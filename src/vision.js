@@ -23,16 +23,8 @@ function visionResetTracking(resetBody){
 }
 function visionUpdateChargePower(sm,sample,now){
   if(!sm.chargeStart)return sm.power||0;
-  if(sample&&sample.valid&&Number.isFinite(sample.liftY)){
-    const dt=Math.max(0,Math.min(.18,(now-(sm.lastPowerAt||now))/1000));
-    const base=sm.chargeBaseY||sample.readyY||sample.liftY;
-    const line=sm.releaseLineY||sample.releaseLineY||VISION.releaseLineY;
-    const span=Math.max(.08,base-line);
-    const lift=clamp((base-sample.liftY)/span,0,1.25);
-    const rate=typeof playerChargeRate==="function"?playerChargeRate():95;
-    sm.power=clamp((sm.power||0)+rate*dt*(.35+.9*lift),0,100);
-    sm.lastPowerAt=now;
-  }
+  sm.power=clamp((typeof G!=="undefined"&&G.charging)?G.power:(sm.power||0),0,100);
+  sm.lastPowerAt=now;
   return sm.power||0;
 }
 function visionGestureStep(sm,sample,now){
@@ -297,18 +289,14 @@ function handleVisionGesture(step){
   if(!VISION.liveControl||!visionGameActive())return;
   if(step.type==="charge"){
     VISION.ownsCharge=!!startCharge();
-    if(VISION.ownsCharge){G.power=clamp(step.power||0,0,100);const fill=$("pFill");if(fill)fill.style.height=Math.round(G.power)+"%";}
-    else resetVisionGesture(VISION.machine);
+    if(!VISION.ownsCharge)resetVisionGesture(VISION.machine);
   }else if(step.type==="release"&&VISION.ownsCharge){
-    if(Number.isFinite(step.power))G.power=clamp(step.power,0,100);
     VISION.ownsCharge=false;doRelease();
   }
   else if(step.type==="cancel")cancelVisionOwnedCharge();
 }
 function syncVisionOwnedPower(step){
   if(!VISION.ownsCharge||!G.charging||!step||step.phase!=="charging")return;
-  if(!Number.isFinite(step.power))return;
-  G.power=clamp(step.power,0,100);
   const fill=$("pFill");if(fill)fill.style.height=Math.round(G.power)+"%";
 }
 function visionCadence(){
