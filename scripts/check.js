@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.47-arena-audio-mix.html";
+const snapshot="block-3pt-kingv1.55-pose-rollback.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -16,8 +16,12 @@ const requiredFiles=[
   "src/assets-manifest.js",
   "src/config.js",
   "src/share.js",
+  "src/recorder.js",
+  "src/shot-physics.js",
+  "src/face-overlays.js",
   "src/audio.js",
   "src/vision.js",
+  "assets/aiba-faces/curry-smile-pixel-128.png",
   "vendor/three.min.r128.js",
   "assets/aiba-vision/pose_landmarker_lite.task"
 ];
@@ -38,6 +42,9 @@ if(!entryHtml.includes('<link rel="stylesheet" href="styles.css">'))fail("styles
 if(!entryHtml.includes('<script src="src/assets-manifest.js"></script>'))fail("assets manifest script missing");
 if(!entryHtml.includes('<script src="src/config.js"></script>'))fail("config script missing");
 if(!entryHtml.includes('<script src="src/share.js"></script>'))fail("share script missing");
+if(!entryHtml.includes('<script src="src/recorder.js"></script>'))fail("recorder script missing");
+if(!entryHtml.includes('<script src="src/shot-physics.js"></script>'))fail("shot physics script missing");
+if(!entryHtml.includes('<script src="src/face-overlays.js"></script>'))fail("face overlays script missing");
 if(!entryHtml.includes('<script src="src/audio.js"></script>'))fail("audio script missing");
 if(!entryHtml.includes('<script src="src/vision.js"></script>'))fail("vision script missing");
 if(/<style>[\s\S]*?<\/style>/.test(entryHtml))fail("inline style block should stay split out");
@@ -65,11 +72,22 @@ for(const [i,script] of inlineScripts.entries()){
 const manifest=read("src/assets-manifest.js");
 const configScript=read("src/config.js");
 const shareScript=read("src/share.js");
+const recorderScript=read("src/recorder.js");
+const shotPhysicsScript=read("src/shot-physics.js");
+const faceOverlaysScript=read("src/face-overlays.js");
 const audioScript=read("src/audio.js");
 try{new Function(configScript);}
 catch(e){fail("config script syntax error: "+e.message);}
 try{new Function(shareScript);}
 catch(e){fail("share script syntax error: "+e.message);}
+try{new Function(recorderScript);}
+catch(e){fail("recorder script syntax error: "+e.message);}
+if(!recorderScript.includes("AIBAAudioCaptureStream"))fail("recorder should attach audio capture stream");
+try{new Function(shotPhysicsScript);}
+catch(e){fail("shot physics script syntax error: "+e.message);}
+try{new Function(faceOverlaysScript);}
+catch(e){fail("face overlays script syntax error: "+e.message);}
+if(!faceOverlaysScript.includes("curry-smile-pixel-128.png"))fail("curry face overlay asset not referenced");
 const configSandbox={window:{}};
 vm.createContext(configSandbox);
 try{vm.runInContext(configScript,configSandbox,{filename:"src/config.js"});}
@@ -77,6 +95,7 @@ catch(e){fail("config script runtime error: "+e.message);}
 if(!configSandbox.window.AIBA_CONFIG||!configSandbox.window.AIBA_CONFIG.DIFFS)fail("AIBA_CONFIG missing required data");
 try{new Function(audioScript);}
 catch(e){fail("audio script syntax error: "+e.message);}
+if(!audioScript.includes("AIBAAudioCaptureStream"))fail("audio capture stream hook missing");
 const voiceFiles=new Set([...audioScript.matchAll(/voiceUrl\("([^"]+\.wav)"\)/g)].map(m=>m[1]));
 if(!voiceFiles.size)fail("no voiceUrl wav references found in audio script");
 for(const file of voiceFiles){

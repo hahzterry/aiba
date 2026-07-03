@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>aiBA·百分大战 v1.55 POSE ROLLBACK</title>
+<title>aiBA·百分大战 v1.49 HIGHLIGHT VIDEO</title>
 <link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -14,7 +14,7 @@
 <div id="bootLoad" role="dialog" aria-modal="true" aria-busy="true" aria-label="游戏资源加载" tabindex="0">
   <div class="bootFrame">
     <div class="bootBrand"><span>ai</span>BA</div>
-    <div class="bootEdition">POSE ROLLBACK / v1.55</div>
+    <div class="bootEdition">HIGHLIGHT VIDEO / v1.49</div>
     <div class="bootRule"></div>
     <div id="bootStatus" class="bootStatus">正在展开赛场</div>
     <div class="bootMeter" aria-hidden="true"><i id="bootBar"></i></div>
@@ -109,11 +109,9 @@
 <script src="src/config.js"></script>
 <script src="src/share.js"></script>
 <script src="src/recorder.js"></script>
-<script src="src/shot-physics.js"></script>
-<script src="src/face-overlays.js"></script>
 <script>
 /* =====================================================
-   aiBA·百分大战 v1.55 POSE ROLLBACK
+   aiBA·百分大战 v1.49 HIGHLIGHT VIDEO
    Minecraft-style NBA 3-Point Contest · 单文件实现
    ===================================================== */
 "use strict";
@@ -143,7 +141,7 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------------- constants ---------------- */
-const GAME_VERSION="v1.55-pose-rollback";
+const GAME_VERSION="v1.49-highlight-video";
 const GAME_NAME="aiBA·百分大战";
 const CONFIG=window.AIBA_CONFIG||{};
 // NBA 标准全场坐标：保留原篮筐/三分点，只向远端延长球场。
@@ -1943,7 +1941,6 @@ function applyStarStyle(guy,star){
   const hc=star.hair!=null?star.hair:0x141414;
   setHair(guy, star.hairStyle||"short", hc);
   setBeard(guy, !!star.beard, (typeof star.beard==="number")?star.beard:hc);
-  if(window.AIBAFaceOverlays)AIBAFaceOverlays.apply(guy,star);
 }
 function randomizeOutfit(o){
   const pick=a=>a[(Math.random()*a.length)|0];
@@ -2302,7 +2299,7 @@ function updWalk(dt){
 /* ---------------- hero ball camera (最后一球英雄时刻) ---------------- */
 const hero={on:false,b:null,t:0,lin:0,perp:null};
 function startHero(B){
-  hero.on=true;hero.b=B;hero.t=0;hero.lin=0;if(window.AIBARecorder)AIBARecorder.mark("最后一球出手",{postMs:5200});
+  hero.on=true;hero.b=B;hero.t=0;hero.lin=0;
   const v=V3(B.v0.x,0,B.v0.z).normalize();
   hero.perp=V3(v.z,0,-v.x);
   if(hero.perp.x*B.p0.x>0)hero.perp.negate();
@@ -3303,7 +3300,8 @@ function doRelease(){
   G.charging=false;
   if(poseK>0.6)landT=0.3;
   if(navigator.vibrate)navigator.vibrate(6);
-  const power=G.power;$("pFill").style.height="0%";
+  const power=G.power;
+  $("pFill").style.height="0%";
   hidePlayerPowerUI();
   const shot=curShot(); if(!shot){return;}
   shotReleaseSound(power,shot);

@@ -2,45 +2,136 @@
 const VISION={
   supported:!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia),desired:false,enabled:false,loading:false,liveControl:true,
   stream:null,landmarker:null,modelPromise:null,lastPose:null,lastHands:[],lastPoseAt:0,lastHandAt:0,lastDraw:0,lastVideoTime:-1,raf:0,ownsCharge:false,lastSample:null,inferAvg:0,
-  machine:{phase:"align",holdStart:0,chargeStart:0,lastSeen:0,cooldownUntil:0,releaseFlashUntil:0},
+  machine:{phase:"idle",holdStart:0,chargeStart:0,lastSeen:0,cooldownUntil:0,releaseFlashUntil:0,chargeBaseY:0,releaseLineY:.32,power:0,lastPowerAt:0},
+  body:{samples:[],startedAt:0,ready:false,noseY:.23,shoulderY:.39,hipY:.66,centerX:.5,shoulderW:.22,bodyH:.27,releaseLineY:.32,hipVisible:false,lastAt:0},
+  tracking:{left:null,right:null,prevLeft:null,prevRight:null,lastValidAt:0,lastAnyAt:0},
   readyArea:{x:.5,bottom:1,w:.88,h:.35},releaseLineY:.32,
   connections:[[11,12],[11,13],[13,15],[15,17],[15,19],[15,21],[12,14],[14,16],[16,18],[16,20],[16,22],[11,23],[12,24],[23,24]],
   handConnections:[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]]
 };
 function visionGameActive(){return (G.state==="round"||G.state==="tiebreak"||G.state==="battle"||G.state==="rackrush")&&G.canShoot&&!G.cutAway&&!G.battleCut;}
-function resetVisionGesture(sm){sm.phase="align";sm.holdStart=0;sm.chargeStart=0;sm.lastSeen=0;sm.cooldownUntil=0;sm.releaseFlashUntil=0;}
+function resetVisionGesture(sm){
+  sm.phase="idle";sm.holdStart=0;sm.chargeStart=0;sm.lastSeen=0;sm.cooldownUntil=0;sm.releaseFlashUntil=0;
+  sm.chargeBaseY=0;sm.releaseLineY=VISION.releaseLineY;sm.power=0;sm.lastPowerAt=0;
+}
+function visionResetTracking(resetBody){
+  VISION.tracking={left:null,right:null,prevLeft:null,prevRight:null,lastValidAt:0,lastAnyAt:0};
+  if(resetBody){
+    VISION.body={samples:[],startedAt:0,ready:false,noseY:.23,shoulderY:.39,hipY:.66,centerX:.5,shoulderW:.22,bodyH:.27,releaseLineY:.32,hipVisible:false,lastAt:0};
+    VISION.releaseLineY=.32;
+  }
+}
+function visionUpdateChargePower(sm,sample,now){
+  if(!sm.chargeStart)return sm.power||0;
+  if(sample&&sample.valid&&Number.isFinite(sample.liftY)){
+    const dt=Math.max(0,Math.min(.18,(now-(sm.lastPowerAt||now))/1000));
+    const base=sm.chargeBaseY||sample.readyY||sample.liftY;
+    const line=sm.releaseLineY||sample.releaseLineY||VISION.releaseLineY;
+    const span=Math.max(.08,base-line);
+    const lift=clamp((base-sample.liftY)/span,0,1.25);
+    const rate=typeof playerChargeRate==="function"?playerChargeRate():95;
+    sm.power=clamp((sm.power||0)+rate*dt*(.35+.9*lift),0,100);
+    sm.lastPowerAt=now;
+  }
+  return sm.power||0;
+}
 function visionGestureStep(sm,sample,now){
-  const event={type:"none",phase:sm.phase,progress:0};
-  if(sample.valid)sm.lastSeen=now;
+  const event={type:"none",phase:sm.phase,progress:0,power:sm.power||0};
+  if(sample.hasHands)sm.lastSeen=now;
   if(sm.phase==="cooldown"){
     if(now<sm.releaseFlashUntil){event.phase="release";event.progress=1;return event;}
-    if(now>=sm.cooldownUntil&&!sample.ready){sm.phase="align";}
+    if(now>=sm.cooldownUntil&&!sample.readyHold){sm.phase="idle";}
     event.phase=sm.phase;return event;
   }
   if(!sample.valid){
-    if(sm.phase==="charging"&&now-sm.lastSeen>420){sm.phase="align";event.type="cancel";}
-    else if(sm.phase==="hold"){sm.phase="align";sm.holdStart=0;}
+    const lostMs=sample.lostMs==null?9999:sample.lostMs;
+    if(sm.phase==="charging"){
+      if(lostMs>250){
+        sm.phase="cooldown";sm.cooldownUntil=now+400;sm.releaseFlashUntil=now+220;
+        event.type="release";event.auto=true;event.phase="release";event.progress=1;event.power=sm.power||0;return event;
+      }
+      event.phase=sm.phase;event.progress=clamp((sm.power||0)/100,0,1);event.power=sm.power||0;return event;
+    }
+    if(sm.phase==="armed"&&lostMs>250){sm.phase="idle";sm.holdStart=0;}
     event.phase=sm.phase;return event;
   }
-  if(sm.phase==="align"){
-    if(sample.ready){sm.phase="hold";sm.holdStart=now;}
+  if(sm.phase==="idle"){
+    if(sample.readyEnter){sm.phase="armed";sm.holdStart=now;}
     event.phase=sm.phase;return event;
   }
-  if(sm.phase==="hold"){
-    if(!sample.ready){sm.phase="align";sm.holdStart=0;event.phase=sm.phase;return event;}
-    event.progress=clamp((now-sm.holdStart)/300,0,1);
-    if(now-sm.holdStart>=300){sm.phase="charging";sm.chargeStart=now;event.type="charge";event.progress=0;}
+  if(sm.phase==="armed"){
+    if(!sample.readyHold){sm.phase="idle";sm.holdStart=0;event.phase=sm.phase;return event;}
+    event.progress=clamp((now-sm.holdStart)/150,0,1);
+    if(now-sm.holdStart>=150){
+      sm.phase="charging";sm.chargeStart=now;sm.lastPowerAt=now;sm.power=0;
+      sm.chargeBaseY=sample.readyY||sample.liftY||VISION.body.hipY;sm.releaseLineY=sample.releaseLineY||VISION.releaseLineY;
+      event.type="charge";event.progress=0;event.power=0;
+    }
     event.phase=sm.phase;return event;
   }
   if(sm.phase==="charging"){
-    event.progress=clamp((now-sm.chargeStart)/900,0,1);
-    if(sample.release){sm.phase="cooldown";sm.cooldownUntil=now+760;sm.releaseFlashUntil=now+260;event.type="release";event.phase="release";event.progress=1;return event;}
-    if(now-sm.chargeStart>2300){sm.phase="align";event.type="cancel";event.phase=sm.phase;event.progress=0;}
+    const power=visionUpdateChargePower(sm,sample,now);
+    event.power=power;event.progress=clamp(power/100,0,1);
+    if(sample.release){
+      sm.phase="cooldown";sm.cooldownUntil=now+400;sm.releaseFlashUntil=now+220;
+      event.type="release";event.phase="release";event.progress=1;event.power=power;return event;
+    }
+    if(now-sm.chargeStart>2600){
+      sm.phase="cooldown";sm.cooldownUntil=now+400;sm.releaseFlashUntil=now+220;
+      event.type="release";event.auto=true;event.phase="release";event.progress=1;event.power=power;return event;
+    }
   }
   return event;
 }
 function visionConfidence(p){return p?(p.visibility==null?(p.presence==null?1:p.presence):p.visibility):0;}
+function visionMedian(vals){
+  vals=vals.filter(Number.isFinite).sort((a,b)=>a-b);
+  if(!vals.length)return 0;
+  const m=vals.length>>1;
+  return vals.length%2?vals[m]:(vals[m-1]+vals[m])*.5;
+}
+function visionGoodPoint(lm,i,min){
+  const p=lm&&lm[i];return p&&visionConfidence(p)>=(min==null ? .35 : min)?p:null;
+}
+function visionBodyCandidate(lm){
+  const nose=visionGoodPoint(lm,0,.3),sL=visionGoodPoint(lm,11,.32),sR=visionGoodPoint(lm,12,.32),hL=visionGoodPoint(lm,23,.28),hR=visionGoodPoint(lm,24,.28);
+  if(!sL||!sR)return null;
+  const hipVisible=!!(hL&&hR);
+  const shoulderY=(sL.y+sR.y)*.5,hipY=hipVisible?(hL.y+hR.y)*.5:null,centerX=hipVisible?(sL.x+sR.x+hL.x+hR.x)*.25:(sL.x+sR.x)*.5;
+  const headSpan=nose?Math.max(.08,shoulderY-nose.y):.14;
+  const estHipY=clamp(shoulderY+headSpan*1.75,.58,.88);
+  const yHip=hipVisible?hipY:estHipY;
+  const shoulderW=Math.abs(sL.x-sR.x),hipW=hipVisible?Math.abs(hL.x-hR.x):shoulderW*.92,bodyH=clamp(yHip-shoulderY,.16,.5);
+  const noseY=nose?nose.y:clamp(shoulderY-bodyH*.58,0,1);
+  const releaseLineY=clamp(noseY+(shoulderY-noseY)*.6,.08,shoulderY-bodyH*.08);
+  return {noseY,shoulderY,hipY:yHip,centerX,shoulderW:Math.max(shoulderW,hipW*.85,.12),bodyH,releaseLineY,hipVisible};
+}
+function visionUpdateBodyCalib(lm,now){
+  const b=VISION.body,raw=visionBodyCandidate(lm);
+  if(!b.startedAt)b.startedAt=now;
+  if(raw){
+    b.samples.push({t:now,...raw});
+    b.samples=b.samples.filter(s=>now-s.t<=2200).slice(-48);
+    const med={};
+    for(const k of ["noseY","shoulderY","hipY","centerX","shoulderW","bodyH","releaseLineY"])med[k]=visionMedian(b.samples.map(s=>s[k]));
+    const a=b.ready?.16:1;
+    for(const k of Object.keys(med))b[k]=b[k]*(1-a)+med[k]*a;
+    b.hipVisible=b.samples.slice(-8).some(s=>s.hipVisible);
+    b.ready=b.samples.length>=2;
+    b.lastAt=now;
+    VISION.releaseLineY=b.releaseLineY;
+  }
+  return b;
+}
 function visionReadyAreaBounds(area,boost){
+  if(area&&area.left!=null){
+    return {
+      left:clamp(area.left-(boost||0),0,1),
+      right:clamp(area.right+(boost||0),0,1),
+      top:clamp(area.top-(boost||0)*.75,0,1),
+      bottom:clamp(area.bottom,0,1)
+    };
+  }
   const grow=boost||0,bottom=area.bottom==null?area.y+area.h*.5:area.bottom;
   return {
     left:area.x-area.w*.5-grow,
@@ -62,19 +153,61 @@ function visionHandLead(hand){
   const tips=[8,12,16,20,4].map(i=>hand&&hand[i]).filter(Boolean);
   return tips.length?tips.reduce((top,p)=>p.y<top.y?p:top):visionPalm(hand);
 }
+function visionDynamicReadyArea(body){
+  const xHalf=clamp(body.shoulderW*2.15,.32,.49);
+  const top=body.hipVisible?body.hipY-body.bodyH*.03:Math.max(.6,body.shoulderY+body.bodyH*.45);
+  return {left:body.centerX-xHalf,right:body.centerX+xHalf,top:clamp(top,.54,.88),bottom:1};
+}
+function visionInBodyReady(p,body,armed){
+  if(!p)return false;
+  const boost=armed?.055:.025;
+  if(visionPointInReadyArea(p,VISION.readyArea,boost))return true;
+  const top=body.hipVisible?(armed?body.hipY-body.bodyH*.08:body.hipY-body.bodyH*.03):(armed?Math.max(.54,body.shoulderY+body.bodyH*.36):Math.max(.6,body.shoulderY+body.bodyH*.45));
+  const area=visionDynamicReadyArea(body),b=visionReadyAreaBounds(area,0);
+  return p.x>=b.left&&p.x<=b.right&&p.y>=top&&p.y<=b.bottom;
+}
+function visionTrackWrists(lm,now){
+  const tr=VISION.tracking,alpha=.4,raw={left:visionGoodPoint(lm,15,.32),right:visionGoodPoint(lm,16,.32)};
+  let count=0;
+  for(const side of ["left","right"]){
+    const p=raw[side];
+    if(!p)continue;
+    count++;
+    const prev=tr[side];
+    tr["prev"+(side==="left"?"Left":"Right")]=prev?{...prev}:null;
+    tr[side]=prev?{x:prev.x*(1-alpha)+p.x*alpha,y:prev.y*(1-alpha)+p.y*alpha,t:now,raw:p}:{x:p.x,y:p.y,t:now,raw:p};
+  }
+  if(count){tr.lastValidAt=now;tr.lastAnyAt=now;}
+  const fresh=side=>tr[side]&&now-tr[side].t<330?tr[side]:null;
+  return {left:fresh("left"),right:fresh("right"),count};
+}
+function visionWristCrossedRelease(side,line,now){
+  const tr=VISION.tracking,p=tr[side],prev=tr["prev"+(side==="left"?"Left":"Right")];
+  if(!p)return false;
+  const raw=p.raw||p,prevRaw=prev&&(prev.raw||prev);
+  if(raw&&raw.y<=line)return true;
+  if(prevRaw&&prevRaw.y>line&&raw&&raw.y<=line)return true;
+  if(p.y<=line)return true;
+  if(!prev)return false;
+  const dt=Math.max(16,p.t-prev.t),vy=(p.y-prev.y)/dt;
+  const crossed=prev.y>line&&p.y<=line;
+  const projected=p.y+vy*Math.min(90,dt*1.5);
+  return crossed||(prev.y>line&&p.y<prev.y-.012&&projected<=line);
+}
 function visionLandmarkSample(lm,handLandmarks,now){
   const poseFresh=now-(VISION.lastPoseAt||0)<450;
-  const handFresh=now-(VISION.lastHandAt||0)<(VISION.machine.phase==="charging"?240:460);
-  const poseNeeded=[0,11,12,15,16],poseValid=poseFresh&&!!lm&&!poseNeeded.some(i=>!lm[i])&&Math.min(...poseNeeded.map(i=>visionConfidence(lm[i])))>=.4;
-  const hands=(handFresh?(handLandmarks||[]):[]).filter(hand=>hand&&hand.length>=21).slice(0,2);
-  const palms=hands.map(visionPalm).filter(Boolean);
-  const poseWrists=poseValid?[lm[15],lm[16]]:[];
-  const readyPoints=palms.length>=2?palms:poseWrists;
-  const releasePoints=[...hands.map(visionHandLead).filter(Boolean),...poseWrists];
-  const holdBoost=VISION.machine.phase==="hold"?.035:0;
-  const ready=readyPoints.length>=2&&readyPoints.slice(0,2).every(p=>visionPointInReadyArea(p,VISION.readyArea,holdBoost));
-  const release=releasePoints.some(p=>p&&p.y<=VISION.releaseLineY);
-  const sample={valid:poseValid||palms.length>0,ready,release,handCount:hands.length,palms,readyPoints,releasePoints,now};
+  const body=visionUpdateBodyCalib(poseFresh?lm:null,now),tracked=poseFresh?visionTrackWrists(lm,now):{left:null,right:null,count:0};
+  const wrists=[tracked.left,tracked.right].filter(Boolean),hasHands=wrists.length>0,lostMs=hasHands?0:now-(VISION.tracking.lastValidAt||0);
+  const armed=VISION.machine.phase==="armed"||VISION.machine.phase==="charging";
+  const readyEnter=!!(tracked.left&&tracked.right&&visionInBodyReady(tracked.left,body,false)&&visionInBodyReady(tracked.right,body,false));
+  const readyHold=!!(tracked.left&&tracked.right&&visionInBodyReady(tracked.left,body,true)&&visionInBodyReady(tracked.right,body,true));
+  const release=wrists.some((_,i)=>visionWristCrossedRelease(i===0?(tracked.left?"left":"right"):"right",body.releaseLineY,now));
+  const liftY=wrists.length?wrists.reduce((m,p)=>Math.min(m,p.y),1):null;
+  const readyY=tracked.left&&tracked.right?(tracked.left.y+tracked.right.y)*.5:liftY;
+  const upperReady=poseFresh&&!!lm&&visionGoodPoint(lm,11,.32)&&visionGoodPoint(lm,12,.32);
+  const valid=(body.ready||upperReady)&&(hasHands||((VISION.machine.phase==="charging"||VISION.machine.phase==="armed")&&lostMs<250));
+  const sample={valid,hasHands,ready:readyEnter,readyEnter,readyHold,release,handCount:wrists.length,palms:[],readyPoints:wrists,releasePoints:wrists,
+    liftY,readyY,lostMs,body,readyArea:visionDynamicReadyArea(body),releaseLineY:body.releaseLineY,now};
   VISION.lastSample=sample;return sample;
 }
 function visionSetUI(phase,label,progress){
@@ -83,13 +216,16 @@ function visionSetUI(phase,label,progress){
   if(state)state.textContent=label;if(fill)fill.style.height=(clamp(progress||0,0,1)*100)+"%";
 }
 function visionPhaseLabel(step,sample){
-  if(step.phase==="hold")return"双手锁定 "+Math.round(step.progress*100)+"%";
+  if(sample&&sample.body&&!sample.body.ready)return"身体标定中";
+  if(step.phase==="armed")return"双手锁定 "+Math.round(step.progress*100)+"%";
   if(step.phase==="charging"){
     const blind=VISION.liveControl&&typeof curShot==="function"&&barHiddenFor(curShot());
-    return blind?"任一手越过上方出手线":"蓄力 · "+Math.round((VISION.liveControl&&G.charging?G.power:step.progress*100))+"%";
+    const p=Math.round((VISION.liveControl&&G.charging?G.power:(step.power||step.progress*100)));
+    return blind?"任一手越过上方出手线":"蓄力 · "+p+"%";
   }
   if(step.phase==="release")return"越线触发 · 出手";
   if(step.phase==="cooldown")return"动作复位";
+  if(sample&&!sample.hasHands&&sample.lostMs>2000)return"回到画面中";
   if(sample&&sample.handCount>0)return"双手放入下方蓄力框";
   return"双手放入下方蓄力框";
 }
@@ -115,9 +251,9 @@ function drawVisionPose(lm,handLandmarks,sample,phase){
   const cv=$("visionCanvas"),video=$("visionVideo");if(!cv||!video)return;
   const w=video.videoWidth||640,h=video.videoHeight||480;if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}
   const g=cv.getContext("2d");g.clearRect(0,0,w,h);if(video.readyState>=2){g.filter="saturate(.72) contrast(1.08) brightness(.78)";g.drawImage(video,0,0,w,h);g.filter="none";}
-  drawVisionReleaseLine(g,VISION.releaseLineY,w,h,phase==="charging"||phase==="release");
-  drawVisionReadyArea(g,VISION.readyArea,w,h,"#70e8ff",phase==="hold");
-  const color=phase==="charging"?"#7CFC6B":(phase==="hold"?"#ffd23f":"#70e8ff");
+  drawVisionReleaseLine(g,(sample&&sample.releaseLineY)||VISION.releaseLineY,w,h,phase==="charging"||phase==="release");
+  drawVisionReadyArea(g,(sample&&sample.readyArea)||VISION.readyArea,w,h,"#70e8ff",phase==="armed");
+  const color=phase==="charging"?"#7CFC6B":(phase==="armed"?"#ffd23f":"#70e8ff");
   g.lineWidth=Math.max(2,w/260);g.strokeStyle=color;g.fillStyle=color;g.globalAlpha=.92;
   if(lm){
     for(const c of VISION.connections){const a=lm[c[0]],b=lm[c[1]];if(!a||!b||visionConfidence(a)<.35||visionConfidence(b)<.35)continue;g.beginPath();g.moveTo(a.x*w,a.y*h);g.lineTo(b.x*w,b.y*h);g.stroke();}
@@ -161,15 +297,25 @@ function handleVisionGesture(step){
   if(!VISION.liveControl||!visionGameActive())return;
   if(step.type==="charge"){
     VISION.ownsCharge=!!startCharge();
-    if(!VISION.ownsCharge)resetVisionGesture(VISION.machine);
-  }else if(step.type==="release"&&VISION.ownsCharge){VISION.ownsCharge=false;doRelease();}
+    if(VISION.ownsCharge){G.power=clamp(step.power||0,0,100);const fill=$("pFill");if(fill)fill.style.height=Math.round(G.power)+"%";}
+    else resetVisionGesture(VISION.machine);
+  }else if(step.type==="release"&&VISION.ownsCharge){
+    if(Number.isFinite(step.power))G.power=clamp(step.power,0,100);
+    VISION.ownsCharge=false;doRelease();
+  }
   else if(step.type==="cancel")cancelVisionOwnedCharge();
+}
+function syncVisionOwnedPower(step){
+  if(!VISION.ownsCharge||!G.charging||!step||step.phase!=="charging")return;
+  if(!Number.isFinite(step.power))return;
+  G.power=clamp(step.power,0,100);
+  const fill=$("pFill");if(fill)fill.style.height=Math.round(G.power)+"%";
 }
 function visionCadence(){
   const phase=VISION.machine.phase,setup=G.state==="menu"||G.state==="diff",active=visionGameActive();
   const penalty=VISION.inferAvg>34?1.5:(VISION.inferAvg>23?1.25:1);
   let drawMs,poseMs,mode;
-  if(active&&(phase==="charging"||phase==="hold")){
+  if(active&&(phase==="charging"||phase==="armed")){
     drawMs=66;poseMs=phase==="charging"?70:82;mode="gesture";
   }else if(active){
     drawMs=82;poseMs=96;mode="ready";
@@ -205,8 +351,9 @@ function visionFrame(now){
   const sample=visionLandmarkSample(VISION.lastPose,VISION.lastHands,now);
   const canAdvance=G.state==="diff"||G.state==="menu"||visionGameActive();
   if(!canAdvance){resetVisionGesture(VISION.machine);cancelVisionOwnedCharge();}
-  const step=canAdvance?visionGestureStep(VISION.machine,sample,now):{type:"none",phase:"align",progress:0};
+  const step=canAdvance?visionGestureStep(VISION.machine,sample,now):{type:"none",phase:"idle",progress:0};
   handleVisionGesture(step);
+  syncVisionOwnedPower(step);
   const drawPose=now-(VISION.lastPoseAt||0)<500?VISION.lastPose:null;
   const drawHands=[];
   drawVisionPose(drawPose,drawHands,sample,step.phase);
@@ -214,7 +361,7 @@ function visionFrame(now){
   visionSetUI(step.phase,visionPhaseLabel(step,sample),blindCharge?0:step.progress);
   if(visionGameActive()){
     const hint=$("hint");
-    if(hint)hint.textContent=step.phase==="hold"?"双手保持在下方蓄力框":(step.phase==="charging"?"任一只手越过上方出手线":(step.phase==="release"?"出手!":"双手进入下方蓄力框 0.3 秒"));
+    if(hint)hint.textContent=step.phase==="armed"?"双手保持在髋线下方":(step.phase==="charging"?"任一只手快速越过上方出手线":(step.phase==="release"?"出手!":"双手进入下方蓄力区 0.15 秒"));
   }
   document.documentElement.dataset.visionPhase=step.phase;
   document.documentElement.dataset.visionReady=sample.ready?"1":"0";
@@ -231,7 +378,7 @@ async function enableVisionControl(event){
     const streamPromise=navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:"user",width:{ideal:640},height:{ideal:480},frameRate:{ideal:24,max:30}}});
     const results=await Promise.all([modelPromise,streamPromise]);VISION.stream=results[1];
     const video=$("visionVideo");video.srcObject=VISION.stream;await video.play();
-    VISION.enabled=true;VISION.lastSample=null;VISION.lastPose=null;VISION.lastHands=[];VISION.lastPoseAt=0;VISION.lastHandAt=0;VISION.lastDraw=0;VISION.inferAvg=0;resetVisionGesture(VISION.machine);visionSetUI("align","双手放入下方蓄力框",0);
+    VISION.enabled=true;VISION.lastSample=null;VISION.lastPose=null;VISION.lastHands=[];VISION.lastPoseAt=0;VISION.lastHandAt=0;VISION.lastDraw=0;VISION.lastVideoTime=-1;VISION.inferAvg=0;visionResetTracking(true);resetVisionGesture(VISION.machine);visionSetUI("idle","双手放入下方蓄力框",0);
     cancelAnimationFrame(VISION.raf);VISION.raf=requestAnimationFrame(visionFrame);
     document.documentElement.dataset.visionControl="ready";
     if(G.state==="diff")goDiff(G.mode,true);
@@ -245,7 +392,7 @@ function disableVisionControl(event){
   if(event){event.stopPropagation();event.preventDefault();}
   VISION.desired=false;VISION.enabled=false;VISION.loading=false;cancelAnimationFrame(VISION.raf);cancelVisionOwnedCharge();
   if(VISION.stream)VISION.stream.getTracks().forEach(t=>t.stop());VISION.stream=null;const video=$("visionVideo");if(video)video.srcObject=null;
-  resetVisionGesture(VISION.machine);VISION.lastSample=null;VISION.lastPose=null;VISION.lastHands=[];VISION.lastPoseAt=0;VISION.lastHandAt=0;VISION.lastDraw=0;VISION.inferAvg=0;$("visionPreview").style.display="none";
+  visionResetTracking(true);resetVisionGesture(VISION.machine);VISION.lastSample=null;VISION.lastPose=null;VISION.lastHands=[];VISION.lastPoseAt=0;VISION.lastHandAt=0;VISION.lastDraw=0;VISION.lastVideoTime=-1;VISION.inferAvg=0;$("visionPreview").style.display="none";
   document.documentElement.dataset.visionControl="off";delete document.documentElement.dataset.visionPhase;delete document.documentElement.dataset.visionReady;delete document.documentElement.dataset.visionHands;
   if(G.state==="diff")goDiff(G.mode,true);
 }

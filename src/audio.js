@@ -248,7 +248,7 @@ const EN_SPEECH=Object.freeze({
 });
 
 /* ---------------- 音频引擎 v3 (菜单BGM + 球馆现场 + DJ/转播 + 投篮手感) ---------------- */
-let AC=null,master=null,crowdBus=null,crowdGain=null,musicBus=null,arenaBus=null,broadcastBus=null,playerBus=null,sfxBus=null;
+let AC=null,master=null,crowdBus=null,crowdGain=null,musicBus=null,arenaBus=null,broadcastBus=null,playerBus=null,sfxBus=null,outputComp=null,recordDest=null;
 let musicTimer=null,arenaTimer=null,ambTimer=null,duckTimer=null,mediaDuckTimer=null,mediaDuckUntil=0;
 const CROWD_BASE=0.16;
 const EXT_DEFAULT_VOLUME=Object.freeze({bgm:.58,crowd:.25,crowdCheer:.23,rain:.19,ocean:.17,gull:.26});
@@ -260,6 +260,22 @@ let MUTED=false;
 let AUDIO_READY=false,AUDIO_PRIMED=false;
 let sceneAudioTick=0;
 const extA={};
+function mediaBusForKey(k){
+  if(k==="bgm")return musicBus||master;
+  if(k==="crowd"||k==="crowdCheer")return arenaBus||master;
+  return arenaBus||sfxBus||master;
+}
+function routeExternalMediaElement(k,a){
+  if(!AC||!a||a._aibaExtSource)return false;
+  try{a._aibaExtSource=AC.createMediaElementSource(a);a._aibaExtSource.connect(mediaBusForKey(k));return true;}catch(e){return false;}
+}
+function ensureAudioCaptureDestination(){
+  if(!AC)return null;
+  try{
+    if(!recordDest){recordDest=AC.createMediaStreamDestination();if(outputComp)outputComp.connect(recordDest);}
+    return recordDest.stream;
+  }catch(e){return null;}
+}
 function syncAudioDebug(){
   try{
     const s=audioState(),r=document.documentElement;
@@ -294,16 +310,18 @@ function extInit(){
       a.volume=EXT_DEFAULT_VOLUME[k]||0.85;
       a.onerror=()=>{delete extA[k];};
       extA[k]=a;
+      routeExternalMediaElement(k,a);
     }catch(e){}
   }
 }
 function extPlay(k){
   const a=extA[k];if(!a||MUTED)return false;
   try{
+    routeExternalMediaElement(k,a);
     const playSafe=x=>{const p=x.play();if(p&&p.then)p.then(()=>syncAudioDebug()).catch(()=>syncAudioDebug());};
     if(a.loop){if(a.paused)playSafe(a);}
     else if(k==="gull"){a.currentTime=0;playSafe(a);}
-    else{const c=a.cloneNode();c.volume=a.volume;playSafe(c);}
+    else{const c=a.cloneNode();c.volume=a.volume;routeExternalMediaElement(k,c);playSafe(c);}
   }catch(e){return false}
   return true;
 }
@@ -475,8 +493,8 @@ function audioInit(){
     // 总线: master → 压缩器(粘合) → 输出
     const comp=AC.createDynamicsCompressor();
     comp.threshold.value=-14;comp.ratio.value=3.5;comp.attack.value=0.004;comp.release.value=0.22;
-    master=AC.createGain();master.gain.value=0.95;
-    master.connect(comp);comp.connect(AC.destination);
+    master=AC.createGain();master.gain.value=0.95;outputComp=comp;
+    master.connect(comp);comp.connect(AC.destination);ensureAudioCaptureDestination();
     musicBus=AC.createGain();musicBus.gain.value=0.72;musicBus.connect(master);
     arenaBus=AC.createGain();arenaBus.gain.value=0.9;arenaBus.connect(master);
     broadcastBus=AC.createGain();broadcastBus.gain.value=0.95;connectArenaVoiceChain(broadcastBus,"pa");
@@ -547,6 +565,7 @@ function audioState(){
     rainPlaying:!!(extA.rain&&!extA.rain.paused),oceanPlaying:!!(extA.ocean&&!extA.ocean.paused),gullReady:!!extA.gull};
 }
 try{window.__aibaAudioState=audioState;}catch(e){}
+try{window.AIBAAudioCaptureStream=()=>ensureAudioCaptureDestination();}catch(e){}
 function ensureAudio(menuMusic,forcePrime){
   if(MUTED)return false;
   audioInit();
