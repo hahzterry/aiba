@@ -119,7 +119,6 @@ function visionUpdateBodyCalib(lm,now){
     b.hipVisible=b.samples.slice(-8).some(s=>s.hipVisible);
     b.ready=b.samples.length>=2;
     b.lastAt=now;
-    VISION.releaseLineY=b.releaseLineY;
   }
   return b;
 }
@@ -201,13 +200,14 @@ function visionLandmarkSample(lm,handLandmarks,now){
   const armed=VISION.machine.phase==="armed"||VISION.machine.phase==="charging";
   const readyEnter=!!(tracked.left&&tracked.right&&visionInBodyReady(tracked.left,body,false)&&visionInBodyReady(tracked.right,body,false));
   const readyHold=!!(tracked.left&&tracked.right&&visionInBodyReady(tracked.left,body,true)&&visionInBodyReady(tracked.right,body,true));
-  const release=wrists.some((_,i)=>visionWristCrossedRelease(i===0?(tracked.left?"left":"right"):"right",body.releaseLineY,now));
+  const releaseLine=VISION.releaseLineY;
+  const release=!!((tracked.left&&visionWristCrossedRelease("left",releaseLine,now))||(tracked.right&&visionWristCrossedRelease("right",releaseLine,now)));
   const liftY=wrists.length?wrists.reduce((m,p)=>Math.min(m,p.y),1):null;
   const readyY=tracked.left&&tracked.right?(tracked.left.y+tracked.right.y)*.5:liftY;
   const upperReady=poseFresh&&!!lm&&visionGoodPoint(lm,11,.32)&&visionGoodPoint(lm,12,.32);
   const valid=(body.ready||upperReady)&&(hasHands||((VISION.machine.phase==="charging"||VISION.machine.phase==="armed")&&lostMs<250));
   const sample={valid,hasHands,ready:readyEnter,readyEnter,readyHold,release,handCount:wrists.length,palms:[],readyPoints:wrists,releasePoints:wrists,
-    liftY,readyY,lostMs,body,readyArea:visionDynamicReadyArea(body),releaseLineY:body.releaseLineY,now};
+    liftY,readyY,lostMs,body,readyArea:visionDynamicReadyArea(body),releaseLineY:releaseLine,now};
   VISION.lastSample=sample;return sample;
 }
 function visionSetUI(phase,label,progress){
@@ -316,13 +316,13 @@ function visionCadence(){
   const penalty=VISION.inferAvg>34?1.5:(VISION.inferAvg>23?1.25:1);
   let drawMs,poseMs,mode;
   if(active&&(phase==="charging"||phase==="armed")){
-    drawMs=66;poseMs=phase==="charging"?70:82;mode="gesture";
+    drawMs=120;poseMs=phase==="charging"?110:125;mode="gesture";
   }else if(active){
-    drawMs=82;poseMs=96;mode="ready";
+    drawMs=145;poseMs=170;mode="ready";
   }else if(setup){
-    drawMs=100;poseMs=160;mode="setup";
+    drawMs=170;poseMs=240;mode="setup";
   }else{
-    drawMs=125;poseMs=300;mode="idle";
+    drawMs=220;poseMs=420;mode="idle";
   }
   return {drawMs:drawMs*(penalty>1?1.15:1),poseMs:poseMs*penalty,mode};
 }
@@ -375,7 +375,7 @@ async function enableVisionControl(event){
   VISION.desired=true;VISION.loading=true;$("visionPreview").style.display="block";visionSetUI("align","正在启动本地识别",.08);
   try{
     const modelPromise=loadVisionModel();
-    const streamPromise=navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:"user",width:{ideal:640},height:{ideal:480},frameRate:{ideal:24,max:30}}});
+    const streamPromise=navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:"user",width:{ideal:360},height:{ideal:270},frameRate:{ideal:18,max:24}}});
     const results=await Promise.all([modelPromise,streamPromise]);VISION.stream=results[1];
     const video=$("visionVideo");video.srcObject=VISION.stream;await video.play();
     VISION.enabled=true;VISION.lastSample=null;VISION.lastPose=null;VISION.lastHands=[];VISION.lastPoseAt=0;VISION.lastHandAt=0;VISION.lastDraw=0;VISION.lastVideoTime=-1;VISION.inferAvg=0;visionResetTracking(true);resetVisionGesture(VISION.machine);visionSetUI("idle","双手放入下方蓄力框",0);

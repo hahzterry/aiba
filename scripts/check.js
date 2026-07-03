@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.55-pose-rollback.html";
+const snapshot="block-3pt-kingv1.57-vision-stable.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -83,6 +83,8 @@ catch(e){fail("share script syntax error: "+e.message);}
 try{new Function(recorderScript);}
 catch(e){fail("recorder script syntax error: "+e.message);}
 if(!recorderScript.includes("AIBAAudioCaptureStream"))fail("recorder should attach audio capture stream");
+const firstMp4=recorderScript.indexOf("video/mp4"),firstWebm=recorderScript.indexOf("video/webm");
+if(firstMp4<0||firstWebm<0||firstMp4>firstWebm)fail("recorder should prefer mp4 before webm");
 try{new Function(shotPhysicsScript);}
 catch(e){fail("shot physics script syntax error: "+e.message);}
 try{new Function(faceOverlaysScript);}

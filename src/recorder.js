@@ -10,8 +10,21 @@
     return !!(global.MediaRecorder&&HTMLCanvasElement.prototype.captureStream);
   }
   function mimeType(){
-    const types=["video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm;codecs=vp9","video/webm;codecs=vp8","video/webm","video/mp4"];
+    const types=[
+      "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+      "video/mp4;codecs=avc1.42001f,mp4a.40.2",
+      "video/mp4;codecs=h264,aac",
+      "video/mp4",
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/webm;codecs=vp9",
+      "video/webm;codecs=vp8",
+      "video/webm"
+    ];
     return types.find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))||"";
+  }
+  function wantsMp4(){
+    return /mp4/i.test(mimeType());
   }
   function canvas(){
     if(state.canvas)return state.canvas;
@@ -89,7 +102,7 @@
   function statusText(){
     if(!supported())return "当前浏览器不支持录制";
     if(state.capturing)return "精彩视频生成中...";
-    if(state.lastBlob)return "精彩视频已就绪";
+    if(state.lastBlob)return /mp4/i.test(state.lastBlob.type)?"精彩MP4已就绪":"精彩视频已就绪(WebM)";
     return "命中关键球后自动生成";
   }
   function audioTracks(){
@@ -130,7 +143,8 @@
       state.rec.start(250);
       state.capturing=true;state.startedAt=performance.now();
       clearTimeout(state.stopTimer);state.stopTimer=setTimeout(stopRecording,opts.postMs||POST_MS);
-      updateStatus(state.audioTracks.length?"精彩视频生成中...含现场音频":"精彩视频生成中...音频未接入");
+      const fmt=/mp4/i.test(mt)?"MP4":"WebM";
+      updateStatus(state.audioTracks.length?`精彩${fmt}生成中...含现场音频`:`精彩${fmt}生成中...音频未接入`);
       return true;
     }catch(e){state.capturing=false;updateStatus("精彩视频生成失败");return false;}
   }
@@ -143,13 +157,14 @@
     state.capturing=false;
     const parts=state.chunks.filter(Boolean);
     if(!parts.length){updateStatus("暂无可保存片段");return;}
-    state.lastBlob=new Blob(parts,{type:(parts[0]&&parts[0].type)||"video/webm"});
+    const recType=(state.rec&&state.rec.mimeType)||(parts[0]&&parts[0].type)||mimeType()||"video/webm";
+    state.lastBlob=new Blob(parts,{type:recType});
     if(state.lastUrl)URL.revokeObjectURL(state.lastUrl);
     state.lastUrl=URL.createObjectURL(state.lastBlob);
     try{if(state.canvasTrack)state.canvasTrack.stop();}catch(e){}
     state.stream=null;state.rec=null;state.canvasTrack=null;state.audioTracks=[];state.chunks=[];
-    updateStatus("精彩视频已就绪");
-    try{if(typeof toast==="function")toast("精彩视频已生成","#7CFC6B");}catch(e){}
+    updateStatus(statusText());
+    try{if(typeof toast==="function")toast(/mp4/i.test(state.lastBlob.type)?"精彩MP4已生成":"精彩视频已生成(WebM)","#7CFC6B");}catch(e){}
     if(state.saveWhenReady){state.saveWhenReady=false;save();}
   }
   function filename(){
@@ -167,7 +182,7 @@
   }
   function resultMarkup(){
     if(!supported())return "";
-    return `<div class="clipExport"><button id="clipSaveBtn" class="btn sm" onclick="AIBARecorder.save()">🎞 保存精彩视频</button><small id="clipStatus">${statusText()}</small></div>`;
+    return `<div class="clipExport"><button id="clipSaveBtn" class="btn sm" onclick="AIBARecorder.save()">🎞 保存MP4视频</button><small id="clipStatus">${wantsMp4()?statusText():"当前浏览器不支持MP4录制,将降级WebM"}</small></div>`;
   }
   global.AIBARecorder=Object.freeze({tick,mark,save,resultMarkup,statusText,supported});
 })(window);

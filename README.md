@@ -9,7 +9,7 @@
 - Vercel 自动部署：https://aiba-percent-battle.vercel.app/
 - GitHub Pages 备用：https://opstiger.github.io/aiba-percent-battle/
 
-当前版本：`v1.55-pose-rollback`
+当前版本：`v1.57-vision-stable`
 
 ## 模式
 
@@ -48,7 +48,7 @@ node scripts/check.js
 ## 项目结构
 
 - `index.html`：当前可玩的入口文件。
-- `block-3pt-kingv1.55-pose-rollback.html`：当前版本快照，和 `index.html` 保持一致。
+- `block-3pt-kingv1.57-vision-stable.html`：当前版本快照，和 `index.html` 保持一致。
 - `styles.css`：游戏 HUD、首页、面板和移动端样式。
 - `src/assets-manifest.js`：封面角色、音频等资源清单。
 - `src/audio.js`：外部音频、合成音效、现场氛围和语音播报。
