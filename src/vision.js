@@ -250,7 +250,7 @@ function drawVisionReleaseLine(g,lineY,w,h,active){
 function drawVisionPose(lm,handLandmarks,sample,phase){
   const cv=$("visionCanvas"),video=$("visionVideo");if(!cv||!video)return;
   const w=video.videoWidth||640,h=video.videoHeight||480;if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}
-  const g=cv.getContext("2d");g.clearRect(0,0,w,h);if(video.readyState>=2){g.filter="saturate(.72) contrast(1.08) brightness(.78)";g.drawImage(video,0,0,w,h);g.filter="none";}
+  const g=cv.getContext("2d");g.clearRect(0,0,w,h);
   drawVisionReleaseLine(g,(sample&&sample.releaseLineY)||VISION.releaseLineY,w,h,phase==="charging"||phase==="release");
   drawVisionReadyArea(g,(sample&&sample.readyArea)||VISION.readyArea,w,h,"#70e8ff",phase==="armed");
   const color=phase==="charging"?"#7CFC6B":(phase==="armed"?"#ffd23f":"#70e8ff");
