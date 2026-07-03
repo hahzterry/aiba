@@ -249,8 +249,13 @@ const EN_SPEECH=Object.freeze({
 
 /* ---------------- 音频引擎 v3 (菜单BGM + 球馆现场 + DJ/转播 + 投篮手感) ---------------- */
 let AC=null,master=null,crowdBus=null,crowdGain=null,musicBus=null,arenaBus=null,broadcastBus=null,playerBus=null,sfxBus=null;
-let musicTimer=null,arenaTimer=null,ambTimer=null,duckTimer=null;
+let musicTimer=null,arenaTimer=null,ambTimer=null,duckTimer=null,mediaDuckTimer=null,mediaDuckUntil=0;
 const CROWD_BASE=0.16;
+const EXT_DEFAULT_VOLUME=Object.freeze({bgm:.58,crowd:.25,crowdCheer:.23,rain:.19,ocean:.17,gull:.26});
+const VOICE_CHAIN_PROFILES=Object.freeze({
+  pa:{hp:210,lp:5200,presF:1650,presGain:3.2,direct:.94,delay:.13,feedback:.16,delayGain:.11,revSec:.82,decay:2.2,reverbGain:.18,comp:-18},
+  player:{hp:145,lp:7200,presF:2400,presGain:1.4,direct:.82,delay:.055,feedback:.08,delayGain:.045,revSec:.5,decay:1.5,reverbGain:.065,comp:-20}
+});
 let MUTED=false;
 let AUDIO_READY=false,AUDIO_PRIMED=false;
 let sceneAudioTick=0;
@@ -286,7 +291,7 @@ function extInit(){
       const a=new Audio(u);a.crossOrigin="anonymous";
       const looped=k==="bgm"||k==="crowd"||k==="crowdCheer"||k==="rain"||k==="ocean";
       a.preload=looped?"auto":"metadata";a.loop=looped;
-      a.volume=k==="crowd"?0.25:(k==="crowdCheer"?0.23:(k==="bgm"?0.58:(k==="rain"?0.19:(k==="ocean"?0.17:(k==="gull"?0.26:0.85)))));
+      a.volume=EXT_DEFAULT_VOLUME[k]||0.85;
       a.onerror=()=>{delete extA[k];};
       extA[k]=a;
     }catch(e){}
@@ -306,14 +311,23 @@ function extStop(k){const a=extA[k];if(a)try{a.pause()}catch(e){}}
 function sceneAudioArenaLike(){
   return G.state==="cinematic"||G.state==="round"||G.state==="roundend"||G.state==="aishow"||G.state==="tiebreak"||G.state==="battle"||G.state==="battleend"||G.state==="rackrush"||G.state==="rushintro"||G.state==="rushbetween"||G.state==="rushend"||G.state==="wincine"||G.state==="victorycine"||G.state==="replay";
 }
+function externalMediaDuckActive(){
+  return Date.now()<mediaDuckUntil;
+}
+function applyExternalMediaMix(){
+  const duck=externalMediaDuckActive(),arenaLike=sceneAudioArenaLike();
+  if(extA.bgm)extA.bgm.volume=EXT_DEFAULT_VOLUME.bgm*(duck?0.58:1);
+  if(extA.crowd)extA.crowd.volume=(G.finalRun?0.34:EXT_DEFAULT_VOLUME.crowd)*(duck?0.72:1);
+  if(extA.crowdCheer)extA.crowdCheer.volume=(G.finalRun?0.31:EXT_DEFAULT_VOLUME.crowdCheer)*(duck?0.7:1);
+  if(extA.rain)extA.rain.volume=(arenaLike?0.2:0.11)*(duck?0.82:1);
+  if(extA.ocean)extA.ocean.volume=(G.finalRun?0.24:(arenaLike?0.18:0.1))*(duck?0.82:1);
+}
 function syncSceneAmbience(){
   const arenaLike=sceneAudioArenaLike(),allowed=G.state==="diff"||arenaLike;
-  if(extA.crowd)extA.crowd.volume=G.finalRun?0.34:0.25;
-  if(extA.crowdCheer)extA.crowdCheer.volume=G.finalRun?0.31:0.23;
+  applyExternalMediaMix();
   if(!AC||MUTED||AC.state==="suspended"||!allowed){extStop("rain");extStop("ocean");syncAudioDebug();return;}
   const rainy=currentWeather==="rain",beach=currentScenePreset==="beachSunset";
-  if(extA.rain)extA.rain.volume=arenaLike?0.2:0.11;
-  if(extA.ocean)extA.ocean.volume=G.finalRun?0.24:(arenaLike?0.18:0.1);
+  applyExternalMediaMix();
   if(rainy)extPlay("rain");else extStop("rain");
   if(beach)extPlay("ocean");else extStop("ocean");
   syncAudioDebug();
@@ -322,32 +336,115 @@ function updateSceneAudio(dt){
   sceneAudioTick-=dt;
   if(sceneAudioTick<=0){sceneAudioTick=.55;syncSceneAmbience();}
 }
-function playClip(t){
-  const u=voiceClipFor(t);if(!u||MUTED)return false;
+function voiceRoleForText(t,u,role){
+  if(role)return role;
+  const file=String(u||"").split("/").pop()||"";
+  if(/^r_/.test(file)||/rival|taunt|ch_/.test(file))return "player";
+  if(/^dj_/.test(file)||/countdown|mk|ms/.test(file))return "dj";
+  return "pa";
+}
+function voiceBusForRole(role){
+  return role==="player"||role==="rival"||role==="taunt"||role==="angry"||role==="sad"?(playerBus||master):(broadcastBus||master);
+}
+function routeVoiceElement(a,role){
+  if(!AC||!a)return false;
   try{
-    if(!playClip.cache[u]){const a=new Audio(u);a.preload="auto";a.load();playClip.cache[u]=a;}
+    const bus=voiceBusForRole(role);
+    if(!a._aibaVoiceSource)a._aibaVoiceSource=AC.createMediaElementSource(a);
+    if(a._aibaVoiceRole!==role){
+      try{a._aibaVoiceSource.disconnect();}catch(e){}
+      a._aibaVoiceSource.connect(bus);
+      a._aibaVoiceRole=role;
+    }
+    return true;
+  }catch(e){return false;}
+}
+function voiceDuckForRole(role){
+  if(role==="player"||role==="rival"||role==="taunt"||role==="angry"||role==="sad")return {ms:1450,depth:.72};
+  if(role==="dj")return {ms:2100,depth:.58};
+  return {ms:2300,depth:.56};
+}
+function makeArenaImpulse(sec,decay){
+  if(!AC)return null;
+  const key=sec+":"+decay+":"+AC.sampleRate;
+  makeArenaImpulse.cache=makeArenaImpulse.cache||Object.create(null);
+  if(makeArenaImpulse.cache[key])return makeArenaImpulse.cache[key];
+  const len=Math.max(1,Math.floor(AC.sampleRate*sec));
+  const b=AC.createBuffer(2,len,AC.sampleRate);
+  for(let ch=0;ch<2;ch++){
+    const d=b.getChannelData(ch);
+    for(let i=0;i<len;i++){
+      const tail=Math.pow(1-i/len,decay);
+      const early=i<AC.sampleRate*.045?(1-i/(AC.sampleRate*.045))*.55:0;
+      d[i]=(Math.random()*2-1)*tail*.24+(Math.random()*2-1)*early*.18;
+    }
+  }
+  makeArenaImpulse.cache[key]=b;
+  return b;
+}
+function connectArenaVoiceChain(input,profileName){
+  if(!AC||!input||!master)return;
+  const p=VOICE_CHAIN_PROFILES[profileName]||VOICE_CHAIN_PROFILES.pa;
+  const hp=AC.createBiquadFilter();hp.type="highpass";hp.frequency.value=p.hp;
+  const lp=AC.createBiquadFilter();lp.type="lowpass";lp.frequency.value=p.lp;
+  const pres=AC.createBiquadFilter();pres.type="peaking";pres.frequency.value=p.presF;pres.Q.value=.9;pres.gain.value=p.presGain;
+  const comp=AC.createDynamicsCompressor();
+  comp.threshold.value=p.comp;comp.knee.value=16;comp.ratio.value=3.2;comp.attack.value=.003;comp.release.value=.18;
+  const direct=AC.createGain();direct.gain.value=p.direct;
+  input.connect(hp);hp.connect(lp);lp.connect(pres);pres.connect(comp);comp.connect(direct);direct.connect(master);
+  const delay=AC.createDelay(.8);delay.delayTime.value=p.delay;
+  const fb=AC.createGain();fb.gain.value=p.feedback;
+  const dg=AC.createGain();dg.gain.value=p.delayGain;
+  comp.connect(delay);delay.connect(fb);fb.connect(delay);delay.connect(dg);dg.connect(master);
+  const impulse=makeArenaImpulse(p.revSec,p.decay);
+  if(impulse){
+    const con=AC.createConvolver();con.buffer=impulse;
+    const rg=AC.createGain();rg.gain.value=p.reverbGain;
+    comp.connect(con);con.connect(rg);rg.connect(master);
+  }
+}
+function voiceMicTransient(role){
+  if(!AC||MUTED)return;
+  const bus=voiceBusForRole(role);
+  if(role==="player"||role==="rival"||role==="taunt"||role==="angry"||role==="sad"){
+    noiseBus(bus,.015,.012,1800,6200);
+    return;
+  }
+  noiseBus(bus,.025,.022,1200,6800);
+  setTimeout(()=>blipBus(bus,role==="dj"?880:620,.035,"square",.012,role==="dj"?1040:520),12);
+}
+function playVoiceUrl(u,role,opt){
+  if(!u||MUTED)return false;
+  try{
+    opt=opt||{};audioInit();
+    if(!playClip.cache[u]){const a=new Audio(u);a.crossOrigin="anonymous";a.preload="auto";a.load();playClip.cache[u]=a;}
     const base=playClip.cache[u],a=base.paused&&base.currentTime===0?base:base.cloneNode();
-    a.volume=1;a.currentTime=0;const p=a.play();if(p&&p.catch)p.catch(()=>{});
-    duckBroadcast(1800);
+    a.crossOrigin="anonymous";
+    const routed=routeVoiceElement(a,role);
+    a.volume=opt.volume==null?(routed?0.92:0.78):opt.volume;
+    a.currentTime=0;
+    voiceMicTransient(role);
+    const p=a.play();if(p&&p.catch)p.catch(()=>{});
+    const duck=voiceDuckForRole(role);
+    duckBroadcast(opt.duckMs||duck.ms,opt.duckDepth||duck.depth);
   }catch(e){return false}
   return true;
+}
+function playClip(t,role){
+  const u=voiceClipFor(t);if(!u||MUTED)return false;
+  return playVoiceUrl(u,voiceRoleForText(t,u,role));
 }
 playClip.cache=Object.create(null);
 let pregameCountdownClipLast=-1;
 function playPregameCountdownCue(){
   if(MUTED||!PREGAME_COUNTDOWN_CLIPS.length)return false;
   try{
-    audioInit();
     const pool=PREGAME_COUNTDOWN_CLIPS;
     let idx=(Math.random()*pool.length)|0;
     if(pool.length>1&&idx===pregameCountdownClipLast)idx=(idx+1+(Math.random()*(pool.length-1)|0))%pool.length;
     pregameCountdownClipLast=idx;
     const u=pool[idx];
-    if(!playClip.cache[u]){const preload=new Audio(u);preload.preload="auto";preload.load();playClip.cache[u]=preload;}
-    const base=playClip.cache[u],a=base.paused&&base.currentTime===0?base:base.cloneNode();
-    a.volume=0.96;a.currentTime=0;
-    const p=a.play();if(p&&p.catch)p.catch(()=>{});
-    duckBroadcast(4200,0.52);
+    playVoiceUrl(u,"pa",{volume:.96,duckMs:4200,duckDepth:.52});
     crowdSwell(.08,2.2);
     return true;
   }catch(e){return false}
@@ -382,8 +479,8 @@ function audioInit(){
     master.connect(comp);comp.connect(AC.destination);
     musicBus=AC.createGain();musicBus.gain.value=0.72;musicBus.connect(master);
     arenaBus=AC.createGain();arenaBus.gain.value=0.9;arenaBus.connect(master);
-    broadcastBus=AC.createGain();broadcastBus.gain.value=0.95;broadcastBus.connect(master);
-    playerBus=AC.createGain();playerBus.gain.value=0.68;playerBus.connect(master);
+    broadcastBus=AC.createGain();broadcastBus.gain.value=0.95;connectArenaVoiceChain(broadcastBus,"pa");
+    playerBus=AC.createGain();playerBus.gain.value=0.72;connectArenaVoiceChain(playerBus,"player");
     sfxBus=AC.createGain();sfxBus.gain.value=0.95;sfxBus.connect(master);
     AUDIO_READY=AC.state==="running";syncAudioDebug();
     primeAudio(true);
@@ -661,13 +758,21 @@ function rampGain(g,v,d){
 }
 function duckBroadcast(dur,depth){
   if(!AC||MUTED)return;
+  dur=dur||1600;
   clearTimeout(duckTimer);
+  clearTimeout(mediaDuckTimer);
+  mediaDuckUntil=Math.max(mediaDuckUntil,Date.now()+dur+160);
   rampGain(musicBus,0.38,0.12);
   rampGain(arenaBus,depth||0.62,0.12);
+  applyExternalMediaMix();
   duckTimer=setTimeout(()=>{
     rampGain(musicBus,0.72,0.35);
     rampGain(arenaBus,0.9,0.35);
-  },(dur||1600));
+  },dur);
+  mediaDuckTimer=setTimeout(()=>{
+    mediaDuckUntil=0;
+    applyExternalMediaMix();
+  },dur+220);
 }
 function broadcastSting(kind){
   if(!AC||MUTED)return;
@@ -919,13 +1024,16 @@ function speakQueued(item){
     if(!opt.pri&&now-SPK.last<2600){scheduleSpeechFlush(120);return;}
     SPK.last=now;
     if(opt.pri&&!speechLiveGame())speechSynthesis.cancel();
-    if(opt.pri||opt.emo==="pa"||opt.emo==="hype")duckBroadcast(opt.pri?2200:1400);
+    if(opt.pri||opt.emo==="pa"||opt.emo==="hype"){
+      voiceMicTransient(opt.emo==="hype"?"dj":(opt.emo||"pa"));
+      duckBroadcast(opt.pri?2200:1400,opt.emo==="hype"?.58:.62);
+    }
     const e=EMO[opt.emo]||{pitch:opt.pitch||1,rate:opt.rate||1.08,jit:0.06,pre:[]};
     let full=speechTextEn(txt);
     if(e.pre.length&&Math.random()<0.65)full=e.pre[(Math.random()*e.pre.length)|0]+full;
     const u=new SpeechSynthesisUtterance(full);
     if(SPK.voice)u.voice=SPK.voice;
-    u.lang="en-US";u.volume=1;
+    u.lang="en-US";u.volume=opt.volume==null ? .86 : opt.volume;
     const basePitch=opt.pitch!=null?opt.pitch:e.pitch;
     const baseRate=opt.rate!=null?opt.rate:e.rate;
     u.pitch=Math.max(0.1,Math.min(2,basePitch+(Math.random()*2-1)*e.jit));
@@ -951,10 +1059,10 @@ function say(txt,opt){
   if(SPK.queue.length>4)SPK.queue.splice(0,SPK.queue.length-4);
   scheduleSpeechFlush(speechInputCritical()?140:20);
 }
-const paSay=(t,pri)=>{if(!playClip(t))say(t,{emo:"pa",pri});};
-const djSay=(t,pri)=>{if(!playClip(t))say(t,{emo:"hype",pri});};
+const paSay=(t,pri)=>{if(!playClip(t,"pa"))say(t,{emo:"pa",pri});};
+const djSay=(t,pri)=>{if(!playClip(t,"dj"))say(t,{emo:"hype",pri});};
 function rivalSay(o,t,emo){
-  if(playClip(t))return;
+  if(playClip(t,emo||"player"))return;
   say(t,{emo:emo||"taunt",pitch:(EMO[emo||"taunt"].pitch)*(0.85+((o.num||7)%5)*0.09)});
 }
 function toggleMute(){

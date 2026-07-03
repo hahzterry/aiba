@@ -1,7 +1,7 @@
 /* ---------------- vision-shot experimental controller ---------------- */
 const VISION={
   supported:!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia),desired:false,enabled:false,loading:false,liveControl:true,
-  stream:null,landmarker:null,handLandmarker:null,lastPose:null,lastHands:[],lastPoseAt:0,lastHandAt:0,lastDraw:0,lastVideoTime:-1,raf:0,ownsCharge:false,lastSample:null,inferAvg:0,
+  stream:null,landmarker:null,modelPromise:null,lastPose:null,lastHands:[],lastPoseAt:0,lastHandAt:0,lastDraw:0,lastVideoTime:-1,raf:0,ownsCharge:false,lastSample:null,inferAvg:0,
   machine:{phase:"align",holdStart:0,chargeStart:0,lastSeen:0,cooldownUntil:0,releaseFlashUntil:0},
   readyArea:{x:.5,bottom:1,w:.88,h:.35},releaseLineY:.32,
   connections:[[11,12],[11,13],[13,15],[15,17],[15,19],[15,21],[12,14],[14,16],[16,18],[16,20],[16,22],[11,23],[12,24],[23,24]],
@@ -131,7 +131,9 @@ function drawVisionPose(lm,handLandmarks,sample,phase){
   g.globalAlpha=1;
 }
 async function loadVisionModel(){
-  if(VISION.landmarker&&VISION.handLandmarker)return VISION.landmarker;
+  if(VISION.landmarker)return VISION.landmarker;
+  if(VISION.modelPromise)return VISION.modelPromise;
+  VISION.modelPromise=(async()=>{
   const mp=await import("../vendor/mediapipe/vision_bundle.mjs");
   const files=await mp.FilesetResolver.forVisionTasks("./vendor/mediapipe/wasm");
   const options={baseOptions:{modelAssetPath:"./assets/aiba-vision/pose_landmarker_lite.task",delegate:"GPU"},runningMode:"VIDEO",numPoses:1,
@@ -140,13 +142,16 @@ async function loadVisionModel(){
     try{VISION.landmarker=await mp.PoseLandmarker.createFromOptions(files,options);}
     catch(e){options.baseOptions.delegate="CPU";VISION.landmarker=await mp.PoseLandmarker.createFromOptions(files,options);}
   }
-  if(!VISION.handLandmarker){
-    const handOptions={baseOptions:{modelAssetPath:"./assets/aiba-vision/hand_landmarker.task",delegate:"CPU"},runningMode:"VIDEO",numHands:2,
-      minHandDetectionConfidence:.45,minHandPresenceConfidence:.45,minTrackingConfidence:.45};
-    try{VISION.handLandmarker=await mp.HandLandmarker.createFromOptions(files,handOptions);}
-    catch(e){handOptions.baseOptions.delegate="GPU";VISION.handLandmarker=await mp.HandLandmarker.createFromOptions(files,handOptions);}
-  }
   return VISION.landmarker;
+  })();
+  try{return await VISION.modelPromise;}
+  finally{VISION.modelPromise=null;}
+}
+function prewarmVisionControl(reason){
+  if(!VISION.supported||VISION.landmarker||VISION.loading||!VISION.desired)return;
+  const run=()=>loadVisionModel().catch(()=>{});
+  if("requestIdleCallback" in window)requestIdleCallback(run,{timeout:1200});
+  else setTimeout(run,80);
 }
 function cancelVisionOwnedCharge(){
   if(!VISION.ownsCharge)return;VISION.ownsCharge=false;
@@ -163,27 +168,20 @@ function handleVisionGesture(step){
 function visionCadence(){
   const phase=VISION.machine.phase,setup=G.state==="menu"||G.state==="diff",active=visionGameActive();
   const penalty=VISION.inferAvg>34?1.5:(VISION.inferAvg>23?1.25:1);
-  let drawMs,poseMs,handMs,mode;
+  let drawMs,poseMs,mode;
   if(active&&(phase==="charging"||phase==="hold")){
-    drawMs=66;poseMs=phase==="charging"?150:105;handMs=phase==="charging"?66:85;mode="gesture";
+    drawMs=66;poseMs=phase==="charging"?70:82;mode="gesture";
   }else if(active){
-    drawMs=82;poseMs=82;handMs=180;mode="ready";
+    drawMs=82;poseMs=96;mode="ready";
   }else if(setup){
-    drawMs=100;poseMs=125;handMs=200;mode="setup";
+    drawMs=100;poseMs=160;mode="setup";
   }else{
-    drawMs=125;poseMs=300;handMs=Infinity;mode="idle";
+    drawMs=125;poseMs=300;mode="idle";
   }
-  return {drawMs:drawMs*(penalty>1?1.15:1),poseMs:poseMs*penalty,handMs:Number.isFinite(handMs)?handMs*penalty:Infinity,mode};
+  return {drawMs:drawMs*(penalty>1?1.15:1),poseMs:poseMs*penalty,mode};
 }
 function visionDetectTask(now,c){
-  const poseAge=now-(VISION.lastPoseAt||0),handAge=now-(VISION.lastHandAt||0);
-  const poseDue=poseAge>=c.poseMs,handDue=Number.isFinite(c.handMs)&&handAge>=c.handMs;
-  if(poseDue&&handDue){
-    const gesture=c.mode==="gesture";
-    if(gesture)return poseAge>=c.poseMs*1.35?"pose":"hand";
-    return handAge>=c.handMs*1.35?"hand":"pose";
-  }
-  return handDue?"hand":(poseDue?"pose":null);
+  return now-(VISION.lastPoseAt||0)>=c.poseMs?"pose":null;
 }
 function noteVisionInference(start){
   const cost=performance.now()-start;
@@ -200,8 +198,6 @@ function visionFrame(now){
   try{
     if(task==="pose"){
       const result=VISION.landmarker.detectForVideo(video,now);VISION.lastPose=result&&result.landmarks&&result.landmarks[0]?result.landmarks[0]:null;VISION.lastPoseAt=now;
-    }else if(task==="hand"&&VISION.handLandmarker){
-      const handResult=VISION.handLandmarker.detectForVideo(video,now);VISION.lastHands=handResult&&handResult.landmarks?handResult.landmarks.slice(0,2):[];VISION.lastHandAt=now;
     }
     if(task)noteVisionInference(started);
   }
@@ -212,7 +208,7 @@ function visionFrame(now){
   const step=canAdvance?visionGestureStep(VISION.machine,sample,now):{type:"none",phase:"align",progress:0};
   handleVisionGesture(step);
   const drawPose=now-(VISION.lastPoseAt||0)<500?VISION.lastPose:null;
-  const drawHands=now-(VISION.lastHandAt||0)<500?VISION.lastHands:[];
+  const drawHands=[];
   drawVisionPose(drawPose,drawHands,sample,step.phase);
   const blindCharge=step.phase==="charging"&&VISION.liveControl&&typeof curShot==="function"&&barHiddenFor(curShot());
   visionSetUI(step.phase,visionPhaseLabel(step,sample),blindCharge?0:step.progress);

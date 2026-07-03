@@ -4,20 +4,22 @@
 const fs=require("fs");
 const path=require("path");
 const vm=require("vm");
+const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.45-courtside-crowd.html";
+const snapshot="block-3pt-kingv1.47-arena-audio-mix.html";
 const requiredFiles=[
   entry,
   snapshot,
   "styles.css",
   "src/assets-manifest.js",
+  "src/config.js",
+  "src/share.js",
   "src/audio.js",
   "src/vision.js",
   "vendor/three.min.r128.js",
-  "assets/aiba-vision/pose_landmarker_lite.task",
-  "assets/aiba-vision/hand_landmarker.task"
+  "assets/aiba-vision/pose_landmarker_lite.task"
 ];
 
 function read(rel){return fs.readFileSync(path.join(root,rel),"utf8");}
@@ -34,10 +36,24 @@ if(entryHtml!==snapshotHtml)fail(entry+" and "+snapshot+" differ");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css">'))fail("stylesheet link missing");
 if(!entryHtml.includes('<script src="src/assets-manifest.js"></script>'))fail("assets manifest script missing");
+if(!entryHtml.includes('<script src="src/config.js"></script>'))fail("config script missing");
+if(!entryHtml.includes('<script src="src/share.js"></script>'))fail("share script missing");
 if(!entryHtml.includes('<script src="src/audio.js"></script>'))fail("audio script missing");
 if(!entryHtml.includes('<script src="src/vision.js"></script>'))fail("vision script missing");
 if(/<style>[\s\S]*?<\/style>/.test(entryHtml))fail("inline style block should stay split out");
 if(/const COVER_STARS=\[/.test(entryHtml)||/const EXT_AUDIO=\{/.test(entryHtml))fail("asset manifest data leaked back into html");
+if(/assets\/aiba-covers\/[^"')]+\.png/.test(entryHtml))fail("runtime should not reference png cover assets");
+
+function inlineScriptLineCount(html){
+  return [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
+    .map(m=>m[1]).filter(s=>s.trim()).reduce((n,s)=>n+s.replace(/\s+$/,"").split(/\r?\n/).length,0);
+}
+const inlineLines=inlineScriptLineCount(entryHtml);
+try{
+  const baseHtml=childProcess.execFileSync("git",["show","HEAD:index.html"],{cwd:root,encoding:"utf8",stdio:["ignore","pipe","ignore"]});
+  const baseLines=inlineScriptLineCount(baseHtml);
+  if(inlineLines>baseLines)fail("inline script line count grew "+inlineLines+" > "+baseLines);
+}catch(e){}
 
 const inlineScripts=[...entryHtml.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
   .map(m=>m[1]).filter(s=>s.trim());
@@ -47,7 +63,18 @@ for(const [i,script] of inlineScripts.entries()){
 }
 
 const manifest=read("src/assets-manifest.js");
+const configScript=read("src/config.js");
+const shareScript=read("src/share.js");
 const audioScript=read("src/audio.js");
+try{new Function(configScript);}
+catch(e){fail("config script syntax error: "+e.message);}
+try{new Function(shareScript);}
+catch(e){fail("share script syntax error: "+e.message);}
+const configSandbox={window:{}};
+vm.createContext(configSandbox);
+try{vm.runInContext(configScript,configSandbox,{filename:"src/config.js"});}
+catch(e){fail("config script runtime error: "+e.message);}
+if(!configSandbox.window.AIBA_CONFIG||!configSandbox.window.AIBA_CONFIG.DIFFS)fail("AIBA_CONFIG missing required data");
 try{new Function(audioScript);}
 catch(e){fail("audio script syntax error: "+e.message);}
 const voiceFiles=new Set([...audioScript.matchAll(/voiceUrl\("([^"]+\.wav)"\)/g)].map(m=>m[1]));
@@ -60,6 +87,7 @@ const vision=read("src/vision.js");
 try{new Function(vision);}
 catch(e){fail("vision script syntax error: "+e.message);}
 if(vision.includes('import("./vendor/'))fail("vision module import path should be relative from src/");
+if(/HandLandmarker|hand_landmarker\.task/.test(vision))fail("game vision path should not load hand landmarker");
 
 const sandbox={window:{}};
 vm.createContext(sandbox);
@@ -70,6 +98,8 @@ if(!assets)fail("AIBA_ASSETS missing");
 if(!Array.isArray(assets.coverStars)||assets.coverStars.length!==5)fail("coverStars should have 5 entries");
 for(const star of assets.coverStars){
   if(!star.id||!star.cover||!star.coverVideo)fail("cover star missing fields");
+  if(!/\.webp$/.test(star.cover))fail("cover image should be webp for "+star.id);
+  if(!/-lite\.mp4$/.test(star.coverVideo))fail("cover video should use lite mp4 for "+star.id);
   if(!exists(star.cover))fail("missing cover image "+star.cover);
   if(!exists(star.coverVideo))fail("missing cover video "+star.coverVideo);
 }
@@ -79,4 +109,4 @@ for(const key of ["bgm","crowd","crowdCheer","rain","ocean","gull"]){
   if(!exists(rel))fail("missing audio file "+rel);
 }
 
-console.log("check ok:",inlineScripts.length+" inline scripts,",assets.coverStars.length+" cover stars");
+console.log("check ok:",inlineScripts.length+" inline scripts,",inlineLines+" inline lines,",assets.coverStars.length+" cover stars");
