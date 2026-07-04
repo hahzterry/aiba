@@ -1,10 +1,10 @@
 /* ---------------- vertical highlight recorder ---------------- */
 (function(global){
   "use strict";
-  const W=720,H=1280,POST_MS=5200,FPS=24;
+  const W=720,H=1280,POST_MS=8200,FPS=24;
   const state={
     canvas:null,ctx:null,stream:null,rec:null,chunks:[],lastBlob:null,lastUrl:"",
-    lastDraw:0,capturing:false,saveWhenReady:false,lastLabel:"精彩时刻",startedAt:0,stopTimer:0,canvasTrack:null,audioTracks:[]
+    lastDraw:0,capturing:false,armed:false,saveWhenReady:false,lastLabel:"精彩时刻",startedAt:0,stopTimer:0,canvasTrack:null,audioTracks:[]
   };
   function supported(){
     return !!(global.MediaRecorder&&HTMLCanvasElement.prototype.captureStream);
@@ -51,6 +51,16 @@
       return (G.score||G.finalScore||G.semiScore||0)+" PTS";
     }catch(e){return "";}
   }
+  function playerText(){
+    try{
+      const p=global.AIBAIdentity&&global.AIBAIdentity.publicProfile&&global.AIBAIdentity.publicProfile();
+      if(p&&(p.display_name||p.player_tag))return (p.display_name||"Rookie")+" "+(p.player_tag?"#"+p.player_tag:"");
+    }catch(e){}
+    return "LOCAL PLAYER";
+  }
+  function rankText(){
+    try{return global.__aibaLastCloudRankText||"";}catch(e){return "";}
+  }
   function drawCover(ctx,img,x,y,w,h){
     const sw=img.videoWidth||img.naturalWidth||img.width,sh=img.videoHeight||img.naturalHeight||img.height;
     if(!sw||!sh)return;
@@ -70,6 +80,8 @@
     ctx.fillStyle="#ffd23f";ctx.font="900 58px Orbitron, monospace";ctx.fillText(scoreText(),34,118);
     ctx.fillStyle="rgba(255,255,255,.88)";ctx.font="700 20px Orbitron, monospace";ctx.fillText(gameLabel(),34,154);
     ctx.fillStyle="rgba(255,255,255,.65)";ctx.font="700 16px Orbitron, monospace";ctx.fillText(state.lastLabel||"LAST SHOT",34,184);
+    ctx.fillStyle="rgba(255,255,255,.82)";ctx.font="700 15px Orbitron, monospace";ctx.fillText(playerText(),34,210);
+    const rt=rankText();if(rt){ctx.fillStyle="#7CFC6B";ctx.font="900 17px Orbitron, monospace";ctx.fillText(rt,34,236);}
     ctx.fillStyle="rgba(0,0,0,.45)";ctx.fillRect(0,H-136,W,136);
     ctx.fillStyle="#fff";ctx.font="900 36px Orbitron, monospace";ctx.fillText("PULL UP. LOCK IN. SHARE IT.",34,H-78);
     ctx.fillStyle="#9ab2c5";ctx.font="700 16px Orbitron, monospace";ctx.fillText("opstiger.github.io/aiba-percent-battle",34,H-44);
@@ -101,7 +113,7 @@
   }
   function statusText(){
     if(!supported())return "当前浏览器不支持录制";
-    if(state.capturing)return "精彩视频生成中...";
+    if(state.capturing)return state.armed?"最后回合预录中...":"精彩视频生成中...";
     if(state.lastBlob)return /mp4/i.test(state.lastBlob.type)?"精彩MP4已就绪":"精彩视频已就绪(WebM)";
     return "命中关键球后自动生成";
   }
@@ -128,25 +140,34 @@
     if(now-state.lastDraw<1000/FPS)return;
     state.lastDraw=now;draw(ctxObj);
   }
+  function startRecording(label,opts){
+    opts=opts||{};state.lastLabel=label||state.lastLabel||"精彩时刻";state.lastBlob=null;
+    draw({canvas:document.getElementById("c")});
+    state.chunks=[];state.stream=freshStream();
+    const mt=mimeType(),optsRec={videoBitsPerSecond:3600000,audioBitsPerSecond:192000};if(mt)optsRec.mimeType=mt;
+    state.rec=new MediaRecorder(state.stream,optsRec);
+    state.rec.ondataavailable=onData;
+    state.rec.onstop=finalizeClip;
+    state.rec.onerror=()=>{state.capturing=false;state.armed=false;updateStatus("精彩视频生成失败");};
+    state.rec.start(250);
+    state.capturing=true;state.armed=!!opts.armed;state.startedAt=performance.now();
+    const fmt=/mp4/i.test(mt)?"MP4":"WebM";
+    updateStatus(state.audioTracks.length?`精彩${fmt}${state.armed?"预录中":"生成中"}...含现场音频`:`精彩${fmt}${state.armed?"预录中":"生成中"}...音频未接入`);
+  }
+  function arm(label){
+    if(!supported())return false;
+    if(state.capturing)return true;
+    try{startRecording(label||"最后回合预录",{armed:true});return true;}catch(e){state.capturing=false;state.armed=false;updateStatus("精彩视频预录失败");return false;}
+  }
   function mark(label,opts){
     if(!supported())return false;
     opts=opts||{};state.lastLabel=label||"精彩时刻";state.lastBlob=null;
-    if(state.capturing){clearTimeout(state.stopTimer);state.stopTimer=setTimeout(stopRecording,opts.postMs||POST_MS);updateStatus("精彩视频延长录制中...");return true;}
+    if(state.capturing){state.armed=false;clearTimeout(state.stopTimer);state.stopTimer=setTimeout(stopRecording,opts.postMs||POST_MS);updateStatus("最后几球已捕捉,继续录制庆祝...");return true;}
     try{
-      draw({canvas:document.getElementById("c")});
-      state.chunks=[];state.stream=freshStream();
-      const mt=mimeType(),optsRec={videoBitsPerSecond:3200000,audioBitsPerSecond:160000};if(mt)optsRec.mimeType=mt;
-      state.rec=new MediaRecorder(state.stream,optsRec);
-      state.rec.ondataavailable=onData;
-      state.rec.onstop=finalizeClip;
-      state.rec.onerror=()=>{state.capturing=false;updateStatus("精彩视频生成失败");};
-      state.rec.start(250);
-      state.capturing=true;state.startedAt=performance.now();
+      startRecording(state.lastLabel,{armed:false});
       clearTimeout(state.stopTimer);state.stopTimer=setTimeout(stopRecording,opts.postMs||POST_MS);
-      const fmt=/mp4/i.test(mt)?"MP4":"WebM";
-      updateStatus(state.audioTracks.length?`精彩${fmt}生成中...含现场音频`:`精彩${fmt}生成中...音频未接入`);
       return true;
-    }catch(e){state.capturing=false;updateStatus("精彩视频生成失败");return false;}
+    }catch(e){state.capturing=false;state.armed=false;updateStatus("精彩视频生成失败");return false;}
   }
   function stopRecording(){
     try{if(state.rec&&state.rec.state==="recording")state.rec.requestData();}catch(e){}
@@ -154,7 +175,7 @@
   }
   function finalizeClip(){
     if(!state.capturing&&!state.rec)return;
-    state.capturing=false;
+    state.capturing=false;state.armed=false;
     const parts=state.chunks.filter(Boolean);
     if(!parts.length){updateStatus("暂无可保存片段");return;}
     const recType=(state.rec&&state.rec.mimeType)||(parts[0]&&parts[0].type)||mimeType()||"video/webm";
@@ -184,5 +205,5 @@
     if(!supported())return "";
     return `<div class="clipExport"><button id="clipSaveBtn" class="btn sm" onclick="AIBARecorder.save()">🎞 保存MP4视频</button><small id="clipStatus">${wantsMp4()?statusText():"当前浏览器不支持MP4录制,将降级WebM"}</small></div>`;
   }
-  global.AIBARecorder=Object.freeze({tick,mark,save,resultMarkup,statusText,supported});
+  global.AIBARecorder=Object.freeze({tick,arm,mark,save,resultMarkup,statusText,supported});
 })(window);

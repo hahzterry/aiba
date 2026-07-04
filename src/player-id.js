@@ -33,6 +33,14 @@
   function saveProfile(p){
     return write(PROFILE_KEY,{...p,updated_at:new Date().toISOString()});
   }
+  function cleanName(name){
+    return String(name||"").replace(/[\u0000-\u001f\u007f]/g,"").trim().slice(0,18);
+  }
+  function setLocalName(name){
+    const clean=cleanName(name);
+    const current=profile()||{};
+    return saveProfile({...current,display_name:clean});
+  }
   async function ensure(opts){
     const current=profile();
     if(current&&current.player_id&&current.player_token)return current;
@@ -52,9 +60,11 @@
     return pending;
   }
   async function updateName(name){
-    const p=await ensure();
-    const clean=String(name||"").trim().slice(0,18);
-    if(!clean)return p;
+    const clean=cleanName(name);
+    const local=setLocalName(clean);
+    if(!clean)return local;
+    let p=local;
+    try{p=await ensure();}catch(e){return local;}
     if(!API)return saveProfile({...p,display_name:clean});
     const res=await fetch(API+"/v1/players/me",{method:"PATCH",headers:{
       "Content-Type":"application/json",
@@ -72,5 +82,5 @@
     return {"Authorization":"Bearer "+p.player_token,"X-AIBA-Player-ID":p.player_id};
   }
 
-  global.AIBAIdentity=Object.freeze({installId,profile,publicProfile,ensure,updateName,authHeaders});
+  global.AIBAIdentity=Object.freeze({installId,profile,publicProfile,ensure,updateName,setLocalName,authHeaders});
 })(window);

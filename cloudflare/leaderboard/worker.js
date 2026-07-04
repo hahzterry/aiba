@@ -104,6 +104,31 @@ function validateRun(input){
     gameVersion:cleanKey(input.game_version??input.version,50),clientCreatedAt:String(input.completedAt||input.client_created_at||"").slice(0,40)
   };
 }
+async function rankForRun(env,run){
+  if(!run.eligible||run.validationStatus!=="valid")return null;
+  const where=["mode=?","validation_status='valid'","eligible=1"];
+  const params=[run.mode];
+  if(run.variant){where.push("variant=?");params.push(run.variant);}
+  if(run.difficulty){where.push("difficulty=?");params.push(run.difficulty);}
+  if(run.control){where.push("control=?");params.push(run.control);}
+  const base=where.join(" AND ");
+  const speed=run.mode==="rack-rush-speed100"||run.variant==="speed100"||run.mode==="percent-battle";
+  let better,betterParams;
+  const acc=Number.isFinite(run.accuracy)?run.accuracy:0;
+  const elapsed=run.elapsed==null?999999999:run.elapsed;
+  if(speed){
+    better=`${base} AND elapsed_ms IS NOT NULL AND (elapsed_ms < ? OR (elapsed_ms = ? AND score > ?) OR (elapsed_ms = ? AND score = ? AND COALESCE(accuracy,0) > ?))`;
+    betterParams=[...params,elapsed,elapsed,run.score,elapsed,run.score,acc];
+  }else{
+    better=`${base} AND (score > ? OR (score = ? AND COALESCE(elapsed_ms,999999999) < ?) OR (score = ? AND COALESCE(elapsed_ms,999999999) = ? AND COALESCE(accuracy,0) > ?))`;
+    betterParams=[...params,run.score,run.score,elapsed,run.score,elapsed,acc];
+  }
+  const countSql=`SELECT COUNT(*) AS n FROM runs WHERE ${base}`;
+  const rankSql=`SELECT COUNT(*) AS n FROM runs WHERE ${better}`;
+  const total=await env.DB.prepare(countSql).bind(...params).first();
+  const ahead=await env.DB.prepare(rankSql).bind(...betterParams).first();
+  return {rank:(ahead&&ahead.n||0)+1,total:total&&total.n||0,scope:{mode:run.mode,variant:run.variant,difficulty:run.difficulty,control:run.control}};
+}
 async function submitRun(req,env){
   const player=await auth(req,env);
   if(!player)return bad("unauthorized",401);
@@ -112,7 +137,8 @@ async function submitRun(req,env){
   const id=crypto.randomUUID();
   await env.DB.prepare("INSERT INTO runs (id,player_id,display_name,player_tag,mode,variant,score,elapsed_ms,attempts,makes,accuracy,best_streak,won,completed,eligible,difficulty,control,star_id,star_name,opponent_id,opponent_name,scene,weather,seed,game_version,rule_version,validation_status,meta_json,client_created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
     .bind(id,player.id,player.display_name,player.player_tag,run.mode,run.variant,run.score,run.elapsed,run.attempts,run.makes,run.accuracy,run.bestStreak,run.won,run.completed,run.eligible,run.difficulty,run.control,run.starId,run.starName,run.opponentId,run.opponentName,run.scene,run.weather,run.seed,run.gameVersion,RULE_VERSION,run.validationStatus,JSON.stringify({}),run.clientCreatedAt).run();
-  return json({ok:true,run_id:id,validation_status:run.validationStatus,eligible:!!run.eligible});
+  const rank=await rankForRun(env,run);
+  return json({ok:true,run_id:id,validation_status:run.validationStatus,eligible:!!run.eligible,...(rank||{})});
 }
 async function leaderboard(req,env){
   const url=new URL(req.url);

@@ -15,6 +15,8 @@ Endpoints:
 - `POST /v1/runs`
 - `GET /v1/leaderboards`
 
+`POST /v1/runs` returns the saved `run_id` plus the current rank for the matching mode / variant / difficulty / control scope when the run is eligible.
+
 The browser game uses a no-login identity model:
 
 - `localStorage.aiba_install_id_v1`
