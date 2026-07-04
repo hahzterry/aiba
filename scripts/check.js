@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.63-profile-rank-clips.html";
+const snapshot="block-3pt-kingv1.64-player-cards.html";
 const requiredFiles=[
   entry,
   snapshot,

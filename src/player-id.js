@@ -25,10 +25,17 @@
     }catch(e){return uuid();}
   }
   function profile(){return read(PROFILE_KEY,null);}
+  function isDefaultName(name){
+    return /^Rookie\s+[A-Z0-9]{4,8}$/i.test(String(name||"").trim());
+  }
+  function hasNickname(p){
+    const name=cleanName(p&&p.display_name);
+    return !!name&&((p&&p.nickname_set) || !isDefaultName(name));
+  }
   function publicProfile(){
     const p=profile();
-    if(!p)return {install_id:installId(),display_name:"",player_tag:"",online:false};
-    return {install_id:installId(),player_id:p.player_id,display_name:p.display_name,player_tag:p.player_tag,online:!!p.player_token};
+    if(!p)return {install_id:installId(),display_name:"",player_tag:"",online:false,has_nickname:false};
+    return {install_id:installId(),player_id:p.player_id,display_name:p.display_name,player_tag:p.player_tag,online:!!p.player_token,has_nickname:hasNickname(p)};
   }
   function saveProfile(p){
     return write(PROFILE_KEY,{...p,updated_at:new Date().toISOString()});
@@ -39,7 +46,7 @@
   function setLocalName(name){
     const clean=cleanName(name);
     const current=profile()||{};
-    return saveProfile({...current,display_name:clean});
+    return saveProfile({...current,display_name:clean,nickname_set:!!clean});
   }
   async function ensure(opts){
     const current=profile();
@@ -49,13 +56,16 @@
       if(!API)throw new Error("leaderboard_api_missing");
       const res=await fetch(API+"/v1/players",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
         install_id:installId(),
-        display_name:current&&current.display_name,
+        display_name:hasNickname(current)?current.display_name:"",
         game_version:opts&&opts.game_version
       })});
       if(!res.ok)throw new Error("player_create_failed_"+res.status);
       const data=await res.json();
       if(!data.ok)throw new Error(data.error||"player_create_failed");
-      return saveProfile({...current,...data});
+      const merged={...current,...data};
+      if(hasNickname(current))merged.display_name=cleanName(current.display_name);
+      merged.nickname_set=hasNickname(current)||hasNickname(merged);
+      return saveProfile(merged);
     })().finally(()=>{pending=null;});
     return pending;
   }
@@ -65,7 +75,7 @@
     if(!clean)return local;
     let p=local;
     try{p=await ensure();}catch(e){return local;}
-    if(!API)return saveProfile({...p,display_name:clean});
+    if(!API)return saveProfile({...p,display_name:clean,nickname_set:!!clean});
     const res=await fetch(API+"/v1/players/me",{method:"PATCH",headers:{
       "Content-Type":"application/json",
       "Authorization":"Bearer "+p.player_token,
@@ -74,7 +84,7 @@
     if(!res.ok)throw new Error("player_update_failed_"+res.status);
     const data=await res.json();
     if(!data.ok)throw new Error(data.error||"player_update_failed");
-    return saveProfile({...p,...data});
+    return saveProfile({...p,...data,display_name:clean,nickname_set:!!clean});
   }
   function authHeaders(){
     const p=profile();
@@ -82,5 +92,5 @@
     return {"Authorization":"Bearer "+p.player_token,"X-AIBA-Player-ID":p.player_id};
   }
 
-  global.AIBAIdentity=Object.freeze({installId,profile,publicProfile,ensure,updateName,setLocalName,authHeaders});
+  global.AIBAIdentity=Object.freeze({installId,profile,publicProfile,ensure,updateName,setLocalName,authHeaders,hasNickname});
 })(window);

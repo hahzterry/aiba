@@ -54,9 +54,9 @@
   function playerText(){
     try{
       const p=global.AIBAIdentity&&global.AIBAIdentity.publicProfile&&global.AIBAIdentity.publicProfile();
-      if(p&&(p.display_name||p.player_tag))return (p.display_name||"Rookie")+" "+(p.player_tag?"#"+p.player_tag:"");
+      if(p&&p.has_nickname&&p.display_name)return p.display_name;
     }catch(e){}
-    return "LOCAL PLAYER";
+    return "aiBA PLAYER";
   }
   function rankText(){
     try{return global.__aibaLastCloudRankText||"";}catch(e){return "";}
