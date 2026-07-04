@@ -905,8 +905,8 @@ function sSwish(){
   }
 }
 function sClank(){ // 铁框:非谐金属泛音
-  if(extPlay("clank")){if(navigator.vibrate)navigator.vibrate(14);return;}
-  if(!AC||MUTED){if(navigator.vibrate)navigator.vibrate(14);return;}
+  if(extPlay("clank"))return;
+  if(!AC||MUTED)return;
   const t=AC.currentTime;
   [317,476,833,1276].forEach((f,i)=>{
     const o=AC.createOscillator();o.type="sine";o.frequency.value=f*rnd2(0.99,1.01);
@@ -916,7 +916,6 @@ function sClank(){ // 铁框:非谐金属泛音
     o.connect(g);g.connect(master);o.start(t);o.stop(t+0.35);
   });
   noiseHit(0.025,0.14,2500);
-  if(navigator.vibrate)navigator.vibrate(14);
 }
 function sBoard(){ // 篮板:木质闷响
   if(!AC||MUTED)return;

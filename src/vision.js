@@ -9,6 +9,8 @@ const VISION={
   connections:[[11,12],[11,13],[13,15],[15,17],[15,19],[15,21],[12,14],[14,16],[16,18],[16,20],[16,22],[11,23],[12,24],[23,24]],
   handConnections:[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]]
 };
+const VISION_READY_HOLD_MS=120;
+const VISION_RELEASE_LOST_MS=140;
 function visionGameActive(){return (G.state==="round"||G.state==="tiebreak"||G.state==="battle"||G.state==="rackrush")&&G.canShoot&&!G.cutAway&&!G.battleCut;}
 function resetVisionGesture(sm){
   sm.phase="idle";sm.holdStart=0;sm.chargeStart=0;sm.lastSeen=0;sm.cooldownUntil=0;sm.releaseFlashUntil=0;
@@ -38,7 +40,7 @@ function visionGestureStep(sm,sample,now){
   if(!sample.valid){
     const lostMs=sample.lostMs==null?9999:sample.lostMs;
     if(sm.phase==="charging"){
-      if(lostMs>250){
+      if(lostMs>VISION_RELEASE_LOST_MS){
         sm.phase="cooldown";sm.cooldownUntil=now+400;sm.releaseFlashUntil=now+220;
         event.type="release";event.auto=true;event.phase="release";event.progress=1;event.power=sm.power||0;return event;
       }
@@ -53,8 +55,8 @@ function visionGestureStep(sm,sample,now){
   }
   if(sm.phase==="armed"){
     if(!sample.readyHold){sm.phase="idle";sm.holdStart=0;event.phase=sm.phase;return event;}
-    event.progress=clamp((now-sm.holdStart)/150,0,1);
-    if(now-sm.holdStart>=150){
+    event.progress=clamp((now-sm.holdStart)/VISION_READY_HOLD_MS,0,1);
+    if(now-sm.holdStart>=VISION_READY_HOLD_MS){
       sm.phase="charging";sm.chargeStart=now;sm.lastPowerAt=now;sm.power=0;
       sm.chargeBaseY=sample.readyY||sample.liftY||VISION.body.hipY;sm.releaseLineY=sample.releaseLineY||VISION.releaseLineY;
       event.type="charge";event.progress=0;event.power=0;
@@ -169,7 +171,10 @@ function visionTrackWrists(lm,now){
     tr[side]=prev?{x:prev.x*(1-alpha)+p.x*alpha,y:prev.y*(1-alpha)+p.y*alpha,t:now,raw:p}:{x:p.x,y:p.y,t:now,raw:p};
   }
   if(count){tr.lastValidAt=now;tr.lastAnyAt=now;}
-  const fresh=side=>tr[side]&&now-tr[side].t<330?tr[side]:null;
+  const fresh=side=>{
+    const p=tr[side];if(!p||now-p.t>=330)return null;
+    return {...p,current:now-p.t<85,age:now-p.t};
+  };
   return {left:fresh("left"),right:fresh("right"),count};
 }
 function visionWristCrossedRelease(side,line,now){
@@ -188,16 +193,18 @@ function visionWristCrossedRelease(side,line,now){
 function visionLandmarkSample(lm,handLandmarks,now){
   const poseFresh=now-(VISION.lastPoseAt||0)<450;
   const body=visionUpdateBodyCalib(poseFresh?lm:null,now),tracked=poseFresh?visionTrackWrists(lm,now):{left:null,right:null,count:0};
-  const wrists=[tracked.left,tracked.right].filter(Boolean),hasHands=wrists.length>0,lostMs=hasHands?0:now-(VISION.tracking.lastValidAt||0);
+  const currentLeft=tracked.left&&tracked.left.current?tracked.left:null,currentRight=tracked.right&&tracked.right.current?tracked.right:null;
+  const wrists=[tracked.left,tracked.right].filter(Boolean),currentWrists=[currentLeft,currentRight].filter(Boolean),hasHands=currentWrists.length>0,lostMs=hasHands?0:now-(VISION.tracking.lastValidAt||0);
   const armed=VISION.machine.phase==="armed"||VISION.machine.phase==="charging";
-  const readyEnter=!!(tracked.left&&tracked.right&&visionInBodyReady(tracked.left,body,false)&&visionInBodyReady(tracked.right,body,false));
-  const readyHold=!!(tracked.left&&tracked.right&&visionInBodyReady(tracked.left,body,true)&&visionInBodyReady(tracked.right,body,true));
+  const readyEnter=!!(currentLeft&&currentRight&&visionInBodyReady(currentLeft,body,false)&&visionInBodyReady(currentRight,body,false));
+  const readyHold=!!(currentLeft&&currentRight&&visionInBodyReady(currentLeft,body,true)&&visionInBodyReady(currentRight,body,true));
   const releaseLine=VISION.releaseLineY;
-  const release=!!((tracked.left&&visionWristCrossedRelease("left",releaseLine,now))||(tracked.right&&visionWristCrossedRelease("right",releaseLine,now)));
-  const liftY=wrists.length?wrists.reduce((m,p)=>Math.min(m,p.y),1):null;
-  const readyY=tracked.left&&tracked.right?(tracked.left.y+tracked.right.y)*.5:liftY;
+  const release=!!((currentLeft&&visionWristCrossedRelease("left",releaseLine,now))||(currentRight&&visionWristCrossedRelease("right",releaseLine,now)));
+  const liftSource=currentWrists.length?currentWrists:wrists;
+  const liftY=liftSource.length?liftSource.reduce((m,p)=>Math.min(m,p.y),1):null;
+  const readyY=currentLeft&&currentRight?(currentLeft.y+currentRight.y)*.5:liftY;
   const upperReady=poseFresh&&!!lm&&visionGoodPoint(lm,11,.32)&&visionGoodPoint(lm,12,.32);
-  const valid=(body.ready||upperReady)&&(hasHands||((VISION.machine.phase==="charging"||VISION.machine.phase==="armed")&&lostMs<250));
+  const valid=(body.ready||upperReady)&&(hasHands||((VISION.machine.phase==="charging"||VISION.machine.phase==="armed")&&lostMs<VISION_RELEASE_LOST_MS));
   const sample={valid,hasHands,ready:readyEnter,readyEnter,readyHold,release,handCount:wrists.length,palms:[],readyPoints:wrists,releasePoints:wrists,
     liftY,readyY,lostMs,body,readyArea:visionDynamicReadyArea(body),releaseLineY:releaseLine,now};
   VISION.lastSample=sample;return sample;
@@ -303,10 +310,12 @@ function visionCadence(){
   const phase=VISION.machine.phase,setup=G.state==="menu"||G.state==="diff",active=visionGameActive();
   const penalty=VISION.inferAvg>34?1.5:(VISION.inferAvg>23?1.25:1);
   let drawMs,poseMs,mode;
-  if(active&&(phase==="charging"||phase==="armed")){
-    drawMs=120;poseMs=phase==="charging"?110:125;mode="gesture";
+  if(active&&phase==="charging"){
+    drawMs=82;poseMs=46;mode="gesture";
+  }else if(active&&phase==="armed"){
+    drawMs=88;poseMs=54;mode="gesture";
   }else if(active){
-    drawMs=145;poseMs=170;mode="ready";
+    drawMs=132;poseMs=118;mode="ready";
   }else if(setup){
     drawMs=170;poseMs=240;mode="setup";
   }else{
@@ -326,9 +335,10 @@ function visionFrame(now){
   if(!VISION.desired)return;VISION.raf=requestAnimationFrame(visionFrame);
   if(!VISION.enabled||!VISION.landmarker)return;
   const video=$("visionVideo");if(!video||video.readyState<2||video.currentTime===VISION.lastVideoTime)return;
-  const cadence=visionCadence();if(now-VISION.lastDraw<cadence.drawMs)return;
-  VISION.lastDraw=now;VISION.lastVideoTime=video.currentTime;
-  const task=visionDetectTask(now,cadence),started=performance.now();
+  const cadence=visionCadence(),task=visionDetectTask(now,cadence),shouldDraw=now-(VISION.lastDraw||0)>=cadence.drawMs;
+  if(!task&&!shouldDraw)return;
+  VISION.lastVideoTime=video.currentTime;
+  const started=performance.now();
   try{
     if(task==="pose"){
       const result=VISION.landmarker.detectForVideo(video,now);VISION.lastPose=result&&result.landmarks&&result.landmarks[0]?result.landmarks[0]:null;VISION.lastPoseAt=now;
@@ -342,19 +352,22 @@ function visionFrame(now){
   const step=canAdvance?visionGestureStep(VISION.machine,sample,now):{type:"none",phase:"idle",progress:0};
   handleVisionGesture(step);
   syncVisionOwnedPower(step);
-  const drawPose=now-(VISION.lastPoseAt||0)<500?VISION.lastPose:null;
-  const drawHands=[];
-  drawVisionPose(drawPose,drawHands,sample,step.phase);
-  const blindCharge=step.phase==="charging"&&VISION.liveControl&&typeof curShot==="function"&&barHiddenFor(curShot());
-  visionSetUI(step.phase,visionPhaseLabel(step,sample),blindCharge?0:step.progress);
-  if(visionGameActive()){
-    const hint=$("hint");
-    if(hint)hint.textContent=step.phase==="armed"?"双手保持在髋线下方":(step.phase==="charging"?"任一只手快速越过上方出手线":(step.phase==="release"?"出手!":"双手进入下方蓄力区 0.15 秒"));
+  if(shouldDraw){
+    VISION.lastDraw=now;
+    const drawPose=now-(VISION.lastPoseAt||0)<500?VISION.lastPose:null;
+    const drawHands=[];
+    drawVisionPose(drawPose,drawHands,sample,step.phase);
+    const blindCharge=step.phase==="charging"&&VISION.liveControl&&typeof curShot==="function"&&barHiddenFor(curShot());
+    visionSetUI(step.phase,visionPhaseLabel(step,sample),blindCharge?0:step.progress);
+    if(visionGameActive()){
+      const hint=$("hint");
+      if(hint)hint.textContent=step.phase==="armed"?"双手保持在髋线下方":(step.phase==="charging"?"任一只手快速越过上方出手线":(step.phase==="release"?"出手!":"双手进入下方蓄力区 0.12 秒"));
+    }
+    document.documentElement.dataset.visionPhase=step.phase;
+    document.documentElement.dataset.visionReady=sample.ready?"1":"0";
+    document.documentElement.dataset.visionHands=String(sample.handCount||0);
+    document.documentElement.dataset.visionCadence=cadence.mode;
   }
-  document.documentElement.dataset.visionPhase=step.phase;
-  document.documentElement.dataset.visionReady=sample.ready?"1":"0";
-  document.documentElement.dataset.visionHands=String(sample.handCount||0);
-  document.documentElement.dataset.visionCadence=cadence.mode;
 }
 async function enableVisionControl(event){
   if(event){event.stopPropagation();event.preventDefault();}

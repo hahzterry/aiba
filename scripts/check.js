@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.59-vision-power-smooth.html";
+const snapshot="block-3pt-kingv1.61-rim-haptic.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -19,6 +19,7 @@ const requiredFiles=[
   "src/recorder.js",
   "src/shot-physics.js",
   "src/face-overlays.js",
+  "src/haptics.js",
   "src/audio.js",
   "src/vision.js",
   "assets/aiba-faces/curry-smile-pixel-128.png",
@@ -45,6 +46,7 @@ if(!entryHtml.includes('<script src="src/share.js"></script>'))fail("share scrip
 if(!entryHtml.includes('<script src="src/recorder.js"></script>'))fail("recorder script missing");
 if(!entryHtml.includes('<script src="src/shot-physics.js"></script>'))fail("shot physics script missing");
 if(!entryHtml.includes('<script src="src/face-overlays.js"></script>'))fail("face overlays script missing");
+if(!entryHtml.includes('<script src="src/haptics.js"></script>'))fail("haptics script missing");
 if(!entryHtml.includes('<script src="src/audio.js"></script>'))fail("audio script missing");
 if(!entryHtml.includes('<script src="src/vision.js"></script>'))fail("vision script missing");
 if(/<style>[\s\S]*?<\/style>/.test(entryHtml))fail("inline style block should stay split out");

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>aiBA·百分大战 v1.61 RIM HAPTIC</title>
+<title>aiBA·百分大战 v1.60 VISION FAST GESTURE</title>
 <link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -14,7 +14,7 @@
 <div id="bootLoad" role="dialog" aria-modal="true" aria-busy="true" aria-label="游戏资源加载" tabindex="0">
   <div class="bootFrame">
     <div class="bootBrand"><span>ai</span>BA</div>
-    <div class="bootEdition">RIM HAPTIC / v1.61</div>
+    <div class="bootEdition">VISION FAST / v1.60</div>
     <div class="bootRule"></div>
     <div id="bootStatus" class="bootStatus">正在展开赛场</div>
     <div class="bootMeter" aria-hidden="true"><i id="bootBar"></i></div>
@@ -111,10 +111,9 @@
 <script src="src/recorder.js"></script>
 <script src="src/shot-physics.js"></script>
 <script src="src/face-overlays.js"></script>
-<script src="src/haptics.js"></script>
 <script>
 /* =====================================================
-   aiBA·百分大战 v1.61 RIM HAPTIC
+   aiBA·百分大战 v1.60 VISION FAST GESTURE
    Minecraft-style NBA 3-Point Contest · 单文件实现
    ===================================================== */
 "use strict";
@@ -144,7 +143,7 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------------- constants ---------------- */
-const GAME_VERSION="v1.61-rim-haptic";
+const GAME_VERSION="v1.60-vision-fast-gesture";
 const GAME_NAME="aiBA·百分大战";
 const CONFIG=window.AIBA_CONFIG||{};
 // NBA 标准全场坐标：保留原篮筐/三分点，只向远端延长球场。
@@ -3561,11 +3560,11 @@ function updBalls(dt){
           sBoard();b.phase="bankdrop";b.bt=0;
           b.bFrom=b.mesh.position.clone();
         }else if(b.outcome==="rattle"||b.outcome==="rattleout"){
-          playerRimHaptic(b);sClank();b.phase="rattle";b.rt=0;b.rin=b.outcome==="rattle";
+          sClank();b.phase="rattle";b.rt=0;b.rin=b.outcome==="rattle";
           b.ra=Math.atan2(b.mesh.position.z-HOOP.z,b.mesh.position.x-HOOP.x);
           b.rdir=Math.random()<.5?1:-1;
         }else if(b.outcome==="rimout"){
-          playerRimHaptic(b);sClank();if(b.opp)triggerStreetCrowdReaction("oppMiss",0);else if(!b.silent)missBall();b.phase="free";
+          sClank();if(b.opp)triggerStreetCrowdReaction("oppMiss",0);else if(!b.silent)missBall();b.phase="free";
           const d=V3(b.mesh.position.x-HOOP.x,0,b.mesh.position.z-HOOP.z).normalize();
           b.vel.set(d.x*rnd(1.2,2.2)+rnd(-.6,.6),rnd(2.4,3.6),d.z*rnd(1.2,2.2)+rnd(-.6,.6));
         }else{
@@ -3582,7 +3581,7 @@ function updBalls(dt){
       if(k>=1){
         if(b.rin){madeBall(b);b.phase="fall";b.vel.set(0,-1.6,0);}
         else{
-          playerRimHaptic(b);sClank();missBall();toast("😱 涮筐而出!","#ff8d7a");b.phase="free";
+          sClank();missBall();toast("😱 涮筐而出!","#ff8d7a");b.phase="free";
           const d=V3(Math.cos(b.ra+b.rt*9*b.rdir),0,Math.sin(b.ra+b.rt*9*b.rdir)).normalize();
           b.vel.set(d.x*rnd(1.4,2.4),rnd(2.0,3.0),d.z*rnd(1.4,2.4));
         }
