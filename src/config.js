@@ -59,6 +59,7 @@
   });
 
   global.AIBA_CONFIG=Object.freeze({
+    LEADERBOARD_API:"https://aiba-leaderboard-api.tiger-seeker.workers.dev",
     DIFFS,
     RACK_RUSH_LEVELS,
     SCENE_PRESETS,

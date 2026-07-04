@@ -8,13 +8,15 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.61-rim-haptic.html";
+const snapshot="block-3pt-kingv1.62-online-identity.html";
 const requiredFiles=[
   entry,
   snapshot,
   "styles.css",
   "src/assets-manifest.js",
   "src/config.js",
+  "src/player-id.js",
+  "src/leaderboard-api.js",
   "src/share.js",
   "src/recorder.js",
   "src/shot-physics.js",
@@ -42,6 +44,8 @@ if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html"
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css">'))fail("stylesheet link missing");
 if(!entryHtml.includes('<script src="src/assets-manifest.js"></script>'))fail("assets manifest script missing");
 if(!entryHtml.includes('<script src="src/config.js"></script>'))fail("config script missing");
+if(!entryHtml.includes('<script src="src/player-id.js"></script>'))fail("player id script missing");
+if(!entryHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("leaderboard api script missing");
 if(!entryHtml.includes('<script src="src/share.js"></script>'))fail("share script missing");
 if(!entryHtml.includes('<script src="src/recorder.js"></script>'))fail("recorder script missing");
 if(!entryHtml.includes('<script src="src/shot-physics.js"></script>'))fail("shot physics script missing");
@@ -73,6 +77,8 @@ for(const [i,script] of inlineScripts.entries()){
 
 const manifest=read("src/assets-manifest.js");
 const configScript=read("src/config.js");
+const playerIdScript=read("src/player-id.js");
+const leaderboardApiScript=read("src/leaderboard-api.js");
 const shareScript=read("src/share.js");
 const recorderScript=read("src/recorder.js");
 const shotPhysicsScript=read("src/shot-physics.js");
@@ -80,6 +86,10 @@ const faceOverlaysScript=read("src/face-overlays.js");
 const audioScript=read("src/audio.js");
 try{new Function(configScript);}
 catch(e){fail("config script syntax error: "+e.message);}
+try{new Function(playerIdScript);}
+catch(e){fail("player id script syntax error: "+e.message);}
+try{new Function(leaderboardApiScript);}
+catch(e){fail("leaderboard api script syntax error: "+e.message);}
 try{new Function(shareScript);}
 catch(e){fail("share script syntax error: "+e.message);}
 try{new Function(recorderScript);}

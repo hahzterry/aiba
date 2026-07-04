@@ -9,7 +9,7 @@
 - Vercel 自动部署：https://aiba-percent-battle.vercel.app/
 - GitHub Pages 备用：https://opstiger.github.io/aiba-percent-battle/
 
-当前版本：`v1.61-rim-haptic`
+当前版本：`v1.62-online-identity`
 
 ## 模式
 
@@ -48,15 +48,18 @@ node scripts/check.js
 ## 项目结构
 
 - `index.html`：当前可玩的入口文件。
-- `block-3pt-kingv1.61-rim-haptic.html`：当前版本快照，和 `index.html` 保持一致。
+- `block-3pt-kingv1.62-online-identity.html`：当前版本快照，和 `index.html` 保持一致。
 - `styles.css`：游戏 HUD、首页、面板和移动端样式。
 - `src/assets-manifest.js`：封面角色、音频等资源清单。
+- `src/player-id.js`：匿名玩家 ID、昵称和本地身份凭证。
+- `src/leaderboard-api.js`：在线成绩提交、离线队列和排行榜 API 客户端。
 - `src/audio.js`：外部音频、合成音效、现场氛围和语音播报。
 - `src/face-overlays.js`：可选球员卡通脸贴图模块，当前用于库里头像试验。
 - `src/vision.js`：摄像头、MediaPipe、视觉投篮识别与预览。
 - `scripts/check.js`：提交前静态验收脚本。
 - `assets/`：游戏图片、视频和音频资源。
 - `vendor/`：随项目带的第三方运行文件，包括 Three.js 与 MediaPipe Tasks Vision。
+- `cloudflare/leaderboard/`：Cloudflare D1 + Worker 排行榜 API 的 schema 和源码。
 - `backup/`：本地历史版本归档，不参与发布。
 - `docs/`：本地需求与迭代文档，不参与发布。
 
