@@ -1,10 +1,10 @@
 /* ---------------- vertical highlight recorder ---------------- */
 (function(global){
   "use strict";
-  const W=720,H=1280,POST_MS=8200,FPS=24;
+  const W=720,H=1280,POST_MS=9000,RESULT_HOLD_MS=7200,FPS=24;
   const state={
     canvas:null,ctx:null,stream:null,rec:null,chunks:[],lastBlob:null,lastUrl:"",
-    lastDraw:0,capturing:false,armed:false,saveWhenReady:false,lastLabel:"精彩时刻",startedAt:0,stopTimer:0,canvasTrack:null,audioTracks:[]
+    lastDraw:0,capturing:false,armed:false,saveWhenReady:false,lastLabel:"精彩时刻",startedAt:0,stopTimer:0,canvasTrack:null,audioTracks:[],resultCard:null,resultAt:0
   };
   function supported(){
     return !!(global.MediaRecorder&&HTMLCanvasElement.prototype.captureStream);
@@ -72,6 +72,47 @@
     ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
     ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
   }
+  function timeText(ms){
+    try{
+      if(typeof formatBattleTime==="function"&&(ms||0)>=60000)return formatBattleTime(ms);
+      if(typeof formatRackRushClock==="function")return formatRackRushClock((ms||0)/1000);
+    }catch(e){}
+    return ((ms||0)/1000).toFixed(1)+"s";
+  }
+  function cardFromRecord(record,opts){
+    opts=opts||{};record=record||{};
+    const battle=record.mode==="percent-battle",speed=record.variant==="speed100"||record.mode==="rack-rush-speed100";
+    const title=opts.title||(battle?(record.won?"PERCENT BATTLE WON":"PERCENT BATTLE"):(speed?"SPEED 100 COMPLETE":"RACK RUSH COMPLETE"));
+    const score=opts.score||(battle?((record.score||0)+" : "+(record.opponentScore||0)):(speed?timeText(record.elapsedMs||record.elapsed_ms):((record.total==null?record.score:record.total)||0)+" PTS"));
+    const makes=record.makes!=null&&record.attempts!=null?record.makes+"/"+record.attempts:"";
+    const sub=opts.sub||(battle?("TIME "+timeText(record.elapsedMs||record.elapsed_ms)):(makes?("MAKES "+makes):"FINAL SCORE"));
+    const statA=battle?"OPPONENT "+(record.opponentName||"CPU"):(speed?"TARGET 100":"TOTAL SCORE");
+    const statB=battle?("STREAK x"+(record.bestStreak||record.best_streak||0)):(record.bestStreak!=null?"STREAK x"+record.bestStreak:"GLOBAL RUN");
+    return {title,score,sub,statA,statB,mode:battle?"PERCENT BATTLE":(speed?"SPEED 100":"RACK RUSH")};
+  }
+  function drawResultCard(ctx){
+    if(!state.resultCard)return;
+    const age=performance.now()-state.resultAt;
+    if(age>RESULT_HOLD_MS+900){state.resultCard=null;return;}
+    const fadeIn=Math.min(1,age/650),fadeOut=age>RESULT_HOLD_MS?Math.max(0,1-(age-RESULT_HOLD_MS)/900):1,alpha=fadeIn*fadeOut;
+    const c=state.resultCard,x=54,y=400,w=W-108,h=390;
+    ctx.save();ctx.globalAlpha=alpha;
+    ctx.fillStyle="rgba(0,0,0,.46)";ctx.fillRect(0,0,W,H);
+    ctx.translate(0,Math.max(0,24*(1-fadeIn)));
+    const grd=ctx.createLinearGradient(x,y,x+w,y+h);grd.addColorStop(0,"rgba(8,13,22,.96)");grd.addColorStop(.55,"rgba(22,19,15,.94)");grd.addColorStop(1,"rgba(8,13,22,.96)");
+    ctx.fillStyle=grd;roundRect(ctx,x,y,w,h,18);ctx.fill();
+    ctx.strokeStyle="rgba(0,0,0,.95)";ctx.lineWidth=7;roundRect(ctx,x,y,w,h,18);ctx.stroke();
+    ctx.strokeStyle="rgba(255,210,63,.78)";ctx.lineWidth=2;roundRect(ctx,x+8,y+8,w-16,h-16,12);ctx.stroke();
+    ctx.fillStyle="#7ee7ff";ctx.font="900 18px Orbitron, monospace";ctx.fillText(c.mode,x+30,y+48);
+    ctx.fillStyle="#fff";ctx.font="900 40px Orbitron, monospace";ctx.fillText(c.title,x+30,y+106);
+    ctx.fillStyle="#ffd23f";ctx.font="900 74px Orbitron, monospace";ctx.fillText(c.score,x+30,y+190);
+    ctx.fillStyle="rgba(255,255,255,.8)";ctx.font="800 20px Orbitron, monospace";ctx.fillText(c.sub,x+30,y+230);
+    ctx.fillStyle="rgba(255,255,255,.08)";roundRect(ctx,x+28,y+258,w-56,72,10);ctx.fill();
+    ctx.fillStyle="#dce8f4";ctx.font="800 17px Orbitron, monospace";ctx.fillText(c.statA,x+48,y+287);
+    ctx.fillStyle="#7CFC6B";ctx.fillText(c.statB,x+48,y+317);
+    const rt=rankText();ctx.fillStyle=rt?"#7CFC6B":"#9ab2c5";ctx.font="900 22px Orbitron, monospace";ctx.fillText(rt||"GLOBAL RANK PENDING",x+30,y+360);
+    ctx.restore();
+  }
   function drawHud(ctx){
     ctx.save();
     const grd=ctx.createLinearGradient(0,0,0,260);grd.addColorStop(0,"rgba(3,6,14,.72)");grd.addColorStop(1,"rgba(3,6,14,0)");
@@ -104,7 +145,7 @@
     ctx.save();drawCover(ctx,source,0,0,W,H);ctx.restore();
     ctx.fillStyle="rgba(3,6,12,.2)";ctx.fillRect(0,0,W,H);
     for(let y=0;y<H;y+=6){ctx.fillStyle="rgba(255,255,255,.025)";ctx.fillRect(0,y,W,1);}
-    drawHud(ctx);drawVisionPip(ctx);
+    drawHud(ctx);drawVisionPip(ctx);drawResultCard(ctx);
     return c;
   }
   function updateStatus(txt){
@@ -169,6 +210,17 @@
       return true;
     }catch(e){state.capturing=false;state.armed=false;updateStatus("精彩视频生成失败");return false;}
   }
+  function extend(ms){
+    if(!state.capturing)return false;
+    clearTimeout(state.stopTimer);state.stopTimer=setTimeout(stopRecording,Math.max(1200,ms||POST_MS));
+    updateStatus("正在录制庆祝和成绩卡...");
+    return true;
+  }
+  function result(record,opts){
+    state.resultCard=cardFromRecord(record,opts);
+    state.resultAt=performance.now();
+    return extend((opts&&opts.postMs)||RESULT_HOLD_MS+1800);
+  }
   function stopRecording(){
     try{if(state.rec&&state.rec.state==="recording")state.rec.requestData();}catch(e){}
     try{if(state.rec&&state.rec.state!=="inactive")state.rec.stop();}catch(e){finalizeClip();}
@@ -205,5 +257,5 @@
     if(!supported())return "";
     return `<div class="clipExport"><button id="clipSaveBtn" class="btn sm" onclick="AIBARecorder.save()">🎞 保存MP4视频</button><small id="clipStatus">${wantsMp4()?statusText():"当前浏览器不支持MP4录制,将降级WebM"}</small></div>`;
   }
-  global.AIBARecorder=Object.freeze({tick,arm,mark,save,resultMarkup,statusText,supported});
+  global.AIBARecorder=Object.freeze({tick,arm,mark,result,save,resultMarkup,statusText,supported});
 })(window);
