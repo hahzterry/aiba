@@ -79,38 +79,70 @@
     }catch(e){}
     return ((ms||0)/1000).toFixed(1)+"s";
   }
+  function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+  function metricScore(record){
+    const attempts=Number(record&&record.attempts)||0,makes=Number(record&&record.makes)||0;
+    const accuracy=attempts?clamp(makes/attempts*100,0,100):0;
+    const streak=clamp((Number(record&&record.bestStreak)||Number(record&&record.best_streak)||0)*14,0,100);
+    const elapsed=Number(record&&record.elapsedMs)||Number(record&&record.elapsed_ms)||0;
+    const total=Number(record&&record.total)||Number(record&&record.score)||0;
+    const pace=elapsed&&attempts?clamp(attempts/(elapsed/60000)*6,24,100):60;
+    const diff=record&&record.difficulty==="hard"?92:(record&&record.difficulty==="normal"?76:58);
+    let clutch=clamp(total,30,100);
+    if(record&&record.mode==="percent-battle")clutch=record.won?88:58;
+    if(record&&(record.variant==="speed100"||record.mode==="rack-rush-speed100"))clutch=clamp(112-((elapsed/1000)-85)*.36,38,100);
+    return clamp(Math.round(accuracy*.34+streak*.17+pace*.16+clutch*.23+diff*.1),0,100);
+  }
+  function tierForScore(score){
+    if(score>=92)return {accent:"#ffd700",dim:"#9f8300",soft:"rgba(255,215,0,.22)",text:"#fff0a8",stamp:"LEGENDARY / 传奇"};
+    if(score>=84)return {accent:"#d9e1e7",dim:"#7e8b92",soft:"rgba(217,225,231,.18)",text:"#f2f6f8",stamp:"SILVER / 精英"};
+    if(score>=74)return {accent:"#c78945",dim:"#7b4e24",soft:"rgba(199,137,69,.2)",text:"#ffd9aa",stamp:"BRONZE / 稳定"};
+    if(score>=64)return {accent:"#b96f38",dim:"#61351a",soft:"rgba(185,111,56,.18)",text:"#ffc49a",stamp:"COPPER / 热手"};
+    if(score>=52)return {accent:"#7fd6e8",dim:"#336575",soft:"rgba(127,214,232,.16)",text:"#d6f7ff",stamp:"STEEL / 新兵"};
+    if(score>=38)return {accent:"#8e969d",dim:"#41474c",soft:"rgba(142,150,157,.17)",text:"#d9dddf",stamp:"SLATE / 加练"};
+    return {accent:"#666b70",dim:"#2d3034",soft:"rgba(120,126,132,.13)",text:"#c7cacc",stamp:"灰色地带"};
+  }
   function cardFromRecord(record,opts){
     opts=opts||{};record=record||{};
     const battle=record.mode==="percent-battle",speed=record.variant==="speed100"||record.mode==="rack-rush-speed100";
+    const dna=metricScore(record),tier=tierForScore(dna);
     const title=opts.title||(battle?(record.won?"PERCENT BATTLE WON":"PERCENT BATTLE"):(speed?"SPEED 100 COMPLETE":"RACK RUSH COMPLETE"));
     const score=opts.score||(battle?((record.score||0)+" : "+(record.opponentScore||0)):(speed?timeText(record.elapsedMs||record.elapsed_ms):((record.total==null?record.score:record.total)||0)+" PTS"));
     const makes=record.makes!=null&&record.attempts!=null?record.makes+"/"+record.attempts:"";
     const sub=opts.sub||(battle?("TIME "+timeText(record.elapsedMs||record.elapsed_ms)):(makes?("MAKES "+makes):"FINAL SCORE"));
     const statA=battle?"OPPONENT "+(record.opponentName||"CPU"):(speed?"TARGET 100":"TOTAL SCORE");
     const statB=battle?("STREAK x"+(record.bestStreak||record.best_streak||0)):(record.bestStreak!=null?"STREAK x"+record.bestStreak:"GLOBAL RUN");
-    return {title,score,sub,statA,statB,mode:battle?"PERCENT BATTLE":(speed?"SPEED 100":"RACK RUSH")};
+    return {title,score,sub,statA,statB,tier,dna,mode:battle?"PERCENT BATTLE":(speed?"SPEED 100":"RACK RUSH")};
+  }
+  function fitText(ctx,text,x,y,max,size,min){
+    let s=size;ctx.font="900 "+s+"px Orbitron, monospace";
+    while(s>min&&ctx.measureText(text).width>max){s-=2;ctx.font="900 "+s+"px Orbitron, monospace";}
+    ctx.fillText(text,x,y);
   }
   function drawResultCard(ctx){
     if(!state.resultCard)return;
     const age=performance.now()-state.resultAt;
     if(age>RESULT_HOLD_MS+900){state.resultCard=null;return;}
     const fadeIn=Math.min(1,age/650),fadeOut=age>RESULT_HOLD_MS?Math.max(0,1-(age-RESULT_HOLD_MS)/900):1,alpha=fadeIn*fadeOut;
-    const c=state.resultCard,x=54,y=400,w=W-108,h=390;
+    const c=state.resultCard,t=c.tier,x=54,y=400,w=W-108,h=390;
     ctx.save();ctx.globalAlpha=alpha;
     ctx.fillStyle="rgba(0,0,0,.46)";ctx.fillRect(0,0,W,H);
     ctx.translate(0,Math.max(0,24*(1-fadeIn)));
-    const grd=ctx.createLinearGradient(x,y,x+w,y+h);grd.addColorStop(0,"rgba(8,13,22,.96)");grd.addColorStop(.55,"rgba(22,19,15,.94)");grd.addColorStop(1,"rgba(8,13,22,.96)");
-    ctx.fillStyle=grd;roundRect(ctx,x,y,w,h,18);ctx.fill();
-    ctx.strokeStyle="rgba(0,0,0,.95)";ctx.lineWidth=7;roundRect(ctx,x,y,w,h,18);ctx.stroke();
-    ctx.strokeStyle="rgba(255,210,63,.78)";ctx.lineWidth=2;roundRect(ctx,x+8,y+8,w-16,h-16,12);ctx.stroke();
-    ctx.fillStyle="#7ee7ff";ctx.font="900 18px Orbitron, monospace";ctx.fillText(c.mode,x+30,y+48);
-    ctx.fillStyle="#fff";ctx.font="900 40px Orbitron, monospace";ctx.fillText(c.title,x+30,y+106);
-    ctx.fillStyle="#ffd23f";ctx.font="900 74px Orbitron, monospace";ctx.fillText(c.score,x+30,y+190);
+    const grd=ctx.createLinearGradient(x,y,x+w,y+h);grd.addColorStop(0,t.soft);grd.addColorStop(.42,"rgba(18,20,20,.96)");grd.addColorStop(1,"rgba(11,12,12,.98)");
+    ctx.fillStyle=grd;ctx.fillRect(x,y,w,h);
+    ctx.strokeStyle="rgba(0,0,0,.95)";ctx.lineWidth=8;ctx.strokeRect(x,y,w,h);
+    ctx.strokeStyle=t.accent;ctx.lineWidth=2;ctx.strokeRect(x+10,y+10,w-20,h-20);
+    [[x+22,y+22,28,0,0,28],[x+w-50,y+22,28,0,28,28],[x+22,y+h-50,28,28,0,28],[x+w-50,y+h-50,28,28,28,28]].forEach(a=>{ctx.beginPath();ctx.moveTo(a[0],a[1]+a[5]);ctx.lineTo(a[0],a[1]);ctx.lineTo(a[0]+a[4],a[1]);ctx.stroke();});
+    ctx.fillStyle=t.accent;ctx.font="900 18px Orbitron, monospace";ctx.fillText(c.mode,x+32,y+52);
+    ctx.fillStyle="#fff";fitText(ctx,c.title,x+32,y+112,w-64,40,24);
+    ctx.save();ctx.translate(x+54,y+145);ctx.rotate(0.16);ctx.strokeStyle=t.accent;ctx.lineWidth=5;ctx.fillStyle="rgba(18,20,20,.58)";ctx.fillRect(0,0,w-108,52);ctx.strokeRect(0,0,w-108,52);ctx.fillStyle=t.accent;fitText(ctx,t.stamp,18,36,w-140,30,18);ctx.restore();
+    ctx.fillStyle=t.accent;ctx.font="900 74px Orbitron, monospace";ctx.fillText(c.score,x+32,y+206);
+    ctx.shadowColor=t.accent;ctx.shadowBlur=18;ctx.fillText(c.score,x+32,y+206);ctx.shadowBlur=0;
     ctx.fillStyle="rgba(255,255,255,.8)";ctx.font="800 20px Orbitron, monospace";ctx.fillText(c.sub,x+30,y+230);
     ctx.fillStyle="rgba(255,255,255,.08)";roundRect(ctx,x+28,y+258,w-56,72,10);ctx.fill();
     ctx.fillStyle="#dce8f4";ctx.font="800 17px Orbitron, monospace";ctx.fillText(c.statA,x+48,y+287);
-    ctx.fillStyle="#7CFC6B";ctx.fillText(c.statB,x+48,y+317);
-    const rt=rankText();ctx.fillStyle=rt?"#7CFC6B":"#9ab2c5";ctx.font="900 22px Orbitron, monospace";ctx.fillText(rt||"GLOBAL RANK PENDING",x+30,y+360);
+    ctx.fillStyle=t.accent;ctx.fillText(c.statB,x+48,y+317);
+    const rt=rankText();ctx.fillStyle=rt?t.accent:"#9ab2c5";ctx.font="900 22px Orbitron, monospace";ctx.fillText(rt||"GLOBAL RANK PENDING",x+30,y+360);
     ctx.restore();
   }
   function drawHud(ctx){

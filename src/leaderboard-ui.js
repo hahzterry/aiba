@@ -118,13 +118,13 @@
     return {accuracy,streak,pace,clutch,diff,score,attempts,makes,total,elapsed};
   }
   function tierFor(score){
-    if(score>=92)return {cls:"legend",title:"传奇手感",line:"这一局已经有点像球馆传说。"};
-    if(score>=84)return {cls:"elite",title:"百分狠人",line:"敢投关键球的人,排行榜会记住。"};
-    if(score>=74)return {cls:"captain",title:"球馆小队长",line:"节奏能带起来,手也够硬。"};
-    if(score>=64)return {cls:"spark",title:"有点东西",line:"不是路人,这手感值得再冲一把。"};
-    if(score>=52)return {cls:"rookie",title:"新兵蛋子",line:"姿势已经上路,下一局先把节奏稳住。"};
-    if(score>=38)return {cls:"granny",title:"老奶奶水平",line:"别慌,球馆也需要一点喜剧效果。"};
-    return {cls:"kid",title:"小学三年级水平",line:"先别急着发朋友圈,回去加练两组。"};
+    if(score>=92)return {cls:"legend",title:"传奇手感",stamp:"LEGENDARY / 传奇",line:"这一局已经有点像球馆传说。"};
+    if(score>=84)return {cls:"silver",title:"精英射手",stamp:"SILVER / 精英",line:"手感够硬,已经能让排行榜紧张。"};
+    if(score>=74)return {cls:"bronze",title:"稳定火力",stamp:"BRONZE / 稳定",line:"节奏能带起来,下一局可以冲更狠。"};
+    if(score>=64)return {cls:"copper",title:"有点东西",stamp:"COPPER / 热手",line:"不是路人,这手感值得再来一把。"};
+    if(score>=52)return {cls:"steel",title:"新兵上路",stamp:"STEEL / 新兵",line:"姿势已经上路,先把节奏稳住。"};
+    if(score>=38)return {cls:"slate",title:"板凳沉思",stamp:"SLATE / 加练",line:"别慌,球馆也需要一点喜剧效果。"};
+    return {cls:"ash",title:"灰阶手感",stamp:"灰色地带",line:"先别急着发朋友圈,回去加练两组。"};
   }
   function radarMarkup(m){
     const vals=[["命中",m.accuracy],["连中",m.streak],["节奏",m.pace],["关键",m.clutch],["难度",m.diff]];
@@ -142,7 +142,11 @@
   function resultBadgeMarkup(record){
     if(!record)return"";
     const m=metricsFor(record),tier=tierFor(m.score),p=profile(),name=displayName(p)||"aiBA PLAYER";
-    return `<section class="resultHeroCard ${tier.cls}"><div class="resultIdentity"><small>POSTGAME TITLE</small><b>${esc(tier.title)}</b><span>${esc(name)} · ${m.score} DNA</span><em>${esc(tier.line)}</em></div><div class="resultRadarWrap">${radarMarkup(m)}</div><div class="resultStatGrid">${statMarkup(record,m)}</div></section>`;
+    return `<section class="resultHeroCard resultTier-${tier.cls} ${tier.cls}"><i class="resultCorner tl"></i><i class="resultCorner tr"></i><i class="resultCorner bl"></i><i class="resultCorner br"></i><div class="resultIdentity"><small>POSTGAME TITLE</small><b>${esc(tier.title)}</b><span>${esc(name)} · ${m.score} DNA</span><em>${esc(tier.line)}</em></div><div class="resultRadarWrap">${radarMarkup(m)}</div><div class="resultStatGrid">${statMarkup(record,m)}</div></section>`;
+  }
+  function resultHeaderMarkup(record,opts){
+    opts=opts||{};const m=metricsFor(record),tier=tierFor(m.score);
+    return `<section class="resultScoreHero resultTier-${tier.cls}"><div class="resultModeLine"><b>${esc(opts.headline||"挑战完成")}</b><span>${esc(opts.mode||"POSTGAME COMPLETE")}</span></div><div class="resultScoreValue">${esc(opts.score||recordScoreText(record))}</div><div class="resultStamp">${esc(tier.stamp)}</div><div class="resultScoreLabel">${esc(opts.label||"FINAL RESULT")}</div></section>`;
   }
   function keyFor(record){
     if(!record._cloudKey)record._cloudKey="cloudRank"+(++seq);
@@ -209,7 +213,8 @@
   global.showNicknameEditor=showNicknameEditor;
   global.AIBACloudRankMarkup=rankMarkup;
   global.AIBAResultBadgeMarkup=resultBadgeMarkup;
+  global.AIBAResultHeaderMarkup=resultHeaderMarkup;
   global.showOnlineLeaderboardForRecord=showOnlineLeaderboardForRecord;
-  global.AIBALeaderboardUI=Object.freeze({submitRecord,rankMarkup,showOnlineLeaderboardForRecord,refreshProfileUI,resultBadgeMarkup});
+  global.AIBALeaderboardUI=Object.freeze({submitRecord,rankMarkup,showOnlineLeaderboardForRecord,refreshProfileUI,resultBadgeMarkup,resultHeaderMarkup});
   setTimeout(refreshProfileUI,0);
 })(window);
