@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>aiBA·百分大战 v1.68 SHOT ARCS</title>
+<title>aiBA·百分大战 v1.67 RANK FLOW</title>
 <link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -14,7 +14,7 @@
 <div id="bootLoad" role="dialog" aria-modal="true" aria-busy="true" aria-label="游戏资源加载" tabindex="0">
   <div class="bootFrame">
     <div class="bootBrand"><span>ai</span>BA</div>
-    <div class="bootEdition">SHOT ARCS / v1.68</div>
+    <div class="bootEdition">RANK FLOW / v1.67</div>
     <div class="bootRule"></div>
     <div id="bootStatus" class="bootStatus">正在展开赛场</div>
     <div class="bootMeter" aria-hidden="true"><i id="bootBar"></i></div>
@@ -117,7 +117,7 @@
 <script src="src/haptics.js"></script>
 <script>
 /* =====================================================
-   aiBA·百分大战 v1.68 SHOT ARCS
+   aiBA·百分大战 v1.67 RANK FLOW
    Minecraft-style NBA 3-Point Contest · 单文件实现
    ===================================================== */
 "use strict";
@@ -147,7 +147,7 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------------- constants ---------------- */
-const GAME_VERSION="v1.68-shot-arcs";
+const GAME_VERSION="v1.67-rank-flow";
 const GAME_NAME="aiBA·百分大战";
 const CONFIG=window.AIBA_CONFIG||{};
 // NBA 标准全场坐标：保留原篮筐/三分点，只向远端延长球场。
@@ -230,12 +230,13 @@ const CLASSIC_LEGENDS=CONFIG.CLASSIC_LEGENDS;
 const LEGENDS=[...CLASSIC_LEGENDS,...COVER_STARS];
 const DEFAULT_SHOT_PROFILE=CONFIG.DEFAULT_SHOT_PROFILE;
 const SHOT_PROFILES=CONFIG.SHOT_PROFILES;
-function shotProfileFor(star){return CONFIG.shotProfileFor?CONFIG.shotProfileFor(star):(SHOT_PROFILES[star&&(star.id||star.n)]||DEFAULT_SHOT_PROFILE);}
+function shotProfileFor(star){return SHOT_PROFILES[star&&(star.id||star.n)]||DEFAULT_SHOT_PROFILE;}
 function playerShotProfile(){return shotProfileFor(G.myStar);}
 function playerSweetZone(){return DIFFS[G.diff].zone*playerShotProfile().window;}
-function playerChargeRate(){return DIFFS[G.diff].fill*playerShotProfile().speed;}
-function shotFlightTime(baseTf,star,shot){return CONFIG.shotFlightTime?CONFIG.shotFlightTime(baseTf,star,{deep:!!(shot&&(shot.deep!=null||shot.super))}):baseTf;}
-function shotProfileText(star){const p=shotProfileFor(star);return p.label+" · "+(p.arcLabel||"标准弧线")+" · 甜区 "+Math.round(p.window*100)+"%";}
+function playerChargeRate(){
+  return DIFFS[G.diff].fill*playerShotProfile().speed;
+}
+function shotProfileText(star){const p=shotProfileFor(star);return p.label+" · 甜区 "+Math.round(p.window*100)+"%";}
 const TEAM_COLORS=[[0x552583,0xfdb927],[0xce1141,0x111111],[0x007a33,0xffffff],[0x1d428a,0xffc72c],
   [0x98002e,0xf9a01b],[0x006bb6,0xf58426],[0x00471b,0xeee1c6],[0x0e2240,0xfec524],
   [0xe56020,0x1d1160],[0x000000,0xc4ced4],[0x5a2d81,0x63727a],[0x00538c,0x002b5e]];
@@ -2455,7 +2456,7 @@ function fireSilentBall(base,s){
   if(s.make){depth=rnd(-0.03,0.03);lat=rnd(-0.04,0.04);}
   else{depth=0.27*(Math.random()<0.5?1:-1);lat=rnd(-0.14,0.14);}
   const T=HOOP.clone().addScaledVector(dirH,depth).addScaledVector(perp,lat);
-  const tf=shotFlightTime(0.78+dist*0.062,show.o||G.myStar,s);
+  const tf=0.78+dist*0.062;
   const v0=V3((T.x-p0.x)/tf,(T.y-p0.y)/tf+4.9*tf,(T.z-p0.z)/tf);
   const mesh=new THREE.Mesh(ballGeo,s.deep!=null?matDeep:(s.money?matGold:matBall));
   mesh.position.copy(p0);scene.add(mesh);
@@ -3354,7 +3355,7 @@ function releaseShot(power,shot){
   let T;
   if(outcome==="bank")T=V3(clamp(lat*4,-0.55,0.55)+rnd(-0.08,0.08),3.45+rnd(0,0.25),-8.42);
   else T=HOOP.clone().addScaledVector(dirH,depth).addScaledVector(perp,lat);
-  const tf=shotFlightTime(0.78+dist*0.062,G.myStar,shot);
+  const tf=0.78+dist*0.062;
   const v0=V3((T.x-p0.x)/tf,(T.y-p0.y)/tf+4.9*tf,(T.z-p0.z)/tf);
   const mesh=new THREE.Mesh(ballGeo,shotMat(shot));
   mesh.position.copy(p0);scene.add(mesh);
@@ -4252,12 +4253,11 @@ function formatRackRushClock(sec){
 function makeRackRushRecord(){
   const rush=G.rush,accuracy=rush.attempts?rush.makes/rush.attempts:0;
   const speed=isRackRushSpeed(rush);
-  const profile=playerShotProfile();
   return {schema:1,version:GAME_VERSION,mode:speed?"rack-rush-speed100":"rack-rush",variant:speed?"speed100":"classic",
     target:speed?RACK_RUSH_SPEED_TARGET:null,total:rush.total,highestLevel:speed?1:rush.level+1,completed:!!rush.completed,
     elapsedMs:Math.round(rush.elapsed*1000),attempts:rush.attempts,makes:rush.makes,accuracy,bestStreak:rush.bestStreak,
     levels:rush.levels.slice(),difficulty:G.diff,control:rush.control,playerId:G.myStar&&(G.myStar.id||G.myStar.n),
-    playerName:G.myStar&&G.myStar.n,shotSpeed:profile.speed,sweetWindow:profile.window,shotArc:profile.arc,shotArcLabel:profile.arcLabel,scene:currentScenePreset,weather:currentWeather,seed:GAME_SEED,completedAt:new Date().toISOString()};
+    playerName:G.myStar&&G.myStar.n,scene:currentScenePreset,weather:currentWeather,seed:GAME_SEED,completedAt:new Date().toISOString()};
 }
 function saveRackRushRecord(record){
   try{const rows=loadRackRushRuns(record.variant);rows.unshift(record);localStorage.setItem(rackRushStorageKey(record.variant),JSON.stringify(rows.slice(0,50)));}catch(e){}
@@ -4358,7 +4358,7 @@ function makeBattleRecord(win,elapsedMs){
     eligible:!!win&&G.score>=BATTLE_TARGET,score:Math.min(G.score,BATTLE_TARGET),opponentScore:Math.min(G.battleOppScore||0,BATTLE_TARGET),
     playerId:G.myStar&&(G.myStar.id||G.myStar.n),playerName:G.myStar&&G.myStar.n,opponentId:G.battleOpp&&(G.battleOpp.id||G.battleOpp.n),opponentName:G.battleOpp&&G.battleOpp.n,
     difficulty:G.diff,control:G.battleControl||"touch",scene:currentScenePreset,weather:currentWeather,seed:GAME_SEED,
-    shotSpeed:profile.speed,sweetWindow:profile.window,shotArc:profile.arc,shotArcLabel:profile.arcLabel,bestStreak:G.stats&&G.stats.best,deepMakes:G.stats&&G.stats.deepM,deepAttempts:G.stats&&G.stats.deepT,completedAt:new Date().toISOString()};
+    shotSpeed:profile.speed,sweetWindow:profile.window,bestStreak:G.stats&&G.stats.best,deepMakes:G.stats&&G.stats.deepM,deepAttempts:G.stats&&G.stats.deepT,completedAt:new Date().toISOString()};
 }
 function saveBattleRecord(record){
   try{const runs=loadBattleRuns();runs.unshift(record);localStorage.setItem(BATTLE_RUNS_KEY,JSON.stringify(runs.slice(0,50)));localStorage.setItem("aiba-battle-last-v1",JSON.stringify(record));}catch(e){}
@@ -4974,7 +4974,7 @@ function oppFireBall(){
   if(make){depth=rnd(-0.03,0.03);lat=rnd(-0.04,0.04);}
   else{depth=0.27*(Math.random()<0.5?1:-1);lat=rnd(-0.14,0.14);}
   const T=HOOP.clone().addScaledVector(dirH,depth).addScaledVector(perp,lat);
-  const tf=shotFlightTime(0.82+dist*0.06,o,sp);
+  const tf=0.82+dist*0.06;
   const v0=V3((T.x-p0.x)/tf,(T.y-p0.y)/tf+4.9*tf,(T.z-p0.z)/tf);
   const mesh=new THREE.Mesh(ballGeo,sp.super?matGold:(sp.deep!=null?matDeep:matBall));
   mesh.position.copy(p0);scene.add(mesh);

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/wrangler.json",
+  "name": "aiba-leaderboard-api",
+  "main": "worker.js",
+  "compatibility_date": "2026-07-06",
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "aiba_percent_battle",
+      "database_id": "5f2a37f8-26b3-45a4-b26f-e250d08c1026"
+    }
+  ]
+}

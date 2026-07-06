@@ -9,7 +9,7 @@
 - Vercel 自动部署：https://aiba-percent-battle.vercel.app/
 - GitHub Pages 备用：https://opstiger.github.io/aiba-percent-battle/
 
-当前版本：`v1.66-postgame-hud`
+当前版本：`v1.68-shot-arcs`
 
 ## 模式
 
@@ -48,7 +48,7 @@ node scripts/check.js
 ## 项目结构
 
 - `index.html`：当前可玩的入口文件。
-- `block-3pt-kingv1.66-postgame-hud.html`：当前版本快照，和 `index.html` 保持一致。
+- `block-3pt-kingv1.68-shot-arcs.html`：当前版本快照，和 `index.html` 保持一致。
 - `styles.css`：游戏 HUD、首页、面板和移动端样式。
 - `src/assets-manifest.js`：封面角色、音频等资源清单。
 - `src/player-id.js`：匿名玩家 ID、昵称和本地身份凭证。

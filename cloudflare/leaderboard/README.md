@@ -17,6 +17,12 @@ Endpoints:
 
 `POST /v1/runs` returns the saved `run_id` plus the current rank for the matching mode / variant / difficulty / control scope when the run is eligible.
 
+`GET /v1/leaderboards` supports:
+
+- `mode`, `variant`, `difficulty`, `control`, `seed`, `limit`
+- `date=YYYY-MM-DD` for a daily board
+- `period=today` as a UTC-day shortcut
+
 The browser game uses a no-login identity model:
 
 - `localStorage.aiba_install_id_v1`

@@ -52,6 +52,7 @@ CREATE INDEX IF NOT EXISTS idx_runs_leaderboard_speed ON runs(mode, variant, dif
 CREATE INDEX IF NOT EXISTS idx_runs_leaderboard_score ON runs(mode, variant, difficulty, control, validation_status, eligible, score DESC, elapsed_ms ASC, accuracy DESC);
 CREATE INDEX IF NOT EXISTS idx_runs_seed ON runs(mode, variant, seed, difficulty, control, validation_status, eligible);
 CREATE INDEX IF NOT EXISTS idx_runs_created ON runs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_runs_leaderboard_created ON runs(mode, variant, difficulty, control, validation_status, eligible, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS rate_limits (
   bucket TEXT PRIMARY KEY,

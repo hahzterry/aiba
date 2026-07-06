@@ -4,7 +4,7 @@ const CORS={
   "Access-Control-Allow-Headers":"Content-Type, Authorization, X-AIBA-Player-ID",
   "Access-Control-Max-Age":"86400"
 };
-const RULE_VERSION="2026-07-04-v1";
+const RULE_VERSION="2026-07-06-v2";
 
 function json(data,status=200){
   return new Response(JSON.stringify(data),{
@@ -26,6 +26,10 @@ function token(){
 }
 function cleanKey(v,max=64){
   return String(v==null?"":v).replace(/[^a-zA-Z0-9_:\-.]/g,"").slice(0,max);
+}
+function cleanDate(v){
+  const s=String(v||"").trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(s)?s:"";
 }
 function tagFrom(id){
   return String(id||"").replace(/-/g,"").slice(-5).toUpperCase();
@@ -148,6 +152,8 @@ async function leaderboard(req,env){
   const difficulty=cleanKey(url.searchParams.get("difficulty")||"",30);
   const control=cleanKey(url.searchParams.get("control")||"",30);
   const seed=cleanKey(url.searchParams.get("seed")||"",80);
+  const period=cleanKey(url.searchParams.get("period")||"",20);
+  const date=cleanDate(url.searchParams.get("date"))||(period==="today"?new Date().toISOString().slice(0,10):"");
   const limit=Math.max(1,Math.min(50,Number(url.searchParams.get("limit")||20)));
   const where=["mode=?","validation_status='valid'","eligible=1"];
   const params=[mode];
@@ -155,12 +161,13 @@ async function leaderboard(req,env){
   if(difficulty){where.push("difficulty=?");params.push(difficulty);}
   if(control){where.push("control=?");params.push(control);}
   if(seed){where.push("seed=?");params.push(seed);}
+  if(date){where.push("substr(created_at,1,10)=?");params.push(date);}
   params.push(limit);
   const speed=mode==="rack-rush-speed100"||variant==="speed100"||mode==="percent-battle";
   const order=speed?"elapsed_ms ASC,score DESC,accuracy DESC,created_at ASC":"score DESC,elapsed_ms ASC,accuracy DESC,created_at ASC";
-  const query="SELECT id,player_id,display_name,player_tag,mode,variant,score,elapsed_ms,attempts,makes,accuracy,best_streak,won,completed,difficulty,control,star_id,star_name,opponent_id,scene,seed,game_version,created_at FROM runs WHERE "+where.join(" AND ")+" ORDER BY "+order+" LIMIT ?";
+  const query="SELECT id,display_name,mode,variant,score,elapsed_ms,attempts,makes,accuracy,best_streak,won,completed,difficulty,control,star_id,star_name,opponent_id,scene,game_version,created_at FROM runs WHERE "+where.join(" AND ")+" ORDER BY "+order+" LIMIT ?";
   const rows=await env.DB.prepare(query).bind(...params).all();
-  return json({ok:true,rows:(rows.results||[]).map((row,i)=>({rank:i+1,...row}))});
+  return json({ok:true,period:date?"date":"all",date:date||null,rows:(rows.results||[]).map((row,i)=>({rank:i+1,...row}))});
 }
 
 export default {

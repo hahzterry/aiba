@@ -72,7 +72,7 @@
   }
   function attach(record){
     const p=global.AIBAIdentity&&global.AIBAIdentity.publicProfile?global.AIBAIdentity.publicProfile():null;
-    return p?{...record,cloudPlayerId:p.player_id||"",nickname:p.display_name||"",playerTag:p.player_tag||""}:record;
+    return p?{...record,cloudPlayerId:p.player_id||"",nickname:p.display_name||""}:record;
   }
 
   global.AIBALeaderboard=Object.freeze({submit,flush,leaderboard,attach,queueSize:()=>readQueue().length});
