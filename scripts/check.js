@@ -8,13 +8,14 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.68-shot-arcs.html";
+const snapshot="block-3pt-kingv1.69-player-select.html";
 const requiredFiles=[
   entry,
   snapshot,
   "styles.css",
   "src/assets-manifest.js",
   "src/config.js",
+  "src/player-select.js",
   "src/player-id.js",
   "src/leaderboard-api.js",
   "src/leaderboard-ui.js",
@@ -45,6 +46,7 @@ if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html"
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css">'))fail("stylesheet link missing");
 if(!entryHtml.includes('<script src="src/assets-manifest.js"></script>'))fail("assets manifest script missing");
 if(!entryHtml.includes('<script src="src/config.js"></script>'))fail("config script missing");
+if(!entryHtml.includes('<script src="src/player-select.js?v=1.69.1"></script>'))fail("player select script missing");
 if(!entryHtml.includes('<script src="src/player-id.js"></script>'))fail("player id script missing");
 if(!entryHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("leaderboard api script missing");
 if(!entryHtml.includes('<script src="src/leaderboard-ui.js"></script>'))fail("leaderboard ui script missing");
@@ -79,6 +81,7 @@ for(const [i,script] of inlineScripts.entries()){
 
 const manifest=read("src/assets-manifest.js");
 const configScript=read("src/config.js");
+const playerSelectScript=read("src/player-select.js");
 const playerIdScript=read("src/player-id.js");
 const leaderboardApiScript=read("src/leaderboard-api.js");
 const leaderboardUiScript=read("src/leaderboard-ui.js");
@@ -89,6 +92,8 @@ const faceOverlaysScript=read("src/face-overlays.js");
 const audioScript=read("src/audio.js");
 try{new Function(configScript);}
 catch(e){fail("config script syntax error: "+e.message);}
+try{new Function(playerSelectScript);}
+catch(e){fail("player select script syntax error: "+e.message);}
 try{new Function(playerIdScript);}
 catch(e){fail("player id script syntax error: "+e.message);}
 try{new Function(leaderboardApiScript);}
