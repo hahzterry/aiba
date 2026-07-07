@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.69-player-select.html";
+const snapshot="block-3pt-kingv1.70-locker-select.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -46,7 +46,7 @@ if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html"
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css">'))fail("stylesheet link missing");
 if(!entryHtml.includes('<script src="src/assets-manifest.js"></script>'))fail("assets manifest script missing");
 if(!entryHtml.includes('<script src="src/config.js"></script>'))fail("config script missing");
-if(!entryHtml.includes('<script src="src/player-select.js?v=1.69.1"></script>'))fail("player select script missing");
+if(!entryHtml.includes('<script src="src/player-select.js?v=1.70.0"></script>'))fail("player select script missing");
 if(!entryHtml.includes('<script src="src/player-id.js"></script>'))fail("player id script missing");
 if(!entryHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("leaderboard api script missing");
 if(!entryHtml.includes('<script src="src/leaderboard-ui.js"></script>'))fail("leaderboard ui script missing");
