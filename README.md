@@ -9,7 +9,7 @@
 - Vercel 自动部署：https://aiba-percent-battle.vercel.app/
 - GitHub Pages 备用：https://opstiger.github.io/aiba-percent-battle/
 
-当前版本：`v1.73-shot-motion`
+当前版本：`v1.75-shot-hand-side`
 
 ## 模式
 
@@ -50,7 +50,7 @@ node scripts/check.js
 ## 项目结构
 
 - `index.html`：当前可玩的入口文件。
-- `block-3pt-kingv1.73-shot-motion.html`：当前版本快照，和 `index.html` 保持一致。
+- `block-3pt-kingv1.75-shot-hand-side.html`：当前版本快照，和 `index.html` 保持一致。
 - `styles.css`：游戏 HUD、首页、面板和移动端样式。
 - `src/assets-manifest.js`：封面角色、音频等资源清单。
 - `src/player-select.js`：赛前选球员、本地记忆和球员风格展示。

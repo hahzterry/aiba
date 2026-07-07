@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.73-shot-motion.html";
+const snapshot="block-3pt-kingv1.75-shot-hand-side.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -60,8 +60,8 @@ if(!entryHtml.includes('<script src="src/recorder.js"></script>'))fail("recorder
 if(!entryHtml.includes('<script src="src/shot-physics.js"></script>'))fail("shot physics script missing");
 if(!entryHtml.includes('<script src="src/gear.js?v=1.72"></script>'))fail("gear script missing");
 if(entryHtml.indexOf('<script src="src/gear.js?v=1.72"></script>')<entryHtml.lastIndexOf("animate();"))fail("gear script should load after the main inline script");
-if(!entryHtml.includes('<script src="src/shot-motion.js?v=1.73"></script>'))fail("shot motion script missing");
-if(entryHtml.indexOf('<script src="src/shot-motion.js?v=1.73"></script>')<entryHtml.indexOf('<script src="src/gear.js?v=1.72"></script>'))fail("shot motion should load after gear");
+if(!entryHtml.includes('<script src="src/shot-motion.js?v=1.75"></script>'))fail("shot motion script missing");
+if(entryHtml.indexOf('<script src="src/shot-motion.js?v=1.75"></script>')<entryHtml.indexOf('<script src="src/gear.js?v=1.72"></script>'))fail("shot motion should load after gear");
 if(!entryHtml.includes('<script src="src/perf.js?v=1.72"></script>'))fail("perf script missing");
 if(entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>')<entryHtml.lastIndexOf("animate();"))fail("perf script should load after the main inline script");
 if(!entryHtml.includes('<script src="src/face-overlays.js"></script>'))fail("face overlays script missing");
@@ -127,7 +127,7 @@ try{new Function(shotPhysicsScript);}
 catch(e){fail("shot physics script syntax error: "+e.message);}
 try{new Function(shotMotionScript);}
 catch(e){fail("shot motion script syntax error: "+e.message);}
-for(const key of ["AIBAMotion","restoreLegacy","installMotionHooks","boardHit","attachBall"])
+for(const key of ["AIBAMotion","restoreLegacy","installMotionHooks","boardHit","attachBall","STANCE_YAW","tuneGuideHand"])
   if(!shotMotionScript.includes(key))fail("shot motion script missing "+key);
 try{new Function(gearScript);}
 catch(e){fail("gear script syntax error: "+e.message);}

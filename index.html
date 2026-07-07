@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>aiBA·百分大战 v1.73 SHOT MOTION</title>
+<title>aiBA·百分大战 v1.75 SHOT HAND SIDE</title>
 <link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -14,7 +14,7 @@
 <div id="bootLoad" role="dialog" aria-modal="true" aria-busy="true" aria-label="游戏资源加载" tabindex="0">
   <div class="bootFrame">
     <div class="bootBrand"><span>ai</span>BA</div>
-    <div class="bootEdition">SHOT MOTION / v1.73</div>
+    <div class="bootEdition">SHOT HAND SIDE / v1.75</div>
     <div class="bootRule"></div>
     <div id="bootStatus" class="bootStatus">正在展开赛场</div>
     <div class="bootMeter" aria-hidden="true"><i id="bootBar"></i></div>
@@ -119,7 +119,7 @@
 <script src="src/haptics.js"></script>
 <script>
 /* =====================================================
-   aiBA·百分大战 v1.73 SHOT MOTION
+   aiBA·百分大战 v1.75 SHOT HAND SIDE
    Minecraft-style NBA 3-Point Contest · 单文件实现
    ===================================================== */
 "use strict";
@@ -149,7 +149,7 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------------- constants ---------------- */
-const GAME_VERSION="v1.73-shot-motion";
+const GAME_VERSION="v1.75-shot-hand-side";
 const GAME_NAME="aiBA·百分大战";
 const CONFIG=window.AIBA_CONFIG||{};
 // NBA 标准全场坐标：保留原篮筐/三分点，只向远端延长球场。
@@ -5650,7 +5650,7 @@ bootGame();
 animate();
 </script>
 <script src="src/gear.js?v=1.72"></script>
-<script src="src/shot-motion.js?v=1.73"></script>
+<script src="src/shot-motion.js?v=1.75"></script>
 <script src="src/perf.js?v=1.72"></script>
 </body>
 </html>
