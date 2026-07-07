@@ -9,7 +9,7 @@
 - Vercel 自动部署：https://aiba-percent-battle.vercel.app/
 - GitHub Pages 备用：https://opstiger.github.io/aiba-percent-battle/
 
-当前版本：`v1.71-locker-3d`
+当前版本：`v1.72-gear-stamina`
 
 ## 模式
 
@@ -20,6 +20,8 @@
 ## 操作
 
 - 按住屏幕蓄力，松开投篮。
+- 赛前更衣室可穿 3 件装备（球鞋 / 护腕护肘 / 头带），但同时只有 1 件的加成生效；加成覆盖投射速度、准星甜区、关键时刻准星和精力。
+- 比赛中左下角有精力条：连续出手会耗尽精力进入力竭，必须停手休息回到 28% 才能继续投；低精力时出手变慢、准星变差。
 - 视觉先锋版可在难度页选择“视觉实验”，用上半身投篮动作蓄力与出手。
 - 百分大战中，点击场上点位或用左右方向键移动。
 - RACK RUSH 中人物固定在弧顶；普通命中 2 分、每第 5 球 3 分，最后 10 秒命中额外加 1 分。
@@ -48,11 +50,13 @@ node scripts/check.js
 ## 项目结构
 
 - `index.html`：当前可玩的入口文件。
-- `block-3pt-kingv1.71-locker-3d.html`：当前版本快照，和 `index.html` 保持一致。
+- `block-3pt-kingv1.72-gear-stamina.html`：当前版本快照，和 `index.html` 保持一致。
 - `styles.css`：游戏 HUD、首页、面板和移动端样式。
 - `src/assets-manifest.js`：封面角色、音频等资源清单。
 - `src/player-select.js`：赛前选球员、本地记忆和球员风格展示。
 - `src/player-locker-preview.js`：更衣室选人界面的 3D 方块球员预览。
+- `src/gear.js`：装备工坊、球员数值和比赛精力条系统。
+- `src/perf.js`：运行时性能优化（静态几何矩阵冻结、摄像头模式近场观众 LOD）。
 - `src/player-id.js`：匿名玩家 ID、昵称和本地身份凭证。
 - `src/leaderboard-api.js`：在线成绩提交、离线队列和排行榜 API 客户端。
 - `src/leaderboard-ui.js`：昵称输入、成绩页云端排名和在线排行榜弹层。
@@ -63,7 +67,7 @@ node scripts/check.js
 - `assets/`：游戏图片、视频和音频资源。
 - `vendor/`：随项目带的第三方运行文件，包括 Three.js 与 MediaPipe Tasks Vision。
 - `cloudflare/leaderboard/`：Cloudflare D1 + Worker 排行榜 API 的 schema 和源码。
-- `backup/`：本地历史版本归档，不参与发布。
+- `backup/`：本地历史版本归档，不参与发布；根目录只保留当前版本快照。
 - `docs/`：本地需求与迭代文档，不参与发布。
 
 ## 开发方向

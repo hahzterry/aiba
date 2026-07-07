@@ -1,0 +1,263 @@
+/* ---------------- gear loadout + player stats + stamina ---------------- */
+(function(global){
+  "use strict";
+
+  const LS_KEY="aiba_gear_v1";
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+  /* 数值口径：speed/aim 是乘区(1+amt)，clutch 只在关键时刻乘到甜区，
+     stamina 抬精力上限，cost 降蓄力+出手的精力消耗，recovery 加快恢复 */
+  const SLOTS=[
+    {id:"shoes",name:"球鞋",en:"SHOES"},
+    {id:"sleeve",name:"护腕护肘",en:"SLEEVE"},
+    {id:"band",name:"头带",en:"HEADBAND"}
+  ];
+  const CATALOG={
+    shoes:[
+      {id:"shoes-blaze",name:"疾风橙",color:"#e8771e",stat:"speed",amt:.12,desc:"投射蓄力 +12%"},
+      {id:"shoes-anchor",name:"稳踏青",color:"#7ee7ff",stat:"aim",amt:.12,desc:"准星甜区 +12%"},
+      {id:"shoes-marathon",name:"长跑灰",color:"#9aa7b8",stat:"stamina",amt:.25,desc:"精力上限 +25%"},
+      {id:"shoes-spring",name:"回弹紫",color:"#b07ff2",stat:"recovery",amt:.35,desc:"精力恢复 +35%"}
+    ],
+    sleeve:[
+      {id:"sleeve-steady",name:"稳定白",color:"#f2f5fa",stat:"aim",amt:.1,desc:"准星甜区 +10%"},
+      {id:"sleeve-ice",name:"冷血黑",color:"#252a36",stat:"clutch",amt:.25,desc:"关键时刻准星 +25%"},
+      {id:"sleeve-snap",name:"快弹红",color:"#e03a3e",stat:"speed",amt:.08,desc:"投射蓄力 +8%"},
+      {id:"sleeve-saver",name:"节能蓝",color:"#4aa3ff",stat:"cost",amt:.2,desc:"精力消耗 -20%"}
+    ],
+    band:[
+      {id:"band-gold",name:"冷静金",color:"#ffd23f",stat:"clutch",amt:.2,desc:"关键时刻准星 +20%"},
+      {id:"band-focus",name:"专注青",color:"#7ee7ff",stat:"aim",amt:.08,desc:"准星甜区 +8%"},
+      {id:"band-iron",name:"铁人绿",color:"#69d98c",stat:"stamina",amt:.2,desc:"精力上限 +20%"},
+      {id:"band-volt",name:"闪电黄",color:"#f2ef6a",stat:"speed",amt:.1,desc:"投射蓄力 +10%"}
+    ]
+  };
+  const STAT_NAMES={speed:"投速",aim:"准星",clutch:"关键",stamina:"精力",recovery:"回复",cost:"节能"};
+
+  /* 精力模型：蓄力持续掉，出手一次性掉；连续出手期间不回复，
+     停手 REGEN_DELAY 秒后才开始快速恢复（=必须真的休息一下）。
+     快节奏约 10-12 连投见底，力竭后回到 28% 解锁 */
+  const STA_BASE=100,CHARGE_DRAIN=5.5,SHOT_COST=6.5,REGEN=14,REGEN_DELAY=.9,WAKE_RATIO=.28,TIRED_RATIO=.25;
+
+  let load={shoes:"",sleeve:"",band:"",active:""};
+  try{
+    const raw=JSON.parse(localStorage.getItem(LS_KEY)||"{}");
+    for(const s of SLOTS)if(typeof raw[s.id]==="string"&&CATALOG[s.id].some(i=>i.id===raw[s.id]))load[s.id]=raw[s.id];
+    if(typeof raw.active==="string"&&load[raw.active])load.active=raw.active;
+  }catch(e){}
+  function save(){try{localStorage.setItem(LS_KEY,JSON.stringify(load));}catch(e){}}
+
+  function itemOf(slot){return (CATALOG[slot]||[]).find(i=>i.id===load[slot])||null;}
+  function activeItem(){return load.active?itemOf(load.active):null;}
+  function activeSummary(){
+    const it=activeItem();
+    return it?it.name+" · "+it.desc:"";
+  }
+  function mods(){
+    const m={speed:1,aim:1,clutch:0,staminaMax:1,cost:1,recovery:1};
+    const it=activeItem();
+    if(!it)return m;
+    if(it.stat==="speed")m.speed+=it.amt;
+    else if(it.stat==="aim")m.aim+=it.amt;
+    else if(it.stat==="clutch")m.clutch=it.amt;
+    else if(it.stat==="stamina")m.staminaMax+=it.amt;
+    else if(it.stat==="cost")m.cost-=it.amt;
+    else if(it.stat==="recovery")m.recovery+=it.amt;
+    return m;
+  }
+
+  /* ---------------- 关键时刻判定 ---------------- */
+  function gameRef(){return typeof G==="undefined"?null:G;}
+  function playing(g){return !!g&&(g.state==="round"||g.state==="tiebreak"||g.state==="battle"||g.state==="rackrush");}
+  function clutchActive(){
+    const g=gameRef();if(!g||!playing(g))return false;
+    if(g.state==="tiebreak")return true;
+    if(g.mode==="battle")return Math.max(g.score||0,g.battleOppScore||0)>=85;
+    return !!g.running&&g.timer<=10;
+  }
+
+  /* ---------------- 精力引擎 ---------------- */
+  const STA={v:STA_BASE,max:STA_BASE,out:false,was:false,lastT:0,toastAt:0,lastUseAt:0};
+  function staminaRatio(){return STA.max?STA.v/STA.max:1;}
+  function fatigueFactor(){
+    const r=staminaRatio();
+    return r>=TIRED_RATIO?1:.85+.6*r;
+  }
+  function toastSafe(msg,col){if(typeof global.toast==="function")global.toast(msg,col);}
+  function toastThrottled(msg,col){
+    const now=performance.now();
+    if(now-STA.toastAt<1600)return;
+    STA.toastAt=now;toastSafe(msg,col);
+  }
+  function announceGear(){
+    const it=activeItem();
+    if(it)setTimeout(()=>toastSafe("🎽 "+it.name+" 生效 · "+it.desc,it.color),700);
+  }
+
+  /* ---------------- HUD ---------------- */
+  let hud=null,hudShown=false,hudPct=-1,hudState="",hudChip="";
+  function ensureHud(){
+    if(hud)return hud;
+    hud=document.createElement("div");
+    hud.id="staminaWrap";
+    hud.innerHTML='<small>精力 STAMINA</small><div class="staBar"><i id="staFill"></i></div><b id="staChip"></b>';
+    document.body.appendChild(hud);
+    return hud;
+  }
+  function updateHud(show){
+    const el=ensureHud();
+    if(show!==hudShown){hudShown=show;el.classList.toggle("on",show);}
+    if(!show)return;
+    const pct=Math.round(staminaRatio()*100);
+    if(pct!==hudPct){hudPct=pct;const f=document.getElementById("staFill");if(f)f.style.width=pct+"%";}
+    const r=staminaRatio();
+    const state=STA.out?"out":(r<TIRED_RATIO?"low":(r<.5?"warn":"ok"));
+    if(state!==hudState){hudState=state;el.dataset.sta=state;}
+    const m=mods();
+    const chip=STA.out?"力竭恢复中…":(m.clutch>0&&clutchActive()?"CLUTCH 准星 +"+Math.round(m.clutch*100)+"%":(r<TIRED_RATIO?"手臂发沉 · 准星下降":""));
+    if(chip!==hudChip){hudChip=chip;const c=document.getElementById("staChip");if(c)c.textContent=chip;}
+  }
+  function tick(now){
+    requestAnimationFrame(tick);
+    const g=gameRef();
+    const dt=clamp((now-(STA.lastT||now))/1000,0,.1);
+    STA.lastT=now;
+    if(!g){updateHud(false);return;}
+    const active=playing(g);
+    if(active&&!STA.was){
+      STA.max=STA_BASE*mods().staminaMax;
+      STA.v=STA.max;STA.out=false;
+      announceGear();
+    }
+    STA.was=active;
+    if(active){
+      const m=mods();
+      if(g.charging){STA.v=Math.max(0,STA.v-CHARGE_DRAIN*m.cost*dt);STA.lastUseAt=now;}
+      else if(now-STA.lastUseAt>=REGEN_DELAY*1000)STA.v=Math.min(STA.max,STA.v+REGEN*m.recovery*dt);
+      if(!STA.out&&STA.v<=.01){STA.out=true;toastThrottled("💦 精力耗尽 · 喘口气再投!","#ff8d7a");}
+      if(STA.out&&STA.v>=STA.max*WAKE_RATIO){STA.out=false;toastThrottled("💪 缓过来了 · 继续!","#7CFC6B");}
+    }
+    updateHud(active);
+  }
+
+  /* ---------------- 球员初始数值 ---------------- */
+  function profileOf(star){
+    const cfg=global.AIBA_CONFIG||{};
+    return (cfg.shotProfileFor?cfg.shotProfileFor(star):null)||cfg.DEFAULT_SHOT_PROFILE||{speed:1,window:1};
+  }
+  function baseStats(star){
+    const p=profileOf(star),r=clamp(Number(star&&star.r)||88,70,99);
+    return {
+      speed:clamp(Math.round(((p.speed||1)-.7)*170),15,99),
+      aim:clamp(Math.round(((p.window||1)-.78)*280),15,99),
+      clutch:clamp(Math.round((r-58)*2.1),15,99),
+      stamina:72
+    };
+  }
+
+  /* ---------------- 更衣室 UI ---------------- */
+  let lastStar=null;
+  function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+  function statRow(label,val,bonusText){
+    const shown=clamp(Math.round(val),8,99);
+    return `<span><b>${esc(label)}</b><i style="--v:${clamp(shown,8,96)}%"></i><em>${shown}${bonusText?` <u>${esc(bonusText)}</u>`:""}</em></span>`;
+  }
+  function statsMarkup(star){
+    const b=baseStats(star),m=mods(),it=activeItem();
+    const extra=it&&(it.stat==="recovery"||it.stat==="cost")?it.desc:"";
+    return `<div class="gearStats lockerMetrics">
+      ${statRow("投速",b.speed*m.speed,m.speed>1?"+"+Math.round((m.speed-1)*100)+"%":"")}
+      ${statRow("准星",b.aim*m.aim,m.aim>1?"+"+Math.round((m.aim-1)*100)+"%":"")}
+      ${statRow("关键",b.clutch*(1+m.clutch),m.clutch>0?"关键时刻+"+Math.round(m.clutch*100)+"%":"")}
+      ${statRow("精力",b.stamina*m.staminaMax,m.staminaMax>1?"+"+Math.round((m.staminaMax-1)*100)+"%":extra)}
+    </div>`;
+  }
+  function chipMarkup(slot,item){
+    const on=load[slot]===item.id;
+    return `<button class="gearChip ${on?"on":""}" type="button" style="--gc:${item.color}" onclick="AIBAGearEquip('${slot}','${item.id}')" aria-pressed="${on}">
+      <i></i><b>${esc(item.name)}</b><em>${esc(item.desc)}</em></button>`;
+  }
+  function slotMarkup(slot){
+    const it=itemOf(slot.id),isActive=load.active===slot.id&&!!it;
+    const state=it?`<button class="gearActive ${isActive?"on":""}" type="button" onclick="AIBAGearActivate('${slot.id}')">${isActive?"✓ 加成生效":"设为生效"}</button>`:`<span class="gearEmpty">未装备</span>`;
+    return `<div class="gearSlot ${isActive?"live":""}">
+      <div class="gearSlotHead"><small>${esc(slot.en)}</small><b>${esc(slot.name)}</b>${state}</div>
+      <div class="gearChips">${CATALOG[slot.id].map(item=>chipMarkup(slot.id,item)).join("")}</div>
+    </div>`;
+  }
+  function sectionMarkup(star){
+    if(star!==undefined)lastStar=star||null;
+    return `<div id="lockerGear" class="lockerGear">
+      <div class="gearHead"><small>GEAR LAB</small><b>装备工坊</b><em>可穿 3 件 · 同时只有 1 件的加成生效，点「设为生效」切换</em></div>
+      ${SLOTS.map(slotMarkup).join("")}
+      ${statsMarkup(lastStar)}
+    </div>`;
+  }
+  function refreshSection(){
+    const el=document.getElementById("lockerGear");
+    if(el)el.outerHTML=sectionMarkup(lastStar);
+  }
+  function equip(slot,id){
+    if(!CATALOG[slot])return;
+    load[slot]=load[slot]===id?"":id;
+    if(load[slot]&&!load.active)load.active=slot;
+    if(!load[slot]&&load.active===slot){
+      const next=SLOTS.find(s=>load[s.id]);
+      load.active=next?next.id:"";
+    }
+    save();refreshSection();
+  }
+  function setActive(slot){
+    if(!load[slot])return;
+    load.active=slot;save();refreshSection();
+  }
+  function onStarPreview(star){
+    lastStar=star||null;
+    const el=document.querySelector("#lockerGear .gearStats");
+    if(el)el.outerHTML=statsMarkup(lastStar);
+  }
+
+  /* ---------------- 挂钩游戏全局(在主脚本之后加载) ---------------- */
+  function wrapGlobals(){
+    const wrap=(name,make)=>{
+      const orig=global[name];
+      if(typeof orig!=="function"||orig.__aibaGear)return;
+      const fn=make(orig);fn.__aibaGear=true;global[name]=fn;
+    };
+    wrap("playerSweetZone",orig=>function(){
+      let z=orig.apply(this,arguments);
+      const m=mods();
+      z*=m.aim*fatigueFactor();
+      if(m.clutch>0&&clutchActive())z*=1+m.clutch;
+      return z;
+    });
+    wrap("playerChargeRate",orig=>function(){
+      return orig.apply(this,arguments)*mods().speed*fatigueFactor();
+    });
+    wrap("startCharge",orig=>function(){
+      if(STA.out&&playing(gameRef())){
+        toastThrottled("💦 力竭中 · 精力回到 "+Math.round(WAKE_RATIO*100)+"% 才能出手","#ffd23f");
+        return false;
+      }
+      return orig.apply(this,arguments);
+    });
+    wrap("releaseShot",orig=>function(power,shot){
+      if(playing(gameRef())){STA.v=Math.max(0,STA.v-SHOT_COST*mods().cost);STA.lastUseAt=performance.now();}
+      return orig.apply(this,arguments);
+    });
+  }
+
+  global.AIBAGearEquip=equip;
+  global.AIBAGearActivate=setActive;
+  global.AIBAGear={
+    SLOTS,CATALOG,STAT_NAMES,
+    get:()=>({...load}),
+    mods,activeItem,activeSummary,clutchActive,
+    baseStats,sectionMarkup,onStarPreview,
+    stamina:()=>({v:STA.v,max:STA.max,out:STA.out}),
+    _setStamina:v=>{STA.v=clamp(Number(v)||0,0,STA.max);}
+  };
+
+  wrapGlobals();
+  requestAnimationFrame(tick);
+})(window);

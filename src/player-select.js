@@ -131,9 +131,11 @@
     setMode(mode);
     const stars=allStars(list),current=selectedId(),star=findStar(stars,current);
     const p=star?profileFor(star):null;
+    const gear=global.AIBAGear?global.AIBAGear.activeSummary():"";
+    const desc=(star?(p.label||"标准出手")+" · "+(p.arcLabel||"标准弧线"):"每局从球星池随机抽选")+(gear?" · 🎽"+gear:"");
     return `<button class="playerSelectDock" type="button" onclick="showAIBAPlayerSelect()" aria-label="选择球员">
       <span class="playerSelectBadge">${star?("#"+esc(star.num)):"RND"}</span>
-      <span class="playerSelectInfo"><small>PLAYER LOCKER</small><b>${star?esc(star.n):RANDOM_LABEL}</b><em>${star?esc((p.label||"标准出手")+" · "+(p.arcLabel||"标准弧线")):"每局从球星池随机抽选"}</em></span>
+      <span class="playerSelectInfo"><small>PLAYER LOCKER</small><b>${star?esc(star.n):RANDOM_LABEL}</b><em>${esc(desc)}</em></span>
       <span class="playerSelectAction">换球员 ›</span>
     </button>`;
   }
@@ -142,10 +144,12 @@
     const stars=allStars(),current=selectedId();
     pendingId=current;
     if(typeof global.showPanel!=="function")return;
+    const gearSection=global.AIBAGear?global.AIBAGear.sectionMarkup(findStar(stars,current)):"";
     global.showPanel(`<div class="playerLocker">
       <div class="lockerHead"><small>PLAYER LOCKER</small><h1>赛前更衣室</h1><p>横划查看球员。点卡片只是预览，确认后才会锁定上场。</p></div>
       <div class="lockerDeck" aria-label="横向选择球员">${randomCard(current)}${stars.map(star=>choiceButton(star,current)).join("")}</div>
       <div id="lockerCurrent" class="lockerCurrent">${currentMarkup(current)}</div>
+      ${gearSection}
       <div class="lockerActions">
         <button class="btn" type="button" onclick="confirmAIBAPlayer()">确认上场</button>
         <button class="btn sm" type="button" onclick="goDiff(${modeArg()},true)">返回设置</button>
@@ -159,6 +163,7 @@
     pendingId=id||"";
     setCardState(pendingId);
     scrollCardIntoView(pendingId);
+    if(global.AIBAGear)global.AIBAGear.onStarPreview(findStar(allStars(),pendingId));
   }
   function choose(id){
     saveSelectedId(id||"");

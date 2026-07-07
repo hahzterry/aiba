@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.71-locker-3d.html";
+const snapshot="block-3pt-kingv1.72-gear-stamina.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -23,6 +23,8 @@ const requiredFiles=[
   "src/share.js",
   "src/recorder.js",
   "src/shot-physics.js",
+  "src/gear.js",
+  "src/perf.js",
   "src/face-overlays.js",
   "src/haptics.js",
   "src/audio.js",
@@ -47,14 +49,18 @@ if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html"
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css">'))fail("stylesheet link missing");
 if(!entryHtml.includes('<script src="src/assets-manifest.js"></script>'))fail("assets manifest script missing");
 if(!entryHtml.includes('<script src="src/config.js"></script>'))fail("config script missing");
-if(!entryHtml.includes('<script src="src/player-select.js?v=1.71.2"></script>'))fail("player select script missing");
-if(!entryHtml.includes('<script src="src/player-locker-preview.js?v=1.71.2"></script>'))fail("player locker preview script missing");
+if(!entryHtml.includes('<script src="src/player-select.js?v=1.72"></script>'))fail("player select script missing");
+if(!entryHtml.includes('<script src="src/player-locker-preview.js?v=1.72"></script>'))fail("player locker preview script missing");
 if(!entryHtml.includes('<script src="src/player-id.js"></script>'))fail("player id script missing");
 if(!entryHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("leaderboard api script missing");
 if(!entryHtml.includes('<script src="src/leaderboard-ui.js"></script>'))fail("leaderboard ui script missing");
 if(!entryHtml.includes('<script src="src/share.js"></script>'))fail("share script missing");
 if(!entryHtml.includes('<script src="src/recorder.js"></script>'))fail("recorder script missing");
 if(!entryHtml.includes('<script src="src/shot-physics.js"></script>'))fail("shot physics script missing");
+if(!entryHtml.includes('<script src="src/gear.js?v=1.72"></script>'))fail("gear script missing");
+if(entryHtml.indexOf('<script src="src/gear.js?v=1.72"></script>')<entryHtml.lastIndexOf("animate();"))fail("gear script should load after the main inline script");
+if(!entryHtml.includes('<script src="src/perf.js?v=1.72"></script>'))fail("perf script missing");
+if(entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>')<entryHtml.lastIndexOf("animate();"))fail("perf script should load after the main inline script");
 if(!entryHtml.includes('<script src="src/face-overlays.js"></script>'))fail("face overlays script missing");
 if(!entryHtml.includes('<script src="src/haptics.js"></script>'))fail("haptics script missing");
 if(!entryHtml.includes('<script src="src/audio.js"></script>'))fail("audio script missing");
@@ -91,6 +97,7 @@ const leaderboardUiScript=read("src/leaderboard-ui.js");
 const shareScript=read("src/share.js");
 const recorderScript=read("src/recorder.js");
 const shotPhysicsScript=read("src/shot-physics.js");
+const gearScript=read("src/gear.js");
 const faceOverlaysScript=read("src/face-overlays.js");
 const audioScript=read("src/audio.js");
 try{new Function(configScript);}
@@ -114,6 +121,16 @@ const firstMp4=recorderScript.indexOf("video/mp4"),firstWebm=recorderScript.inde
 if(firstMp4<0||firstWebm<0||firstMp4>firstWebm)fail("recorder should prefer mp4 before webm");
 try{new Function(shotPhysicsScript);}
 catch(e){fail("shot physics script syntax error: "+e.message);}
+try{new Function(gearScript);}
+catch(e){fail("gear script syntax error: "+e.message);}
+if(!gearScript.includes("AIBAGear")||!gearScript.includes("aiba_gear_v1"))fail("gear script missing AIBAGear exports");
+for(const name of ["playerSweetZone","playerChargeRate","startCharge","releaseShot"])
+  if(!gearScript.includes('"'+name+'"'))fail("gear script no longer hooks "+name);
+const perfScript=read("src/perf.js");
+try{new Function(perfScript);}
+catch(e){fail("perf script syntax error: "+e.message);}
+if(!perfScript.includes("AIBAPerf")||!perfScript.includes("freezeStatic"))fail("perf script missing AIBAPerf exports");
+if(/HandLandmarker|minPoseDetectionConfidence|detectForVideo/.test(perfScript))fail("perf script must not touch pose detection");
 try{new Function(faceOverlaysScript);}
 catch(e){fail("face overlays script syntax error: "+e.message);}
 if(!faceOverlaysScript.includes("curry-smile-pixel-128.png"))fail("curry face overlay asset not referenced");

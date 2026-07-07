@@ -16,6 +16,16 @@
     catch(e){return "";}
   }
 
+  function shooterTitle(score,best){
+    score=Number(score)||0;best=Number(best)||0;
+    if(score>=100)return best>=8?"三分雨制造机":"球馆狠人";
+    if(score>=80)return "街区神射手";
+    if(score>=60)return "街头小队长";
+    if(score>=40)return "篮球初学者";
+    if(score>=20)return "加练新兵";
+    return "新兵蛋子";
+  }
+
   function genPoster(champ,ctx){
     ctx=ctx||{};
     const G=ctx.G,DIFFS=ctx.DIFFS||{},GAME_NAME=ctx.GAME_NAME||"aiBA",GAME_SEED=ctx.GAME_SEED||Date.now(),toast=ctx.toast||function(){};
@@ -72,10 +82,11 @@
     c.font="14px Orbitron, sans-serif";c.fillStyle="#9ab";
     const names=(G.opponents||[]).map(o=>o.n+"#"+o.num).join(" · ");
     c.fillText("对阵:"+names,W/2,692);
+    const title=shooterTitle(sc,G.stats&&G.stats.best);
     c.fillStyle="rgba(20,40,72,0.28)";c.fillRect(40,730,W-80,70);
     c.strokeStyle="#4aa3ff";c.lineWidth=2;c.strokeRect(40,730,W-80,70);
     c.font="bold 20px Orbitron, sans-serif";c.fillStyle="#ffd23f";
-    c.fillText("霓虹球场已开灯",W/2,762);
+    c.fillText("本场称号 · 「"+title+"」",W/2,762);
     c.font="13px Orbitron, sans-serif";c.fillStyle="#d9f6ff";
     c.fillText("下一场,换你接管最后一投。",W/2,784);
     c.font="bold 16px Orbitron, sans-serif";c.fillStyle="#dde";
@@ -90,7 +101,7 @@
         const file=new File([blob],fileName,{type:"image/png"});
         if(navigator.canShare({files:[file]})){
           navigator.share({files:[file],title:GAME_NAME+" #"+GAME_SEED,
-            text:champ?"我夺冠了! "+sc+"分":sc+"分 · 你能超过我吗?"
+            text:(champ?"我夺冠了! ":"")+sc+"分 · 拿下「"+title+"」称号,你能超过我吗?"
           }).catch(()=>fallbackSave(blob,{fileName,toast}));
           return;
         }
@@ -99,5 +110,5 @@
     },"image/png");
   }
 
-  global.AIBAShare=Object.freeze({genPoster,fallbackSave,seedUrl});
+  global.AIBAShare=Object.freeze({genPoster,fallbackSave,seedUrl,shooterTitle});
 })(window);
