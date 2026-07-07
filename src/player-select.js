@@ -145,11 +145,13 @@
     pendingId=current;
     if(typeof global.showPanel!=="function")return;
     const gearSection=global.AIBAGear?global.AIBAGear.sectionMarkup(findStar(stars,current)):"";
+    const motionSection=global.AIBAMotion?global.AIBAMotion.toggleMarkup():"";
     global.showPanel(`<div class="playerLocker">
       <div class="lockerHead"><small>PLAYER LOCKER</small><h1>赛前更衣室</h1><p>横划查看球员。点卡片只是预览，确认后才会锁定上场。</p></div>
       <div class="lockerDeck" aria-label="横向选择球员">${randomCard(current)}${stars.map(star=>choiceButton(star,current)).join("")}</div>
       <div id="lockerCurrent" class="lockerCurrent">${currentMarkup(current)}</div>
       ${gearSection}
+      ${motionSection}
       <div class="lockerActions">
         <button class="btn" type="button" onclick="confirmAIBAPlayer()">确认上场</button>
         <button class="btn sm" type="button" onclick="goDiff(${modeArg()},true)">返回设置</button>
