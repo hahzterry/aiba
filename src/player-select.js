@@ -64,15 +64,12 @@
     const pct=Math.max(8,Math.min(96,Math.round(value)));
     return `<span><b>${esc(label)}</b><i style="--v:${pct}%"></i><em>${esc(copy)}</em></span>`;
   }
-  function figureStyle(star){
+  function cardStyle(star){
     const col=star&&star.col||[0x202832,0x77e7ff],jersey=hex(col[0],0x202832),trim=hex(col[1],0x77e7ff);
-    return `--jersey:${jersey};--trim:${trim};--skin:${hex(star&&star.skin,0xb98254)};--shoe:${hex(star&&star.shoe,col[1]||0xffffff)};--hair:${hex(star&&star.hair,0x15110e)};--wrist:${hex(star&&star.wrist,col[1]||0xffffff)};--sleeve:${star&&star.sleeve?hex(star.sleeve,0x111111):"transparent"}`;
+    return `--jersey:${jersey};--trim:${trim}`;
   }
-  function figure(star,random){
-    return `<span class="lockerFigure ${random?"random":""}" style="${figureStyle(star)}">
-      <i class="lfGlow"></i><i class="lfLeg lfLeft"></i><i class="lfLeg lfRight"></i><i class="lfShoe lfLeft"></i><i class="lfShoe lfRight"></i>
-      <i class="lfBody"><b>${random?"?":esc(star&&star.num)}</b></i><i class="lfArm lfLeft"></i><i class="lfArm lfRight"></i><i class="lfHead"></i><i class="lfBall"></i>
-    </span>`;
+  function avatarSlot(id){
+    return `<span class="lockerAvatar" data-locker-avatar="${esc(id||"")}"><i>3D</i><b>LOADING</b></span>`;
   }
   function metrics(star){
     const p=profileFor(star);
@@ -84,18 +81,18 @@
   }
   function randomCard(current){
     const star={col:[0x202832,0x77e7ff],num:"?"};
-    return `<button class="lockerCard lockerRandom ${current?"":"selected"}" type="button" data-aiba-player="" style="${figureStyle(star)}" onclick="previewAIBAPlayer('')" aria-pressed="${current?"false":"true"}">
+    return `<button class="lockerCard lockerRandom ${current?"":"selected"}" type="button" data-aiba-player="" style="${cardStyle(star)}" onclick="previewAIBAPlayer('')" aria-pressed="${current?"false":"true"}">
       <span class="lockerPlate"><small>LOCKER</small><b>RND</b></span>
-      ${figure(star,true)}
+      ${avatarSlot("")}
       <span class="lockerCardCopy"><small>EVERY GAME</small><b>${RANDOM_LABEL}</b><em>每局从球星池抽选，保留一点赛前未知感。</em></span>
       <span class="lockerRibbon">SHUFFLE</span>
     </button>`;
   }
   function choiceButton(star,current){
     const id=starKey(star),p=profileFor(star),isOn=id===current;
-    return `<button class="lockerCard ${isOn?"selected":""}" type="button" data-aiba-player="${esc(id)}" style="${figureStyle(star)}" onclick="previewAIBAPlayer(${safeArg(id)})" aria-pressed="${isOn}">
+    return `<button class="lockerCard ${isOn?"selected":""}" type="button" data-aiba-player="${esc(id)}" style="${cardStyle(star)}" onclick="previewAIBAPlayer(${safeArg(id)})" aria-pressed="${isOn}">
       <span class="lockerPlate"><small>${esc((p.label||"SHOOTER").toUpperCase())}</small><b>#${esc(star.num)}</b></span>
-      ${figure(star,false)}
+      ${avatarSlot(id)}
       <span class="lockerCardCopy"><small>${esc(rating(star))}</small><b>${esc(star.n)}</b><em>${esc(star.t||"街球场走出的方块新星")}</em></span>
       <span class="lockerRibbon">${esc(p.arcLabel||"标准弧线")}</span>
     </button>`;
@@ -118,10 +115,17 @@
     });
     const current=document.getElementById("lockerCurrent");
     if(current)current.innerHTML=currentMarkup(id||"");
+    hydrateAvatars();
   }
   function scrollCardIntoView(id){
     const card=[...document.querySelectorAll(".lockerCard[data-aiba-player]")].find(el=>el.getAttribute("data-aiba-player")===(id||""));
     if(card&&card.scrollIntoView)card.scrollIntoView({behavior:"smooth",inline:"center",block:"nearest"});
+  }
+  function hydrateAvatars(){
+    const root=document.querySelector(".playerLocker");
+    if(!root)return;
+    if(global.AIBALockerPreview&&typeof global.AIBALockerPreview.render==="function")global.AIBALockerPreview.render(root);
+    else setTimeout(hydrateAvatars,80);
   }
   function selectMarkup(list,mode){
     setMode(mode);
@@ -149,7 +153,7 @@
     </div>`);
     const box=document.getElementById("ovBox");
     if(box)box.classList.add("playerLockerBox");
-    setTimeout(()=>scrollCardIntoView(current),0);
+    setTimeout(()=>{scrollCardIntoView(current);hydrateAvatars();},0);
   }
   function preview(id){
     pendingId=id||"";
