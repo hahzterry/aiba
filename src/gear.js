@@ -139,7 +139,7 @@
       return;
     }
     staV=staV||staProj();
-    staV.set(P.pos.x,0.08,P.pos.z).project(camera);
+    staV.set(P.pos.x,0.03,P.pos.z).project(camera);
     if(!Number.isFinite(staV.x)||!Number.isFinite(staV.y)||staV.z>1){
       el.classList.add("offscreen");
       return;
@@ -147,10 +147,11 @@
     el.classList.remove("offscreen");
     const x=(staV.x*.5+.5)*innerWidth;
     const y=(-staV.y*.5+.5)*innerHeight;
-    el.style.left=Math.max(44,Math.min(innerWidth-44,x))+"px";
-    el.style.top=Math.max(74,Math.min(innerHeight-42,y+28))+"px";
+    const scale=clamp(1.04-staV.z*.18,.76,1.02);
+    el.style.left=Math.max(38,Math.min(innerWidth-38,x))+"px";
+    el.style.top=Math.max(44,Math.min(innerHeight-24,y+6))+"px";
     el.style.bottom="";
-    el.style.transform="translate(-50%,-50%)";
+    el.style.transform="translate(-50%,-50%) scale("+scale.toFixed(2)+")";
   }
   function updateHud(show){
     const el=ensureHud();

@@ -486,25 +486,26 @@ table.std tr.adv td{box-shadow:inset 0 0 0 2px #ffd23f}
 @media (max-width:820px){.motionToggle{grid-template-columns:1fr}.motionToggle button{justify-self:start}.customHead{grid-template-columns:1fr;padding-bottom:7px}.customHead h1{font-size:22px}.customHead p{text-align:left;font-size:9px}.customBody{grid-template-rows:minmax(210px,43%) minmax(0,1fr)}.customPreview{grid-template-columns:150px minmax(0,1fr);gap:8px;padding:8px}.customPreview .lockerAvatar{height:176px}.customForm{grid-template-columns:1fr;overflow-y:auto}.customGroup{grid-column:auto}.customGrid,.customGrid.two{grid-template-columns:repeat(2,minmax(0,1fr))}.customActions{grid-template-columns:1fr}.customActions .btn{width:100%}}
 
 /* ---------------- stamina HUD (精力条): third-person ring / first-person bar ---------------- */
-#staminaWrap{position:fixed;z-index:60;display:none;width:70px;height:70px;pointer-events:none;filter:drop-shadow(0 3px 0 rgba(0,0,0,.62));transition:opacity .12s linear}
+#staminaWrap{position:fixed;z-index:56;display:none;width:76px;height:36px;pointer-events:none;opacity:.62;filter:drop-shadow(0 2px 5px rgba(60,255,126,.14));transition:opacity .12s linear}
 #staminaWrap.on{display:block}
 #staminaWrap.offscreen{opacity:0}
-#staminaWrap .staRing{position:absolute;inset:0;transform:rotate(-90deg)}
-#staminaWrap .staTrack{fill:rgba(4,8,14,.28);stroke:rgba(0,0,0,.72);stroke-width:9}
-#staminaWrap .staArc{fill:none;stroke:#7ee7ff;stroke-width:7;stroke-linecap:round;stroke-dasharray:100 100;transition:stroke-dasharray .18s linear,stroke .16s linear;filter:drop-shadow(0 0 6px rgba(126,231,255,.48))}
+#staminaWrap:before{content:"";position:absolute;left:18%;right:18%;top:26%;bottom:26%;border-radius:50%;background:radial-gradient(ellipse,rgba(124,252,107,.12),rgba(124,252,107,.04) 45%,transparent 74%)}
+#staminaWrap .staRing{position:absolute;inset:0;transform:scaleY(.44) rotate(-90deg);transform-origin:center}
+#staminaWrap .staTrack{fill:transparent;stroke:rgba(124,252,107,.16);stroke-width:3.5}
+#staminaWrap .staArc{fill:none;stroke:rgba(124,252,107,.58);stroke-width:3.8;stroke-linecap:round;stroke-dasharray:100 100;transition:stroke-dasharray .18s linear,stroke .16s linear;filter:drop-shadow(0 0 5px rgba(124,252,107,.3))}
 #staminaWrap small,#staminaWrap .staBar{display:none}
-#staminaWrap b{position:absolute;left:50%;top:-14px;min-width:116px;transform:translateX(-50%);color:#ffd23f;font-size:7px;text-align:center;text-shadow:1px 1px 0 #000;white-space:nowrap}
-#staminaWrap[data-sta="warn"] .staArc{stroke:#ffd23f;filter:drop-shadow(0 0 7px rgba(255,210,63,.55))}
-#staminaWrap[data-sta="low"] .staArc{stroke:#ff9c3d;filter:drop-shadow(0 0 8px rgba(232,119,30,.65))}
-#staminaWrap[data-sta="out"] .staArc{stroke:#ff5d4d;animation:staPulse .7s steps(2) infinite;filter:drop-shadow(0 0 9px rgba(255,93,77,.72))}
+#staminaWrap b{display:none;position:absolute;left:50%;top:-14px;min-width:116px;transform:translateX(-50%);color:#ffd23f;font-size:7px;text-align:center;text-shadow:1px 1px 0 #000;white-space:nowrap}
+#staminaWrap[data-sta="warn"] .staArc{stroke:rgba(185,255,126,.5);filter:drop-shadow(0 0 5px rgba(185,255,126,.24))}
+#staminaWrap[data-sta="low"] .staArc{stroke:rgba(255,210,63,.48);filter:drop-shadow(0 0 6px rgba(255,210,63,.26))}
+#staminaWrap[data-sta="out"] .staArc{stroke:rgba(255,93,77,.5);animation:staPulse .7s steps(2) infinite;filter:drop-shadow(0 0 7px rgba(255,93,77,.32))}
 #staminaWrap[data-sta="out"] b{color:#ff8d7a}
-#staminaWrap.fp{width:min(250px,58vw);height:auto;display:none;grid-template-columns:auto;gap:4px}
+#staminaWrap.fp{width:min(250px,58vw);height:auto;display:none;grid-template-columns:auto;gap:4px;opacity:1;filter:none}
 #staminaWrap.fp.on{display:grid}
-#staminaWrap.fp .staRing{display:none}
+#staminaWrap.fp:before,#staminaWrap.fp .staRing{display:none}
 #staminaWrap.fp small{display:block;color:#9fd7e8;font-size:7px;letter-spacing:2px;text-shadow:1px 1px 0 #000}
 #staminaWrap.fp .staBar{display:block;height:10px;background:rgba(8,12,20,.78);border:2px solid #000;box-shadow:0 0 0 1px rgba(126,231,255,.4),0 0 12px rgba(126,231,255,.12)}
 #staminaWrap.fp .staBar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#33d1c9,#7ee7ff);transition:width .18s linear}
-#staminaWrap.fp b{position:static;min-height:10px;transform:none;text-align:left}
+#staminaWrap.fp b{display:block;position:static;min-height:10px;transform:none;text-align:left}
 #staminaWrap.fp[data-sta="warn"] .staBar i{background:linear-gradient(90deg,#e0c23a,#ffd23f)}
 #staminaWrap.fp[data-sta="low"] .staBar i{background:linear-gradient(90deg,#e8771e,#ffb14e)}
 #staminaWrap.fp[data-sta="out"] .staBar i{background:linear-gradient(90deg,#c9352f,#ff6a5a);animation:staPulse .7s steps(2) infinite}
@@ -519,3 +520,34 @@ table.std tr.adv td{box-shadow:inset 0 0 0 2px #ffd23f}
 
 /* v1.79 自建球员:装备说明行 */
 .customNote{margin:2px 0 0;padding:8px 10px;color:#8fa3c8;background:rgba(17,24,33,.6);border:1px dashed rgba(126,231,255,.28);font-size:8px;line-height:1.6}
+
+/* v1.81 性能设置面板 + 常驻入口 + 实时 FPS 读数 */
+#perfBtn{position:fixed;left:10px;top:calc(10px + env(safe-area-inset-top,0px));z-index:70;width:34px;height:34px;padding:0;font-size:17px;line-height:34px;text-align:center;color:#bcd4e6;background:rgba(8,12,20,.62);border:1px solid rgba(126,231,255,.42);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer;opacity:.7;transition:opacity .15s,transform .1s}
+#perfBtn:hover{opacity:1}
+#perfBtn:active{transform:scale(.92)}
+#perfMeter{position:fixed;right:10px;top:calc(46px + env(safe-area-inset-top,0px));z-index:70;display:none;flex-direction:column;align-items:flex-end;padding:5px 8px;background:rgba(8,12,20,.72);border:1px solid rgba(126,231,255,.4);border-radius:8px;font-family:Orbitron,monospace;pointer-events:none;line-height:1.1}
+#perfMeter.on{display:flex}
+#perfMeter #pmFps{font-size:20px;font-weight:700;color:#7CFC6B}
+#perfMeter #pmFps[data-tier="ok"]{color:#ffd23f}
+#perfMeter #pmFps[data-tier="bad"]{color:#ff8d7a}
+#perfMeter #pmSub{margin-top:2px;font-size:8px;color:#9fb4cd;letter-spacing:1px}
+#ovBox.perfPanelBox{max-width:520px}
+.perfPanel{display:grid;gap:10px;color:#eef7ff;text-align:left}
+.perfHead small{color:#77e7ff;font-size:9px;letter-spacing:3px}
+.perfHead h1{margin:4px 0 0;font-size:26px;text-shadow:2px 2px 0 #000}
+.perfHead p{margin:6px 0 2px;color:#aebccd;font-size:10px;line-height:1.55}
+.perfRow{display:flex;align-items:center;gap:10px;width:100%;padding:11px 13px;color:#eef7ff;background:linear-gradient(180deg,rgba(25,32,41,.96),rgba(11,14,19,.96));border:2px solid #000;box-shadow:0 0 0 1px #2c3848,3px 4px 0 rgba(0,0,0,.45);font:inherit;text-align:left;cursor:pointer}
+.perfRow.on{box-shadow:0 0 0 2px #7CFC6B,3px 4px 0 rgba(0,0,0,.45)}
+.perfRowMain{flex:1;min-width:0;display:grid;gap:3px}
+.perfRowMain b{font-size:13px}
+.perfRowMain em{font-size:9px;font-style:normal;color:#8fa3c8;line-height:1.4}
+.perfSwitch{flex:0 0 auto;width:40px;height:22px;background:#131a24;border:2px solid #000;border-radius:12px;position:relative}
+.perfSwitch i{position:absolute;top:1px;left:1px;width:16px;height:16px;background:#66738a;border-radius:50%;transition:left .14s,background .14s}
+.perfRow.on .perfSwitch{background:#1c3b26}
+.perfRow.on .perfSwitch i{left:19px;background:#7CFC6B}
+.perfSeg{cursor:default}
+.perfSegBtns{flex:0 0 auto;display:flex;gap:4px}
+.perfSegBtns button{padding:5px 9px;color:#9fb4cd;background:#131a24;border:2px solid #000;font:inherit;font-size:10px;cursor:pointer}
+.perfSegBtns button.on{color:#071018;background:#7ee7ff}
+.perfActions{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:2px}
+.perfActions .btn{margin:0}

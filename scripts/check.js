@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.81-hot-hand.html";
+const snapshot="block-3pt-kingv1.82-perf-settings.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -31,6 +31,7 @@ const requiredFiles=[
   "src/result-stats.js",
   "src/gear.js",
   "src/perf.js",
+  "src/perf-settings.js",
   "src/face-overlays.js",
   "src/haptics.js",
   "src/audio.js",
@@ -80,9 +81,11 @@ if(!entryHtml.includes('<script src="src/hot-hand.js?v=1.81"></script>'))fail("h
 if(entryHtml.indexOf('<script src="src/hot-hand.js?v=1.81"></script>')<entryHtml.indexOf('<script src="src/hero-moments.js?v=1.79"></script>'))fail("hot hand should load after hero moments");
 if(!entryHtml.includes('<script src="src/perf.js?v=1.72"></script>'))fail("perf script missing");
 if(entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>')<entryHtml.indexOf('<script src="src/hot-hand.js?v=1.81"></script>'))fail("perf script should load after hot hand");
+if(!entryHtml.includes('<script src="src/perf-settings.js?v=1.81"></script>'))fail("perf settings script missing");
+if(entryHtml.indexOf('<script src="src/perf-settings.js?v=1.81"></script>')<entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>'))fail("perf settings should load after perf");
 if(!entryHtml.includes('<script src="src/face-overlays.js"></script>'))fail("face overlays script missing");
 if(!entryHtml.includes('<script src="src/haptics.js?v=1.80"></script>'))fail("haptics script missing");
-if(!entryHtml.includes('<script src="src/audio.js"></script>'))fail("audio script missing");
+if(!entryHtml.includes('<script src="src/audio.js?v=1.83"></script>'))fail("audio script missing");
 if(!entryHtml.includes('<script src="src/vision.js"></script>'))fail("vision script missing");
 if(/<style>[\s\S]*?<\/style>/.test(entryHtml))fail("inline style block should stay split out");
 if(/const COVER_STARS=\[/.test(entryHtml)||/const EXT_AUDIO=\{/.test(entryHtml))fail("asset manifest data leaked back into html");
@@ -187,6 +190,12 @@ try{new Function(perfScript);}
 catch(e){fail("perf script syntax error: "+e.message);}
 if(!perfScript.includes("AIBAPerf")||!perfScript.includes("freezeStatic"))fail("perf script missing AIBAPerf exports");
 if(/HandLandmarker|minPoseDetectionConfidence|detectForVideo/.test(perfScript))fail("perf script must not touch pose detection");
+const perfSettingsScript=read("src/perf-settings.js");
+try{new Function(perfSettingsScript);}
+catch(e){fail("perf settings script syntax error: "+e.message);}
+for(const key of ["AIBAPerfSettings","aiba_perf_settings_v1","meterTick","applyLowRes"])
+  if(!perfSettingsScript.includes(key))fail("perf settings script missing "+key);
+if(/HandLandmarker|minPoseDetectionConfidence|detectForVideo/.test(perfSettingsScript))fail("perf settings must not touch pose detection");
 try{new Function(faceOverlaysScript);}
 catch(e){fail("face overlays script syntax error: "+e.message);}
 try{new Function(hapticsScript);}
@@ -201,6 +210,7 @@ catch(e){fail("config script runtime error: "+e.message);}
 if(!configSandbox.window.AIBA_CONFIG||!configSandbox.window.AIBA_CONFIG.DIFFS)fail("AIBA_CONFIG missing required data");
 try{new Function(audioScript);}
 catch(e){fail("audio script syntax error: "+e.message);}
+if(/\bglobal\./.test(audioScript))fail("audio script must use browser globals, not bare global");
 if(!audioScript.includes("AIBAAudioCaptureStream"))fail("audio capture stream hook missing");
 for(const key of ["crowdHeat","setCrowdHeat","AIBAAudio"])
   if(!audioScript.includes(key))fail("audio script missing crowd heat "+key);

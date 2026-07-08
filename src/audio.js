@@ -1209,5 +1209,5 @@ function playAudioEvent(eventId, opt) {
   return playVoiceUrl(url, role, opt);
 }
 
-global.playSFX = playSFX;
-global.playAudioEvent = playAudioEvent;
+window.playSFX = playSFX;
+window.playAudioEvent = playAudioEvent;
