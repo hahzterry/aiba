@@ -298,6 +298,7 @@ function handleVisionGesture(step){
     VISION.ownsCharge=!!startCharge();
     if(!VISION.ownsCharge)resetVisionGesture(VISION.machine);
   }else if(step.type==="release"&&VISION.ownsCharge){
+    if (typeof playAudioEvent === "function") playAudioEvent("pose_release");
     VISION.ownsCharge=false;doRelease();
   }
   else if(step.type==="cancel")cancelVisionOwnedCharge();
@@ -352,6 +353,20 @@ function visionFrame(now){
   const step=canAdvance?visionGestureStep(VISION.machine,sample,now):{type:"none",phase:"idle",progress:0};
   handleVisionGesture(step);
   syncVisionOwnedPower(step);
+  if (VISION.enabled && sample) {
+    if (sample.ready && !VISION._lastReady) {
+      if (now - (VISION._lastReadyTime || 0) > 3000) {
+        if (typeof playAudioEvent === "function") playAudioEvent("pose_ready");
+        VISION._lastReadyTime = now;
+      }
+    } else if (!sample.ready && VISION._lastReady) {
+      if (now - (VISION._lastLostTime || 0) > 4000) {
+        if (typeof playAudioEvent === "function") playAudioEvent("pose_lost");
+        VISION._lastLostTime = now;
+      }
+    }
+    VISION._lastReady = sample.ready;
+  }
   if(shouldDraw){
     VISION.lastDraw=now;
     const drawPose=now-(VISION.lastPoseAt||0)<500?VISION.lastPose:null;

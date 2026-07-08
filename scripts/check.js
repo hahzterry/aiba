@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.79-roster-heroes.html";
+const snapshot="block-3pt-kingv1.81-hot-hand.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -27,6 +27,7 @@ const requiredFiles=[
   "src/shot-motion.js",
   "src/roster-style.js",
   "src/hero-moments.js",
+  "src/hot-hand.js",
   "src/result-stats.js",
   "src/gear.js",
   "src/perf.js",
@@ -64,21 +65,23 @@ if(!entryHtml.includes('<script src="src/recorder.js?v=1.78"></script>'))fail("r
 if(!entryHtml.includes('<script src="src/shot-physics.js"></script>'))fail("shot physics script missing");
 if(!entryHtml.includes('<script src="src/result-stats.js?v=1.78"></script>'))fail("result stats script missing");
 if(entryHtml.indexOf('<script src="src/result-stats.js?v=1.78"></script>')<entryHtml.lastIndexOf("animate();"))fail("result stats should load after the main inline script");
-if(!entryHtml.includes('<script src="src/gear.js?v=1.78"></script>'))fail("gear script missing");
-if(entryHtml.indexOf('<script src="src/gear.js?v=1.78"></script>')<entryHtml.indexOf('<script src="src/result-stats.js?v=1.78"></script>'))fail("gear script should load after result stats");
-if(entryHtml.indexOf('<script src="src/gear.js?v=1.78"></script>')<entryHtml.lastIndexOf("animate();"))fail("gear script should load after the main inline script");
+if(!entryHtml.includes('<script src="src/gear.js?v=1.81"></script>'))fail("gear script missing");
+if(entryHtml.indexOf('<script src="src/gear.js?v=1.81"></script>')<entryHtml.indexOf('<script src="src/result-stats.js?v=1.78"></script>'))fail("gear script should load after result stats");
+if(entryHtml.indexOf('<script src="src/gear.js?v=1.81"></script>')<entryHtml.lastIndexOf("animate();"))fail("gear script should load after the main inline script");
 if(!entryHtml.includes('<script src="src/avatar-customizer.js?v=1.79"></script>'))fail("avatar customizer script missing");
 if(entryHtml.indexOf('<script src="src/avatar-customizer.js?v=1.79"></script>')<entryHtml.lastIndexOf("animate();"))fail("avatar customizer should load after the main inline script");
-if(!entryHtml.includes('<script src="src/shot-motion.js?v=1.77"></script>'))fail("shot motion script missing");
-if(entryHtml.indexOf('<script src="src/shot-motion.js?v=1.77"></script>')<entryHtml.indexOf('<script src="src/gear.js?v=1.78"></script>'))fail("shot motion should load after gear");
+if(!entryHtml.includes('<script src="src/shot-motion.js?v=1.80"></script>'))fail("shot motion script missing");
+if(entryHtml.indexOf('<script src="src/shot-motion.js?v=1.80"></script>')<entryHtml.indexOf('<script src="src/gear.js?v=1.81"></script>'))fail("shot motion should load after gear");
 if(!entryHtml.includes('<script src="src/roster-style.js?v=1.79"></script>'))fail("roster style script missing");
 if(entryHtml.indexOf('<script src="src/roster-style.js?v=1.79"></script>')<entryHtml.indexOf('<script src="src/avatar-customizer.js?v=1.79"></script>'))fail("roster style should load after avatar customizer");
 if(!entryHtml.includes('<script src="src/hero-moments.js?v=1.79"></script>'))fail("hero moments script missing");
-if(entryHtml.indexOf('<script src="src/hero-moments.js?v=1.79"></script>')<entryHtml.indexOf('<script src="src/shot-motion.js?v=1.77"></script>'))fail("hero moments should load after shot motion");
+if(entryHtml.indexOf('<script src="src/hero-moments.js?v=1.79"></script>')<entryHtml.indexOf('<script src="src/shot-motion.js?v=1.80"></script>'))fail("hero moments should load after shot motion");
+if(!entryHtml.includes('<script src="src/hot-hand.js?v=1.81"></script>'))fail("hot hand script missing");
+if(entryHtml.indexOf('<script src="src/hot-hand.js?v=1.81"></script>')<entryHtml.indexOf('<script src="src/hero-moments.js?v=1.79"></script>'))fail("hot hand should load after hero moments");
 if(!entryHtml.includes('<script src="src/perf.js?v=1.72"></script>'))fail("perf script missing");
-if(entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>')<entryHtml.lastIndexOf("animate();"))fail("perf script should load after the main inline script");
+if(entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>')<entryHtml.indexOf('<script src="src/hot-hand.js?v=1.81"></script>'))fail("perf script should load after hot hand");
 if(!entryHtml.includes('<script src="src/face-overlays.js"></script>'))fail("face overlays script missing");
-if(!entryHtml.includes('<script src="src/haptics.js"></script>'))fail("haptics script missing");
+if(!entryHtml.includes('<script src="src/haptics.js?v=1.80"></script>'))fail("haptics script missing");
 if(!entryHtml.includes('<script src="src/audio.js"></script>'))fail("audio script missing");
 if(!entryHtml.includes('<script src="src/vision.js"></script>'))fail("vision script missing");
 if(/<style>[\s\S]*?<\/style>/.test(entryHtml))fail("inline style block should stay split out");
@@ -117,7 +120,9 @@ const shotPhysicsScript=read("src/shot-physics.js");
 const shotMotionScript=read("src/shot-motion.js");
 const resultStatsScript=read("src/result-stats.js");
 const gearScript=read("src/gear.js");
+const hotHandScript=read("src/hot-hand.js");
 const faceOverlaysScript=read("src/face-overlays.js");
+const hapticsScript=read("src/haptics.js");
 const audioScript=read("src/audio.js");
 try{new Function(configScript);}
 catch(e){fail("config script syntax error: "+e.message);}
@@ -167,10 +172,16 @@ for(const key of ["noteResultAttempt","noteResultMake","summarizeResultStats"])
 try{new Function(gearScript);}
 catch(e){fail("gear script syntax error: "+e.message);}
 if(!gearScript.includes("AIBAGear")||!gearScript.includes("aiba_gear_v1"))fail("gear script missing AIBAGear exports");
+for(const key of ["staRing","staArc","positionHud","CAM.mode"])
+  if(!gearScript.includes(key))fail("gear script missing stamina ring "+key);
 for(const key of ["黑面具","太阳镜","连帽衫","奇葩头套","mods"])
   if(!gearScript.includes(key))fail("gear script missing head gear "+key);
 for(const name of ["playerSweetZone","playerChargeRate","startCharge","releaseShot"])
   if(!gearScript.includes('"'+name+'"'))fail("gear script no longer hooks "+name);
+try{new Function(hotHandScript);}
+catch(e){fail("hot hand script syntax error: "+e.message);}
+for(const key of ["AIBAHotHand","levelFor","tagLastShotHot","setCrowdHeat","hotHandWrap"])
+  if(!hotHandScript.includes(key))fail("hot hand script missing "+key);
 const perfScript=read("src/perf.js");
 try{new Function(perfScript);}
 catch(e){fail("perf script syntax error: "+e.message);}
@@ -178,6 +189,10 @@ if(!perfScript.includes("AIBAPerf")||!perfScript.includes("freezeStatic"))fail("
 if(/HandLandmarker|minPoseDetectionConfidence|detectForVideo/.test(perfScript))fail("perf script must not touch pose detection");
 try{new Function(faceOverlaysScript);}
 catch(e){fail("face overlays script syntax error: "+e.message);}
+try{new Function(hapticsScript);}
+catch(e){fail("haptics script syntax error: "+e.message);}
+for(const key of ["HAPTIC_PATTERNS","clutchMake","heroShot","victory","wireHapticMoments","playerRimHaptic"])
+  if(!hapticsScript.includes(key))fail("haptics script missing "+key);
 if(!faceOverlaysScript.includes("curry-smile-pixel-128.png"))fail("curry face overlay asset not referenced");
 const configSandbox={window:{}};
 vm.createContext(configSandbox);
@@ -187,11 +202,28 @@ if(!configSandbox.window.AIBA_CONFIG||!configSandbox.window.AIBA_CONFIG.DIFFS)fa
 try{new Function(audioScript);}
 catch(e){fail("audio script syntax error: "+e.message);}
 if(!audioScript.includes("AIBAAudioCaptureStream"))fail("audio capture stream hook missing");
+for(const key of ["crowdHeat","setCrowdHeat","AIBAAudio"])
+  if(!audioScript.includes(key))fail("audio script missing crowd heat "+key);
 const voiceFiles=new Set([...audioScript.matchAll(/voiceUrl\("([^"]+\.wav)"\)/g)].map(m=>m[1]));
 if(!voiceFiles.size)fail("no voiceUrl wav references found in audio script");
 for(const file of voiceFiles){
   const rel=path.posix.join("assets/aiba-audio/voices",file);
   if(!exists(rel))fail("missing referenced voice clip "+rel);
+}
+const audioEventsBlock=(audioScript.match(/const AUDIO_EVENTS = \{([\s\S]*?)\n\};/)||[])[1]||"";
+const audioEvents=[...audioEventsBlock.matchAll(/\n\s*([A-Za-z0-9_]+):\s*\[([^\]]*)\]/g)].map(m=>({id:m[1],files:[...m[2].matchAll(/"([^"]+)"/g)].map(x=>x[1])}));
+if(audioEvents.length<30)fail("AUDIO_EVENTS unexpectedly small: "+audioEvents.length);
+const allCode=entryHtml+"\n"+audioScript+"\n"+read("src/vision.js")+"\n"+playerSelectScript+"\n"+leaderboardUiScript+"\n"+recorderScript+"\n"+gearScript+"\n"+read("src/nba-dna/NBADNA.js");
+for(const ev of audioEvents){
+  if(!new RegExp('playAudioEvent\\(\\s*["\\\']'+ev.id+'["\\\']').test(allCode))fail("AUDIO_EVENTS entry has no direct trigger "+ev.id);
+  for(const name of ev.files){
+    const rel=path.posix.join("assets/aiba-audio/voices",name+".wav");
+    if(!exists(rel))fail("missing AUDIO_EVENTS clip "+rel);
+  }
+}
+for(const name of new Set([...allCode.matchAll(/playSFX\(\s*["']([^"']+)["']/g)].map(m=>m[1]))){
+  const rel=path.posix.join("assets/aiba-audio/voices",name+".wav");
+  if(!exists(rel))fail("missing SFX clip "+rel);
 }
 const vision=read("src/vision.js");
 try{new Function(vision);}

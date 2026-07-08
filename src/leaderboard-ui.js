@@ -354,6 +354,7 @@
       <button class="btn sm" onclick="copyAIBAChallenge('${def.key}')">复制同题挑战</button></section>`;
   }
   async function showLeaderboardHub(period,focus){
+    if(typeof global.playSFX==="function")global.playSFX("ui_leaderboard_open_01");
     period=period==="all"?"all":"today";
     const defs=boardDefsFor(focus);
     if(!global.AIBALeaderboard||!global.AIBALeaderboard.leaderboard){
@@ -396,6 +397,7 @@
     catch(e){if(typeof toast==="function")toast("复制失败,可以手动分享当前链接","#ffd23f");}
   }
   async function showOnlineLeaderboardForRecord(record){
+    if(typeof global.playSFX==="function")global.playSFX("ui_leaderboard_open_01");
     if(!record||!global.AIBALeaderboard||!global.AIBALeaderboard.leaderboard){
       if(typeof toast==="function")toast("全球排行榜暂不可用","#ff8d7a");
       return;

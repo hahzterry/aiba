@@ -28,7 +28,9 @@
     buzzer:"",
     bounce:"",
     swish:"assets/aiba-audio/swish.mp3",
-    clank:"assets/aiba-audio/clank.mp3"
+    clank:"assets/aiba-audio/clank.mp3",
+    crowdFinalMake:"assets/aiba-audio/crowd_final_make_01.mp3",
+    crowdFinalMiss:"assets/aiba-audio/crowd_final_miss_01.mp3"
   });
 
   global.AIBA_ASSETS=Object.freeze({coverStars,audio});

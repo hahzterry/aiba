@@ -219,6 +219,7 @@
         b.vel.x*=0.8;
       }
       p.set(hit.x,hit.y,BOARD_Z+0.02);
+      if(typeof playerRimHaptic==="function")playerRimHaptic(b);
       sBoard();
     }
   }

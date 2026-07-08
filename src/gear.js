@@ -96,6 +96,8 @@
   /* ---------------- 精力引擎 ---------------- */
   const STA={v:STA_BASE,max:STA_BASE,out:false,was:false,lastT:0,toastAt:0,lastUseAt:0};
   const MET={lowMs:0,outCount:0};
+  const staProj=()=>new THREE.Vector3();
+  let staV=null;
   function staminaRatio(){return STA.max?STA.v/STA.max:1;}
   function fatigueFactor(){
     const r=staminaRatio();
@@ -118,16 +120,49 @@
     if(hud)return hud;
     hud=document.createElement("div");
     hud.id="staminaWrap";
-    hud.innerHTML='<small>精力 STAMINA</small><div class="staBar"><i id="staFill"></i></div><b id="staChip"></b>';
+    hud.innerHTML='<svg class="staRing" viewBox="0 0 64 64" aria-hidden="true"><circle class="staTrack" cx="32" cy="32" r="25" pathLength="100"/><circle id="staArc" class="staArc" cx="32" cy="32" r="25" pathLength="100"/></svg><small>精力 STAMINA</small><div class="staBar"><i id="staFill"></i></div><b id="staChip"></b>';
     document.body.appendChild(hud);
     return hud;
+  }
+  function positionHud(el,show){
+    if(!show)return;
+    const firstPerson=typeof CAM!=="undefined"&&CAM.mode===0;
+    el.classList.toggle("fp",firstPerson);
+    if(firstPerson){
+      el.style.left="50%";el.style.top="";el.style.bottom="calc(18px + env(safe-area-inset-bottom,0px))";
+      el.style.transform="translateX(-50%)";
+      return;
+    }
+    if(typeof camera==="undefined"||typeof P==="undefined"||typeof THREE==="undefined"){
+      el.style.left="10px";el.style.top="";el.style.bottom="calc(12px + env(safe-area-inset-bottom,0px))";
+      el.style.transform="none";
+      return;
+    }
+    staV=staV||staProj();
+    staV.set(P.pos.x,0.08,P.pos.z).project(camera);
+    if(!Number.isFinite(staV.x)||!Number.isFinite(staV.y)||staV.z>1){
+      el.classList.add("offscreen");
+      return;
+    }
+    el.classList.remove("offscreen");
+    const x=(staV.x*.5+.5)*innerWidth;
+    const y=(-staV.y*.5+.5)*innerHeight;
+    el.style.left=Math.max(44,Math.min(innerWidth-44,x))+"px";
+    el.style.top=Math.max(74,Math.min(innerHeight-42,y+28))+"px";
+    el.style.bottom="";
+    el.style.transform="translate(-50%,-50%)";
   }
   function updateHud(show){
     const el=ensureHud();
     if(show!==hudShown){hudShown=show;el.classList.toggle("on",show);}
     if(!show)return;
+    positionHud(el,show);
     const pct=Math.round(staminaRatio()*100);
-    if(pct!==hudPct){hudPct=pct;const f=document.getElementById("staFill");if(f)f.style.width=pct+"%";}
+    if(pct!==hudPct){
+      hudPct=pct;
+      const f=document.getElementById("staFill");if(f)f.style.width=pct+"%";
+      const arc=document.getElementById("staArc");if(arc)arc.style.strokeDasharray=pct+" 100";
+    }
     const r=staminaRatio();
     const state=STA.out?"out":(r<TIRED_RATIO?"low":(r<.5?"warn":"ok"));
     if(state!==hudState){hudState=state;el.dataset.sta=state;}
@@ -154,7 +189,7 @@
       if(g.charging){STA.v=Math.max(0,STA.v-CHARGE_DRAIN*m.cost*dt);STA.lastUseAt=now;}
       else if(now-STA.lastUseAt>=REGEN_DELAY*1000)STA.v=Math.min(STA.max,STA.v+REGEN*m.recovery*dt);
       if(staminaRatio()<TIRED_RATIO)MET.lowMs+=dt*1000;
-      if(!STA.out&&STA.v<=.01){STA.out=true;MET.outCount++;toastThrottled("💦 精力耗尽 · 喘口气再投!","#ff8d7a");}
+      if(!STA.out&&STA.v<=.01){STA.out=true;MET.outCount++;toastThrottled("💦 精力耗尽 · 喘口气再投!","#ff8d7a");if(typeof phoneHaptic==="function"&&typeof HAPTIC_PATTERNS!=="undefined")phoneHaptic(HAPTIC_PATTERNS.exhausted);}
       if(STA.out&&STA.v>=STA.max*WAKE_RATIO){STA.out=false;toastThrottled("💪 缓过来了 · 继续!","#7CFC6B");}
     }
     updateHud(active);
@@ -219,6 +254,7 @@
   }
   function equip(slot,id){
     if(!CATALOG[slot])return;
+    if(typeof global.playSFX==="function")global.playSFX("ui_equip_01");
     load[slot]=load[slot]===id?"":id;
     if(load[slot]&&!load.active)load.active=slot;
     if(!load[slot]&&load.active===slot){
@@ -229,6 +265,7 @@
   }
   function setActive(slot){
     if(!load[slot])return;
+    if(typeof global.playSFX==="function")global.playSFX("ui_equip_01");
     load.active=slot;save();refreshSection();
   }
   function onStarPreview(star){

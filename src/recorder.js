@@ -284,6 +284,7 @@
   function save(){
     if(!supported()){try{toast("当前浏览器不支持录制","#ff8d7a");}catch(e){}return false;}
     if(!state.lastBlob){state.saveWhenReady=true;updateStatus("生成完成后自动保存");try{toast("精彩视频还在生成,稍等一下","#ffd23f");}catch(e){}return false;}
+    if(typeof global.playSFX==="function")global.playSFX("ui_save_video_01");
     const a=document.createElement("a");a.href=state.lastUrl||URL.createObjectURL(state.lastBlob);a.download=filename();
     document.body.appendChild(a);a.click();a.remove();
     try{toast("精彩视频已保存","#7CFC6B");}catch(e){}

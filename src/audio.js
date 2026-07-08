@@ -138,7 +138,14 @@ const VOICE_CLIPS=Object.freeze({
 });
 const VOICE_RULES=Object.freeze([
   {re:/欢迎来到 aiBA/i,url:voiceUrl("p_09_en.wav")},
-  {re:/最后冲刺/i,url:voiceUrl("p_10_en.wav")},
+  {re:/最后冲刺/i,url:voiceUrl("p_rack_level_start_06_en.wav")},
+  {re:/第1关/i,url:voiceUrl("p_rack_level_start_01_en.wav")},
+  {re:/第2关/i,url:voiceUrl("p_rack_level_start_02_en.wav")},
+  {re:/第3关/i,url:voiceUrl("p_rack_level_start_03_en.wav")},
+  {re:/第4关/i,url:voiceUrl("p_rack_level_start_04_en.wav")},
+  {re:/第5关/i,url:voiceUrl("p_rack_level_start_05_en.wav")},
+  {re:/第6关/i,url:voiceUrl("p_rack_level_start_06_en.wav")},
+  {re:/本次挑战结束/i,url:voiceUrl("p_rack_fail_01_en.wav")},
   {re:/最后五分决胜/i,url:voiceUrl("p_11_en.wav")},
   {re:/RACK RUSH完成/i,url:voiceUrl("p_12_en.wav")},
   {re:/屈居亚军/,url:voiceUrl("p_08_en.wav")},
@@ -251,7 +258,8 @@ const EN_SPEECH=Object.freeze({
 let AC=null,master=null,crowdBus=null,crowdGain=null,musicBus=null,arenaBus=null,broadcastBus=null,playerBus=null,sfxBus=null,outputComp=null,recordDest=null;
 let musicTimer=null,arenaTimer=null,ambTimer=null,duckTimer=null,mediaDuckTimer=null,mediaDuckUntil=0;
 const CROWD_BASE=0.16;
-const EXT_DEFAULT_VOLUME=Object.freeze({bgm:.58,crowd:.25,crowdCheer:.23,rain:.19,ocean:.17,gull:.26});
+const EXT_DEFAULT_VOLUME=Object.freeze({bgm:.58,crowd:.25,crowdCheer:.23,rain:.19,ocean:.17,gull:.26,crowdFinalMake:.88,crowdFinalMiss:.88});
+let crowdHeat=0;
 const VOICE_CHAIN_PROFILES=Object.freeze({
   pa:{hp:210,lp:5200,presF:1650,presGain:3.2,direct:.94,delay:.13,feedback:.16,delayGain:.11,revSec:.82,decay:2.2,reverbGain:.18,comp:-18},
   player:{hp:145,lp:7200,presF:2400,presGain:1.4,direct:.82,delay:.055,feedback:.08,delayGain:.045,revSec:.5,decay:1.5,reverbGain:.065,comp:-20}
@@ -334,11 +342,21 @@ function externalMediaDuckActive(){
 }
 function applyExternalMediaMix(){
   const duck=externalMediaDuckActive(),arenaLike=sceneAudioArenaLike();
+  const heat=Math.max(0,Math.min(1,crowdHeat||0));
   if(extA.bgm)extA.bgm.volume=EXT_DEFAULT_VOLUME.bgm*(duck?0.58:1);
-  if(extA.crowd)extA.crowd.volume=(G.finalRun?0.34:EXT_DEFAULT_VOLUME.crowd)*(duck?0.72:1);
-  if(extA.crowdCheer)extA.crowdCheer.volume=(G.finalRun?0.31:EXT_DEFAULT_VOLUME.crowdCheer)*(duck?0.7:1);
+  if(extA.crowd)extA.crowd.volume=(G.finalRun?0.34:EXT_DEFAULT_VOLUME.crowd)*(1+heat*.42)*(duck?0.72:1);
+  if(extA.crowdCheer)extA.crowdCheer.volume=(G.finalRun?0.31:EXT_DEFAULT_VOLUME.crowdCheer)*(1+heat*.62)*(duck?0.7:1);
   if(extA.rain)extA.rain.volume=(arenaLike?0.2:0.11)*(duck?0.82:1);
   if(extA.ocean)extA.ocean.volume=(G.finalRun?0.24:(arenaLike?0.18:0.1))*(duck?0.82:1);
+}
+function setCrowdHeat(level){
+  crowdHeat=Math.max(0,Math.min(1,Number(level)||0));
+  if(crowdBus&&AC){
+    const t=AC.currentTime,base=extA.crowd?0.035:CROWD_BASE;
+    crowdBus.gain.cancelScheduledValues(t);
+    crowdBus.gain.setTargetAtTime(base+crowdHeat*(extA.crowd?0.035:0.075),t,0.55);
+  }
+  applyExternalMediaMix();
 }
 function syncSceneAmbience(){
   const arenaLike=sceneAudioArenaLike(),allowed=G.state==="diff"||arenaLike;
@@ -455,8 +473,14 @@ function playClip(t,role){
 playClip.cache=Object.create(null);
 let pregameCountdownClipLast=-1;
 function playPregameCountdownCue(){
-  if(MUTED||!PREGAME_COUNTDOWN_CLIPS.length)return false;
+  if(MUTED)return false;
   try{
+    if(typeof G !== "undefined" && G.mode === "contest"){
+      const ok=typeof playAudioEvent==="function"?playAudioEvent("contest_start",{role:"pa",volume:.98,duckMs:4600,duckDepth:.5}):false;
+      crowdSwell(.12, 2.2);
+      return ok;
+    }
+    if(!PREGAME_COUNTDOWN_CLIPS.length)return false;
     const pool=PREGAME_COUNTDOWN_CLIPS;
     let idx=(Math.random()*pool.length)|0;
     if(pool.length>1&&idx===pregameCountdownClipLast)idx=(idx+1+(Math.random()*(pool.length-1)|0))%pool.length;
@@ -474,7 +498,9 @@ function voiceClipFor(t){
   return "";
 }
 function preloadVoiceClips(){
-  const urls=Object.values(VOICE_CLIPS).concat(VOICE_RULES.map(r=>r.url),PREGAME_COUNTDOWN_CLIPS);
+  const eventUrls=typeof AUDIO_EVENTS==="undefined"?[]:Object.values(AUDIO_EVENTS).flat().map(n=>voiceUrl(n+".wav"));
+  const sfxUrls=["ui_mode_whoosh_01","ui_start_game_01","ui_roster_lock_01","ui_equip_01","ui_leaderboard_open_01","ui_save_video_01","sfx_pose_release_01"].map(n=>voiceUrl(n+".wav"));
+  const urls=Object.values(VOICE_CLIPS).concat(VOICE_RULES.map(r=>r.url),PREGAME_COUNTDOWN_CLIPS,eventUrls,sfxUrls);
   urls.forEach(u=>{
     if(!u||playClip.cache[u])return;
     try{const a=new Audio(u);a.preload="auto";a.load();playClip.cache[u]=a;}catch(e){}
@@ -594,12 +620,13 @@ function mkNoiseBuf(sec){
 }
 function crowdSwell(amt,dur){
   if(!crowdBus)return;
-  const t=AC.currentTime,b=extA.crowd?0.04:CROWD_BASE;
+  const t=AC.currentTime,b=(extA.crowd?0.04:CROWD_BASE)+Math.max(0,Math.min(1,crowdHeat||0))*(extA.crowd?0.03:0.06);
   crowdBus.gain.cancelScheduledValues(t);
   crowdBus.gain.setValueAtTime(crowdBus.gain.value,t);
   crowdBus.gain.linearRampToValueAtTime(b+amt,t+0.5);
   crowdBus.gain.exponentialRampToValueAtTime(b,t+(dur||2.4));
 }
+try{window.AIBAAudio=Object.assign(window.AIBAAudio||{},{setCrowdHeat,crowdSwell});}catch(e){}
 /* ---- 掌声:几十个去相关的真实拍手颗粒 ---- */
 function applause(vol,dur,n){
   if(!AC||MUTED)return;
@@ -1108,3 +1135,79 @@ function toggleMute(){
     syncAudioDebug();
   }catch(e){}
 }
+
+const AUDIO_EVENTS = {
+  contest_start: ["p_contest_start_01_en", "p_contest_start_02_en", "p_contest_start_03_en"],
+  contest_opponent_intro: ["r_contest_intro_01_en", "r_contest_intro_02_en", "r_contest_intro_03_en"],
+  contest_host_intro: ["p_contest_intro_04_en", "p_contest_intro_05_en"],
+  contest_moneyrack: ["dj_contest_moneyrack_01_en", "dj_contest_moneyrack_02_en", "dj_contest_moneyrack_03_en"],
+  contest_finalrack: ["p_contest_finalrack_01_en", "p_contest_finalrack_02_en", "p_contest_finalrack_03_en"],
+  contest_final10: ["p_contest_final10_01_en", "p_contest_final10_02_en", "p_contest_final10_03_en", "p_contest_final10_04_en"],
+  contest_advance: ["p_contest_advance_01_en", "p_contest_advance_02_en"],
+  contest_eliminated: ["p_contest_advance_03_en", "p_contest_advance_04_en"],
+  contest_finals_start: ["p_contest_advance_05_en", "p_contest_advance_06_en"],
+  contest_champion: ["dj_contest_champion_01_en", "dj_contest_champion_02_en"],
+  contest_runnerup: ["dj_contest_champion_03_en", "dj_contest_champion_04_en"],
+  rack_clear: ["dj_rack_clear_01_en", "dj_rack_clear_02_en", "dj_rack_clear_03_en", "dj_rack_clear_04_en"],
+  rack_fail: ["p_rack_fail_01_en", "p_rack_fail_02_en", "p_rack_fail_03_en", "p_rack_fail_04_en"],
+  speed100_25: ["p_speed100_25_01_en", "p_speed100_25_02_en"],
+  speed100_50: ["p_speed100_50_01_en", "p_speed100_50_02_en"],
+  speed100_75: ["p_speed100_75_01_en", "p_speed100_75_02_en"],
+  speed100_90: ["p_speed100_90_01_en", "p_speed100_90_02_en"],
+  speed100_finish_record: ["dj_speed100_finish_01_en"],
+  speed100_finish_board: ["dj_speed100_finish_02_en"],
+  speed100_finish: ["dj_speed100_finish_03_en", "dj_speed100_finish_04_en"],
+  speed100_finish_close: ["dj_speed100_finish_05_en"],
+  final_shot: ["dj_final_shot_01_en", "dj_final_shot_02_en", "dj_final_shot_03_en", "dj_final_shot_04_en", "dj_final_shot_05_en"],
+  dna_intro: ["dna_intro_01_en", "dna_intro_02_en", "dna_intro_03_en"],
+  dna_scan: ["dna_scan_01_en", "dna_scan_02_en", "dna_scan_03_en", "dna_scan_04_en"],
+  dna_metric_elbow: ["dna_metric_elbow_01_en", "dna_metric_elbow_02_en"],
+  dna_metric_balance: ["dna_metric_balance_01_en", "dna_metric_balance_02_en"],
+  dna_metric_release: ["dna_metric_release_01_en", "dna_metric_release_02_en"],
+  dna_metric_follow: ["dna_metric_follow_01_en", "dna_metric_follow_02_en"],
+  dna_result_legend: ["dna_result_legend_01_en", "dna_result_legend_02_en"],
+  dna_result_elite: ["dna_result_legend_03_en", "dna_result_legend_04_en"],
+  dna_result_solid: ["dna_result_legend_05_en", "dna_result_legend_06_en"],
+  dna_result_brick: ["dna_result_legend_07_en", "dna_result_legend_08_en"],
+  pose_ready: ["p_pose_ready_01_en", "p_pose_ready_02_en", "p_pose_ready_03_en"],
+  pose_lost: ["p_pose_lost_01_en", "p_pose_lost_02_en", "p_pose_lost_03_en"],
+  pose_release: ["sfx_pose_release_01"]
+};
+
+function playSFX(name, vol){
+  if(MUTED) return;
+  const u = VOICE_BASE + name + ".wav";
+  try {
+    audioInit();
+    if (!playClip.cache[u]) {
+      const a = new Audio(u); a.crossOrigin = "anonymous"; a.preload = "auto"; a.load();
+      playClip.cache[u] = a;
+    }
+    const base = playClip.cache[u], a = base.paused && base.currentTime === 0 ? base : base.cloneNode();
+    a.crossOrigin = "anonymous";
+    if (AC && a) {
+      if (!a._aibaSfxSource) a._aibaSfxSource = AC.createMediaElementSource(a);
+      try{a._aibaSfxSource.disconnect();}catch(e){}
+      a._aibaSfxSource.connect(sfxBus || master);
+    }
+    a.onended=()=>{try{if(a._aibaSfxSource)a._aibaSfxSource.disconnect();}catch(e){};a.onended=null;};
+    a.volume = vol == null ? 0.95 : vol;
+    a.currentTime = 0;
+    const p = a.play(); if (p && p.catch) p.catch(()=>{});
+  } catch (e) {}
+}
+
+function playAudioEvent(eventId, opt) {
+  if (MUTED) return false;
+  opt = opt || {};
+  const pool = AUDIO_EVENTS[eventId];
+  if (!pool || !pool.length) return false;
+  const name = pool[Math.floor(Math.random() * pool.length)];
+  if(/^sfx_|^ui_/.test(name))return playSFX(name,opt.volume);
+  const url = voiceUrl(name + ".wav");
+  const role = voiceRoleForText("", url, opt.role);
+  return playVoiceUrl(url, role, opt);
+}
+
+global.playSFX = playSFX;
+global.playAudioEvent = playAudioEvent;

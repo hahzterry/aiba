@@ -13,6 +13,7 @@
   function start(){
     if(global.G)G.state="nba-dna";
     if(typeof ensureAudio==="function")ensureAudio(true,true);
+    if(typeof playAudioEvent==="function")playAudioEvent("dna_intro");
     dnaUpload();
   }
   function dnaUpload(){
@@ -96,6 +97,11 @@
       tape.forEach((el,i)=>el.classList.toggle("active",i<=step));
       nodes.forEach((el,i)=>el.classList.toggle("active",i<step));
       if(stageText&&tape[step])stageText.textContent=tape[step].textContent;
+      if (typeof playAudioEvent === "function") {
+        if (step === 1) playAudioEvent("dna_metric_elbow");
+        else if (step === 2) playAudioEvent("dna_metric_balance");
+        else if (step === 3) playAudioEvent("dna_metric_release");
+      }
       await sleep(step===0?760:860);
     }
     nodes.forEach(el=>el.classList.add("active"));
@@ -128,10 +134,23 @@
     const tape=Array.from(document.querySelectorAll("#nbaDnaTape span"));
     const nodes=Array.from(document.querySelectorAll("#nbaDnaNodePrint b"));
     try{
+      let voiceTriggered = [false, false, false, false];
       await NBADNAPoseVisualizer.animate(canvas,analyzed,result,p=>{
         const step=p<.25?0:(p<.5?1:(p<.72?2:3));
         tape.forEach((el,i)=>el.classList.toggle("active",i<=step));
-        nodes.forEach((el,i)=>el.classList.toggle("active",p>(.64+i*.075)));
+        nodes.forEach((el,i)=>{
+          const active = p>(.64+i*.075);
+          if (active && !voiceTriggered[i]) {
+            voiceTriggered[i] = true;
+            if (typeof playAudioEvent === "function") {
+              if (i === 0) playAudioEvent("dna_metric_release");
+              else if (i === 1) playAudioEvent("dna_metric_elbow");
+              else if (i === 2) playAudioEvent("dna_metric_balance");
+              else if (i === 3) playAudioEvent("dna_metric_follow");
+            }
+          }
+          el.classList.toggle("active",active);
+        });
         if(stageText)stageText.textContent=tape[step]?tape[step].textContent:"打印关键节点相似度";
       });
     }catch(e){
@@ -144,6 +163,7 @@
     if(state.busy)return;
     if(!state.file){safeToast("先给我一张投篮照片","#ff8d7a");return;}
     state.busy=true;progress("读取你的球场基因");
+    if(typeof playAudioEvent==="function")playAudioEvent("dna_scan");
     try{
       const analyzed=await NBADNAPoseAnalyzer.analyzeFile(state.file);
       const seed=state.file.size+(state.file.lastModified||0);
@@ -170,6 +190,12 @@
     return result.rewards.length?`<div class="dnaRewards"><small>UNLOCKED</small>${result.rewards.map(x=>`<span>${x}</span>`).join("")}</div>`:`<div class="dnaRewards locked"><small>NEXT UNLOCK</small><span>70% 解锁 Mamba 投篮动作</span></div>`;
   }
   function showResult(result,img){
+    if(typeof playAudioEvent==="function"){
+      if (result.total >= 90) playAudioEvent("dna_result_legend");
+      else if (result.total >= 80) playAudioEvent("dna_result_elite");
+      else if (result.total >= 65) playAudioEvent("dna_result_solid");
+      else playAudioEvent("dna_result_brick");
+    }
     const coach=result.coach.map(x=>`<li>${quoteEscape(x)}</li>`).join("");
     dnaShell(`
       <div id="nbaDnaResultVisual" class="dnaResultVisual"></div>

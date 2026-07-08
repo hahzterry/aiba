@@ -175,6 +175,7 @@
   }
   function confirm(){
     choose(pendingId);
+    if(typeof global.playSFX==="function")global.playSFX("ui_roster_lock_01");
     if(typeof global.goDiff==="function")global.goDiff(activeMode,true);
   }
 
