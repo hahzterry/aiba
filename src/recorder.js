@@ -81,6 +81,10 @@
   }
   function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
   function metricScore(record){
+    if(global.AIBAResultMetricsFor){
+      const m=global.AIBAResultMetricsFor(record);
+      if(m&&Number.isFinite(m.score))return m.score;
+    }
     const attempts=Number(record&&record.attempts)||0,makes=Number(record&&record.makes)||0;
     const accuracy=attempts?clamp(makes/attempts*100,0,100):0;
     const streak=clamp((Number(record&&record.bestStreak)||Number(record&&record.best_streak)||0)*14,0,100);

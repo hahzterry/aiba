@@ -11,9 +11,10 @@
   }
   function starKey(star){return star&&(star.id||star.n)||"";}
   function allStars(list){
-    if(Array.isArray(list)&&list.length)return list;
+    const custom=global.AIBACustomizer&&typeof global.AIBACustomizer.listStars==="function"?global.AIBACustomizer.listStars():[];
+    if(Array.isArray(list)&&list.length)return [...list,...custom.filter(star=>!list.some(item=>starKey(item)===starKey(star)))];
     const cfg=global.AIBA_CONFIG||{},assets=global.AIBA_ASSETS||{};
-    return [...(cfg.CLASSIC_LEGENDS||[]),...(assets.coverStars||[])];
+    return [...(cfg.CLASSIC_LEGENDS||[]),...(assets.coverStars||[]),...custom];
   }
   function profileFor(star){
     const cfg=global.AIBA_CONFIG||{};
@@ -148,7 +149,7 @@
     const motionSection=global.AIBAMotion?global.AIBAMotion.toggleMarkup():"";
     global.showPanel(`<div class="playerLocker">
       <div class="lockerHead"><small>PLAYER LOCKER</small><h1>赛前更衣室</h1><p>横划查看球员。点卡片只是预览，确认后才会锁定上场。</p></div>
-      <div class="lockerDeck" aria-label="横向选择球员">${randomCard(current)}${stars.map(star=>choiceButton(star,current)).join("")}</div>
+      <div class="lockerDeck" aria-label="横向选择球员">${global.AIBACustomizer?global.AIBACustomizer.cardMarkup(current):""}${randomCard(current)}${stars.filter(star=>starKey(star)!=="custom-player").map(star=>choiceButton(star,current)).join("")}</div>
       <div id="lockerCurrent" class="lockerCurrent">${currentMarkup(current)}</div>
       ${gearSection}
       ${motionSection}

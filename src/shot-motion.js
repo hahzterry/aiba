@@ -22,7 +22,7 @@
   const BOUNCE_K=0.42;          // 篮板反弹衰减
   const OVER_ERR=19;            // 过力超过该值 → 高弧绕过篮板上方
   const OVER_TOP={y:4.42,z:-9.05,maxX:1.5};
-  const STANCE_YAW=Math.PI/18; // 约10°:投篮手侧略微斜向篮筐,避免正面对框的僵硬感
+  const STANCE_YAW=Math.PI/9; // 约20°:投篮手侧略微斜向篮筐,避免正面对框的僵硬感
 
   let on=true;
   try{on=localStorage.getItem(LS_KEY)!=="off";}catch(e){}
@@ -82,7 +82,8 @@
   }
 
   function stanceBlend(c){
-    return clampN(c.dip*.55+c.lift*.85+c.jmp*.35,0,1);
+    const ready=(typeof G!=="undefined"&&(G.canShoot||G.charging))?.72:0;
+    return clampN(Math.max(ready,c.dip*.55+c.lift*.85+c.jmp*.35),0,1);
   }
   function tuneGuideHand(c){
     if(!player||!player.arms||!player.elbows)return;

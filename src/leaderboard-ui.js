@@ -129,19 +129,101 @@
   function clamp(v,min,max){
     return Math.max(min,Math.min(max,v));
   }
+  function num(v,fb){
+    v=Number(v);
+    return Number.isFinite(v)?v:(fb||0);
+  }
+  function nested(record,key,prop){
+    return record&&record[key]&&record[key][prop]!=null?record[key][prop]:null;
+  }
+  function modeKind(record){
+    if(!record)return "";
+    if(record.mode==="percent-battle")return "battle";
+    if(record.variant==="speed100"||record.mode==="rack-rush-speed100")return "speed100";
+    if(record.mode==="rack-rush")return "rackrush";
+    return record.mode||"";
+  }
+  function difficultyBase(record){
+    const d=record&&record.difficulty;
+    return d==="hard"?68:(d==="normal"?52:36);
+  }
+  function targetGap(record){
+    const k=modeKind(record);
+    if(k==="speed100")return 1.28;
+    if(k==="battle")return 2.25;
+    if(k==="rackrush")return 1.85;
+    return 2.15;
+  }
+  function rhythmScore(record,attempts,elapsed){
+    const rhythm=record&&record.rhythmStats||{};
+    const gapSec=num(rhythm.avgGapMs,0)/1000||num(rhythm.avgGapSec,0);
+    const fallback=elapsed&&attempts>1?elapsed/1000/attempts:0;
+    const g=gapSec||fallback;
+    if(!g)return 46;
+    const target=targetGap(record);
+    let score=100-Math.abs(g-target)/target*62;
+    if(g<target*.62)score-=18;
+    if(g>target*2.25)score-=14;
+    const lowRatio=num(rhythm.lowStaminaRatio,0);
+    const outCount=num(rhythm.staminaOutCount,0);
+    const jitter=num(rhythm.gapCv,0);
+    score-=lowRatio*34+outCount*11+Math.max(0,jitter-.45)*24;
+    return clamp(score,12,96);
+  }
+  function clutchScore(record,total,attempts,makes){
+    const c=record&&record.clutchStats||{};
+    const ca=num(c.attempts,0),cm=num(c.makes,0),cp=num(c.points,0);
+    if(ca>0){
+      const rate=cm/ca;
+      return clamp(34+rate*44+Math.min(18,cp*1.3)+(c.lastMade?6:0),18,98);
+    }
+    const k=modeKind(record);
+    if(k==="battle"){
+      const me=num(record&&record.score,0),opp=num(record&&record.opponentScore,0);
+      const margin=me-opp,close=Math.max(0,14-Math.abs(margin))*1.1;
+      return record&&record.won?clamp(56+me*.16+Math.max(0,opp-70)*.24+close,42,94):clamp(34+me*.18-Math.max(0,opp-me)*.18+close*.4,18,66);
+    }
+    if(k==="speed100"){
+      const sec=(num(record&&record.elapsedMs,0)||num(record&&record.elapsed_ms,0))/1000;
+      return total>=100?clamp(96-Math.max(0,sec-78)*.5,40,96):clamp(24+total*.45,18,72);
+    }
+    if(k==="rackrush"){
+      const level=num(record&&record.highestLevel,0);
+      return record&&record.completed?90:clamp(30+level*8+total*.08+(makes>attempts*.55?6:0),22,82);
+    }
+    return clamp(total,24,82);
+  }
+  function difficultyScore(record,attempts){
+    const mix=record&&record.shotMix||{};
+    const madeMix=record&&record.makeMix||{};
+    const hasMix=Object.keys(mix).length>0;
+    const highAttempts=num(mix.money,0)+num(mix.special,0)*1.25+num(mix.super,0)*2.1+(hasMix?0:num(record&&record.deepAttempts,0)*1.6);
+    const highMakes=num(madeMix.money,0)+num(madeMix.special,0)*1.35+num(madeMix.super,0)*2.4+(hasMix?0:num(record&&record.deepMakes,0)*1.8);
+    const spot=attempts?clamp(highAttempts/attempts*55+highMakes*2.8,0,28):0;
+    const sweet=num(record&&record.sweetWindow,1);
+    const sweetScore=sweet?clamp((1.12-sweet)*82,-10,24):0;
+    const arc=num(record&&record.shotArc,1);
+    const arcScore=arc?clamp(Math.abs(arc-1)*14,0,8):0;
+    const control=record&&record.control==="vision"?7:0;
+    return clamp(difficultyBase(record)+spot+sweetScore+arcScore+control,20,100);
+  }
   function metricsFor(record){
-    const attempts=Number(record&&record.attempts)||0,makes=Number(record&&record.makes)||0;
-    const accuracy=attempts?clamp(makes/attempts*100,0,100):0;
-    const streak=clamp((Number(record&&record.bestStreak)||Number(record&&record.best_streak)||0)*14,0,100);
-    const elapsed=Number(record&&record.elapsedMs)||Number(record&&record.elapsed_ms)||0;
-    const total=Number(record&&record.total)||Number(record&&record.score)||0;
-    const pace=elapsed&&attempts?clamp(attempts/(elapsed/60000)*6,24,100):60;
-    const diff=record&&record.difficulty==="hard"?92:(record&&record.difficulty==="normal"?76:58);
-    let clutch=clamp(total,30,100);
-    if(record&&record.mode==="percent-battle")clutch=record.won?88:58;
-    if(record&&(record.variant==="speed100"||record.mode==="rack-rush-speed100"))clutch=clamp(112-((elapsed/1000)-85)*.36,38,100);
-    const score=clamp(Math.round(accuracy*.34+streak*.17+pace*.16+clutch*.23+diff*.1),0,100);
-    return {accuracy,streak,pace,clutch,diff,score,attempts,makes,total,elapsed};
+    const attempts=num(record&&record.attempts,nested(record,"stabilityStats","attempts")||0);
+    const makes=num(record&&record.makes,nested(record,"stabilityStats","makes")||0);
+    const elapsed=num(record&&record.elapsedMs,record&&record.elapsed_ms);
+    const total=num(record&&record.total,record&&record.score);
+    const rate=attempts?clamp(makes/attempts,0,1):clamp(num(record&&record.accuracy,0),0,1);
+    const valuePerMake=makes?total/makes:0;
+    const baseValue=modeKind(record)==="rackrush"?2.25:3;
+    const accuracy=clamp((rate-.24)/.5*100+clamp((valuePerMake-baseValue)*7,-7,10),6,100);
+    const best=num(record&&record.bestStreak,record&&record.best_streak);
+    const maxMiss=num(nested(record,"stabilityStats","maxMissRun"),record&&record.maxMissRun);
+    const stability=clamp(best*10+rate*26-Math.max(0,maxMiss-1)*9-(attempts<5?14:0),8,100);
+    const pace=rhythmScore(record,attempts,elapsed);
+    const clutch=clutchScore(record,total,attempts,makes);
+    const diff=difficultyScore(record,attempts);
+    const score=clamp(Math.round(accuracy*.30+stability*.20+pace*.15+clutch*.25+diff*.10),0,100);
+    return {accuracy,rawAccuracy:rate*100,stability,pace,clutch,diff,score,attempts,makes,total,elapsed};
   }
   function tierFor(score){
     if(score>=92)return {cls:"legend",title:"传奇手感",stamp:"LEGENDARY / 传奇",line:"这一局已经有点像球馆传说。"};
@@ -153,7 +235,7 @@
     return {cls:"ash",title:"灰阶手感",stamp:"灰色地带",line:"先别急着发朋友圈,回去加练两组。"};
   }
   function radarMarkup(m){
-    const vals=[["命中",m.accuracy],["连中",m.streak],["节奏",m.pace],["关键",m.clutch],["难度",m.diff]];
+    const vals=[["命中",m.accuracy],["稳定",m.stability],["节奏",m.pace],["关键",m.clutch],["难度",m.diff]];
     const cx=62,cy=62,r=42;
     const pts=vals.map((x,i)=>{const a=-Math.PI/2+i*Math.PI*2/5,rr=r*clamp(x[1],0,100)/100;return [cx+Math.cos(a)*rr,cy+Math.sin(a)*rr];}).map(p=>p.map(n=>n.toFixed(1)).join(",")).join(" ");
     const grid=[.33,.66,1].map(k=>vals.map((x,i)=>{const a=-Math.PI/2+i*Math.PI*2/5,rr=r*k;return [cx+Math.cos(a)*rr,cy+Math.sin(a)*rr].map(n=>n.toFixed(1)).join(",");}).join(" ")).map(p=>`<polygon points="${p}"></polygon>`).join("");
@@ -162,7 +244,7 @@
   }
   function statMarkup(record,m){
     if(record&&record.mode==="percent-battle")return `<span><b>${record.score||0}:${record.opponentScore||0}</b><small>最终比分</small></span><span><b>${timeText(m.elapsed)}</b><small>百分耗时</small></span><span><b>${record.deepMakes||0}/${record.deepAttempts||0}</b><small>中场球</small></span>`;
-    if(record&&(record.variant==="speed100"||record.mode==="rack-rush-speed100"))return `<span><b>${timeText(m.elapsed)}</b><small>冲线时间</small></span><span><b>${m.makes}/${m.attempts}</b><small>命中</small></span><span><b>${Math.round(m.accuracy)}%</b><small>命中率</small></span>`;
+    if(record&&(record.variant==="speed100"||record.mode==="rack-rush-speed100"))return `<span><b>${timeText(m.elapsed)}</b><small>冲线时间</small></span><span><b>${m.makes}/${m.attempts}</b><small>命中</small></span><span><b>${Math.round(m.rawAccuracy)}%</b><small>命中率</small></span>`;
     return `<span><b>${m.total}</b><small>总分</small></span><span><b>${m.makes}/${m.attempts}</b><small>命中</small></span><span><b>x${record&&record.bestStreak||0}</b><small>最高连中</small></span>`;
   }
   function resultBadgeMarkup(record){
@@ -341,6 +423,7 @@
   global.AIBACloudRankMarkup=rankMarkup;
   global.AIBAResultBadgeMarkup=resultBadgeMarkup;
   global.AIBAResultHeaderMarkup=resultHeaderMarkup;
+  global.AIBAResultMetricsFor=metricsFor;
   global.showOnlineLeaderboardForRecord=showOnlineLeaderboardForRecord;
   global.AIBALeaderboardUI=Object.freeze({submitRecord,rankMarkup,showOnlineLeaderboardForRecord,refreshProfileUI,resultBadgeMarkup,resultHeaderMarkup,showLeaderboardHub,copyChallenge,homeMarkup,modeMarkup,recordRankText});
   setTimeout(refreshProfileUI,0);

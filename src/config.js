@@ -59,6 +59,7 @@
   });
 
   function shotProfileFor(star){
+    if(star&&star.shotProfile)return star.shotProfile;
     return SHOT_PROFILES[star&&(star.id||star.n)]||DEFAULT_SHOT_PROFILE;
   }
   function shotFlightTime(baseTf,star,opts){

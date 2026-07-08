@@ -9,7 +9,7 @@
 - Vercel 自动部署：https://aiba-percent-battle.vercel.app/
 - GitHub Pages 备用：https://opstiger.github.io/aiba-percent-battle/
 
-当前版本：`v1.75-shot-hand-side`
+当前版本：`v1.78-result-radar`
 
 ## 模式
 
@@ -50,17 +50,19 @@ node scripts/check.js
 ## 项目结构
 
 - `index.html`：当前可玩的入口文件。
-- `block-3pt-kingv1.75-shot-hand-side.html`：当前版本快照，和 `index.html` 保持一致。
+- `block-3pt-kingv1.78-result-radar.html`：当前版本快照，和 `index.html` 保持一致。
 - `styles.css`：游戏 HUD、首页、面板和移动端样式。
 - `src/assets-manifest.js`：封面角色、音频等资源清单。
 - `src/player-select.js`：赛前选球员、本地记忆和球员风格展示。
 - `src/player-locker-preview.js`：更衣室选人界面的 3D 方块球员预览。
+- `src/avatar-customizer.js`：自建方块球员工坊、造型保存和上场样式。
 - `src/gear.js`：装备工坊、球员数值和比赛精力条系统。
 - `src/shot-motion.js`：新版投篮动作引擎，可一键恢复经典动作兜底。
 - `src/perf.js`：运行时性能优化（静态几何矩阵冻结、摄像头模式近场观众 LOD）。
 - `src/player-id.js`：匿名玩家 ID、昵称和本地身份凭证。
 - `src/leaderboard-api.js`：在线成绩提交、离线队列和排行榜 API 客户端。
-- `src/leaderboard-ui.js`：昵称输入、成绩页云端排名和在线排行榜弹层。
+- `src/leaderboard-ui.js`：昵称输入、成绩页云端排名、在线排行榜弹层和赛后雷达评分。
+- `src/result-stats.js`：赛后雷达所需的出手节奏、关键球、点位难度和稳定性统计。
 - `src/audio.js`：外部音频、合成音效、现场氛围和语音播报。
 - `src/face-overlays.js`：可选球员卡通脸贴图模块，当前用于库里头像试验。
 - `src/vision.js`：摄像头、MediaPipe、视觉投篮识别与预览。

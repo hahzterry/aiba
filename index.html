@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>aiBA·百分大战 v1.75 SHOT HAND SIDE</title>
+<title>aiBA·百分大战 v1.78 RESULT RADAR</title>
 <link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -14,7 +14,7 @@
 <div id="bootLoad" role="dialog" aria-modal="true" aria-busy="true" aria-label="游戏资源加载" tabindex="0">
   <div class="bootFrame">
     <div class="bootBrand"><span>ai</span>BA</div>
-    <div class="bootEdition">SHOT HAND SIDE / v1.75</div>
+    <div class="bootEdition">RESULT RADAR / v1.78</div>
     <div class="bootRule"></div>
     <div id="bootStatus" class="bootStatus">正在展开赛场</div>
     <div class="bootMeter" aria-hidden="true"><i id="bootBar"></i></div>
@@ -107,19 +107,19 @@
 <script>typeof THREE==="undefined"&&document.write('<script src="https://lib.baomitu.com/three.js/r128/three.min.js"><\/script>')</script>
 <script src="src/assets-manifest.js"></script>
 <script src="src/config.js"></script>
-<script src="src/player-select.js?v=1.73"></script>
-<script src="src/player-locker-preview.js?v=1.72"></script>
+<script src="src/player-select.js?v=1.76"></script>
+<script src="src/player-locker-preview.js?v=1.76"></script>
 <script src="src/player-id.js"></script>
 <script src="src/leaderboard-api.js"></script>
-<script src="src/leaderboard-ui.js"></script>
+<script src="src/leaderboard-ui.js?v=1.78"></script>
 <script src="src/share.js"></script>
-<script src="src/recorder.js"></script>
+<script src="src/recorder.js?v=1.78"></script>
 <script src="src/shot-physics.js"></script>
 <script src="src/face-overlays.js"></script>
 <script src="src/haptics.js"></script>
 <script>
 /* =====================================================
-   aiBA·百分大战 v1.75 SHOT HAND SIDE
+   aiBA·百分大战 v1.78 RESULT RADAR
    Minecraft-style NBA 3-Point Contest · 单文件实现
    ===================================================== */
 "use strict";
@@ -149,7 +149,7 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------------- constants ---------------- */
-const GAME_VERSION="v1.75-shot-hand-side";
+const GAME_VERSION="v1.78-result-radar";
 const GAME_NAME="aiBA·百分大战";
 const CONFIG=window.AIBA_CONFIG||{};
 // NBA 标准全场坐标：保留原篮筐/三分点，只向远端延长球场。
@@ -164,12 +164,12 @@ const COURT_ATTACK_DIR=V3(0,0,-1);
 const HOOP=V3(0,3.05,COURT.nearHoopZ); // rim center
 const EYE=1.78;
 const RACKS=[
-  {p:V3(-6.7,0,-6.3), n:"左底角"},
-  {p:V3(-5.23,0,-2.77),n:"左侧 45°"},
-  {p:V3(0,0,-0.6),    n:"弧顶"},
-  {p:V3(5.23,0,-2.77),n:"右侧 45°"},
-  {p:V3(6.7,0,-6.3),  n:"右底角"}];
-const DEEPS=[{p:V3(-3.55,0,0.55)},{p:V3(3.55,0,0.55)}];
+  {p:V3(-7.2,0,-6.15), n:"左底角"},
+  {p:V3(-5.62,0,-2.38),n:"左侧 45°"},
+  {p:V3(0,0,-0.05),    n:"弧顶"},
+  {p:V3(5.62,0,-2.38),n:"右侧 45°"},
+  {p:V3(7.2,0,-6.15),  n:"右底角"}];
+const DEEPS=[{p:V3(-3.7,0,0.95)},{p:V3(3.7,0,0.95)}];
 const HALFCOURT={p:V3(0,0,COURT.playMaxZ),n:"中场 LOGO 超远",val:10};
 const DIFFS=CONFIG.DIFFS;
 const IDEAL=74, IDEAL_DEEP=86, IDEAL_HALF=94;
@@ -3366,7 +3366,7 @@ function releaseShot(power,shot){
   const B={mesh,blob,p0:p0.clone(),v0,tf,t:0,phase:"fly",outcome,vel:new THREE.Vector3(),
     val:shot.val,baseVal:shot.baseVal||shot.val,bonus:shot.bonus||0,money:shot.money,deep:isDeep,super:!!shot.super,rush:isRush,made:false,life:3,bounces:0,
     rec:[],timeLeft:G.timer,hot,startPos:p0.clone(),shooterPos:P.pos.clone(),shooterFace:P.face};
-  balls.push(B);
+  B.resultClutch=noteResultAttempt(shot);balls.push(B);
   G.lastErr=err;
   // stats
   if(!G.practice&&!isBattle&&!isRush){
@@ -3428,7 +3428,7 @@ function madeBall(b){
     popScore("✔ 命中","#7CFC6B");toast(CHEERS[(Math.random()*CHEERS.length)|0]);
     return;
   }
-  if(G.mode==="rackrush"){
+  noteResultMake(b);if(G.mode==="rackrush"){
     if(!G.rush||G.state!=="rackrush")return;
     const rush=G.rush,cfg=RACK_RUSH_LEVELS[rush.level],target=isRackRushSpeed(rush)?RACK_RUSH_SPEED_TARGET:rackRushTarget(rush.level);
     rush.levelScore+=b.val;rush.total+=b.val;rush.makes++;rush.levelMakes++;
@@ -3514,7 +3514,7 @@ function missBall(){
   }
   if(G.mode==="battle"){
     if(G.state!=="battle"||G.battleOver)return;
-    G.missRun=(G.missRun||0)+1;
+    G.missRun=(G.missRun||0)+1;noteResultMissRun();
     if(Math.random()<0.45)aww();
     if(triggerMissRunVoice()){updBattleUI();return;}
     toast(MISSES[(Math.random()*MISSES.length)|0],"#ff8d7a");
@@ -3523,12 +3523,12 @@ function missBall(){
   }
   if(G.mode==="rackrush"){
     if(!G.rush||G.state!=="rackrush")return;
-    G.missRun=(G.missRun||0)+1;if(Math.random()<.35)aww();
+    G.missRun=(G.missRun||0)+1;noteResultMissRun();if(Math.random()<.35)aww();
     if(triggerMissRunVoice()){updateRackRushHUD();return;}
     if(Math.random()<.35)toast(MISSES[(Math.random()*MISSES.length)|0],"#ff8d7a");
     updateRackRushHUD();return;
   }
-  G.missRun=(G.missRun||0)+1;
+  G.missRun=(G.missRun||0)+1;noteResultMissRun();
   if(Math.random()<0.45)aww();
   if(triggerMissRunVoice())return;
   // 连续打铁 → 对手垃圾话
@@ -4083,7 +4083,7 @@ function resetRackRushState(variant){
   G.practice=false;G.battleCut=null;
   G.seq=[];G.shotIdx=0;G.score=0;G.streak=0;G.timer=0;G.running=false;G.buzzed=false;
   G.shots=[];G.canShoot=false;G.blindToasted=false;G.cutQ=[];G.cutAway=null;G.missRun=0;
-  G.rush={level:0,total:0,levelScore:0,shotNo:0,attempts:0,makes:0,levelAttempts:0,levelMakes:0,
+  G.stats={best:0,moneyM:0,moneyT:0,deepM:0,deepT:0};G.rush={level:0,total:0,levelScore:0,shotNo:0,attempts:0,makes:0,levelAttempts:0,levelMakes:0,
     bestStreak:0,elapsed:0,levels:[],levelCleared:false,finalTen:false,levelEnding:false,uiAcc:0,
     control:VISION.enabled?"vision":"touch",completed:false,variant,target:variant==="speed100"?RACK_RUSH_SPEED_TARGET:null};
   G.rushResultRecord=null;
@@ -4255,11 +4255,11 @@ function makeRackRushRecord(){
   const rush=G.rush,accuracy=rush.attempts?rush.makes/rush.attempts:0;
   const speed=isRackRushSpeed(rush);
   const profile=playerShotProfile();
-  return {schema:1,version:GAME_VERSION,mode:speed?"rack-rush-speed100":"rack-rush",variant:speed?"speed100":"classic",
+  return Object.assign({schema:1,version:GAME_VERSION,mode:speed?"rack-rush-speed100":"rack-rush",variant:speed?"speed100":"classic",
     target:speed?RACK_RUSH_SPEED_TARGET:null,total:rush.total,highestLevel:speed?1:rush.level+1,completed:!!rush.completed,
     elapsedMs:Math.round(rush.elapsed*1000),attempts:rush.attempts,makes:rush.makes,accuracy,bestStreak:rush.bestStreak,
     levels:rush.levels.slice(),difficulty:G.diff,control:rush.control,playerId:G.myStar&&(G.myStar.id||G.myStar.n),
-    playerName:G.myStar&&G.myStar.n,shotSpeed:profile.speed,sweetWindow:profile.window,shotArc:profile.arc,shotArcLabel:profile.arcLabel,scene:currentScenePreset,weather:currentWeather,seed:GAME_SEED,completedAt:new Date().toISOString()};
+    playerName:G.myStar&&G.myStar.n,shotSpeed:profile.speed,sweetWindow:profile.window,shotArc:profile.arc,shotArcLabel:profile.arcLabel,scene:currentScenePreset,weather:currentWeather,seed:GAME_SEED,completedAt:new Date().toISOString()},summarizeResultStats());
 }
 function saveRackRushRecord(record){
   try{const rows=loadRackRushRuns(record.variant);rows.unshift(record);localStorage.setItem(rackRushStorageKey(record.variant),JSON.stringify(rows.slice(0,50)));}catch(e){}
@@ -4355,12 +4355,12 @@ function loadBattleRuns(){
   try{const v=JSON.parse(localStorage.getItem(BATTLE_RUNS_KEY)||"[]");return Array.isArray(v)?v:[];}catch(e){return[];}
 }
 function makeBattleRecord(win,elapsedMs){
-  const profile=playerShotProfile();
-  return {schema:1,version:GAME_VERSION,mode:"percent-battle",target:BATTLE_TARGET,elapsedMs:Math.round(elapsedMs),won:!!win,
-    eligible:!!win&&G.score>=BATTLE_TARGET,score:Math.min(G.score,BATTLE_TARGET),opponentScore:Math.min(G.battleOppScore||0,BATTLE_TARGET),
+  const profile=playerShotProfile(),attempts=G.stats&&G.stats.attempts||0,makes=G.stats&&G.stats.makes||0,accuracy=attempts?makes/attempts:0;
+  return Object.assign({schema:1,version:GAME_VERSION,mode:"percent-battle",target:BATTLE_TARGET,elapsedMs:Math.round(elapsedMs),won:!!win,
+    eligible:!!win&&G.score>=BATTLE_TARGET,score:Math.min(G.score,BATTLE_TARGET),opponentScore:Math.min(G.battleOppScore||0,BATTLE_TARGET),attempts,makes,accuracy,
     playerId:G.myStar&&(G.myStar.id||G.myStar.n),playerName:G.myStar&&G.myStar.n,opponentId:G.battleOpp&&(G.battleOpp.id||G.battleOpp.n),opponentName:G.battleOpp&&G.battleOpp.n,
     difficulty:G.diff,control:G.battleControl||"touch",scene:currentScenePreset,weather:currentWeather,seed:GAME_SEED,
-    shotSpeed:profile.speed,sweetWindow:profile.window,shotArc:profile.arc,shotArcLabel:profile.arcLabel,bestStreak:G.stats&&G.stats.best,deepMakes:G.stats&&G.stats.deepM,deepAttempts:G.stats&&G.stats.deepT,completedAt:new Date().toISOString()};
+    shotSpeed:profile.speed,sweetWindow:profile.window,shotArc:profile.arc,shotArcLabel:profile.arcLabel,bestStreak:G.stats&&G.stats.best,deepMakes:G.stats&&G.stats.deepM,deepAttempts:G.stats&&G.stats.deepT,completedAt:new Date().toISOString()},summarizeResultStats());
 }
 function saveBattleRecord(record){
   try{const runs=loadBattleRuns();runs.unshift(record);localStorage.setItem(BATTLE_RUNS_KEY,JSON.stringify(runs.slice(0,50)));localStorage.setItem("aiba-battle-last-v1",JSON.stringify(record));}catch(e){}
@@ -5649,8 +5649,10 @@ handBall.visible=false;
 bootGame();
 animate();
 </script>
-<script src="src/gear.js?v=1.72"></script>
-<script src="src/shot-motion.js?v=1.75"></script>
+<script src="src/result-stats.js?v=1.78"></script>
+<script src="src/gear.js?v=1.78"></script>
+<script src="src/avatar-customizer.js?v=1.76"></script>
+<script src="src/shot-motion.js?v=1.77"></script>
 <script src="src/perf.js?v=1.72"></script>
 </body>
 </html>

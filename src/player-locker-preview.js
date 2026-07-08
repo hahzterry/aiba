@@ -7,7 +7,8 @@
   function starKey(star){return star&&(star.id||star.n)||"";}
   function allStars(){
     const cfg=global.AIBA_CONFIG||{},assets=global.AIBA_ASSETS||{};
-    return [...(cfg.CLASSIC_LEGENDS||[]),...(assets.coverStars||[])];
+    const custom=global.AIBACustomizer&&typeof global.AIBACustomizer.listStars==="function"?global.AIBACustomizer.listStars():[];
+    return [...(cfg.CLASSIC_LEGENDS||[]),...(assets.coverStars||[]),...custom];
   }
   function findStar(id){
     if(!id)return null;
@@ -89,11 +90,11 @@
     return {canvas,renderer,scene,rig,camera};
   }
   function renderStar(ctx,id,featured){
-    const key=(id||"__random")+(featured?":pose":":stand");
-    if(cache.has(key))return cache.get(key);
     if(!global.THREE||typeof global.voxelGuy!=="function")return "";
     clearGroup(ctx.rig);
     const star=findStar(id);
+    const key=(id||"__random")+":"+(star&&star.updatedAt||0)+(featured?":pose":":stand");
+    if(cache.has(key))return cache.get(key);
     const guy=global.voxelGuy();
     dressPreview(guy,star);
     if(featured)featuredPose(guy,id);

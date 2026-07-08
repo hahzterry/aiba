@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.75-shot-hand-side.html";
+const snapshot="block-3pt-kingv1.78-result-radar.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -17,6 +17,7 @@ const requiredFiles=[
   "src/config.js",
   "src/player-select.js",
   "src/player-locker-preview.js",
+  "src/avatar-customizer.js",
   "src/player-id.js",
   "src/leaderboard-api.js",
   "src/leaderboard-ui.js",
@@ -24,6 +25,7 @@ const requiredFiles=[
   "src/recorder.js",
   "src/shot-physics.js",
   "src/shot-motion.js",
+  "src/result-stats.js",
   "src/gear.js",
   "src/perf.js",
   "src/face-overlays.js",
@@ -50,18 +52,23 @@ if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html"
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css">'))fail("stylesheet link missing");
 if(!entryHtml.includes('<script src="src/assets-manifest.js"></script>'))fail("assets manifest script missing");
 if(!entryHtml.includes('<script src="src/config.js"></script>'))fail("config script missing");
-if(!entryHtml.includes('<script src="src/player-select.js?v=1.73"></script>'))fail("player select script missing");
-if(!entryHtml.includes('<script src="src/player-locker-preview.js?v=1.72"></script>'))fail("player locker preview script missing");
+if(!entryHtml.includes('<script src="src/player-select.js?v=1.76"></script>'))fail("player select script missing");
+if(!entryHtml.includes('<script src="src/player-locker-preview.js?v=1.76"></script>'))fail("player locker preview script missing");
 if(!entryHtml.includes('<script src="src/player-id.js"></script>'))fail("player id script missing");
 if(!entryHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("leaderboard api script missing");
-if(!entryHtml.includes('<script src="src/leaderboard-ui.js"></script>'))fail("leaderboard ui script missing");
+if(!entryHtml.includes('<script src="src/leaderboard-ui.js?v=1.78"></script>'))fail("leaderboard ui script missing");
 if(!entryHtml.includes('<script src="src/share.js"></script>'))fail("share script missing");
-if(!entryHtml.includes('<script src="src/recorder.js"></script>'))fail("recorder script missing");
+if(!entryHtml.includes('<script src="src/recorder.js?v=1.78"></script>'))fail("recorder script missing");
 if(!entryHtml.includes('<script src="src/shot-physics.js"></script>'))fail("shot physics script missing");
-if(!entryHtml.includes('<script src="src/gear.js?v=1.72"></script>'))fail("gear script missing");
-if(entryHtml.indexOf('<script src="src/gear.js?v=1.72"></script>')<entryHtml.lastIndexOf("animate();"))fail("gear script should load after the main inline script");
-if(!entryHtml.includes('<script src="src/shot-motion.js?v=1.75"></script>'))fail("shot motion script missing");
-if(entryHtml.indexOf('<script src="src/shot-motion.js?v=1.75"></script>')<entryHtml.indexOf('<script src="src/gear.js?v=1.72"></script>'))fail("shot motion should load after gear");
+if(!entryHtml.includes('<script src="src/result-stats.js?v=1.78"></script>'))fail("result stats script missing");
+if(entryHtml.indexOf('<script src="src/result-stats.js?v=1.78"></script>')<entryHtml.lastIndexOf("animate();"))fail("result stats should load after the main inline script");
+if(!entryHtml.includes('<script src="src/gear.js?v=1.78"></script>'))fail("gear script missing");
+if(entryHtml.indexOf('<script src="src/gear.js?v=1.78"></script>')<entryHtml.indexOf('<script src="src/result-stats.js?v=1.78"></script>'))fail("gear script should load after result stats");
+if(entryHtml.indexOf('<script src="src/gear.js?v=1.78"></script>')<entryHtml.lastIndexOf("animate();"))fail("gear script should load after the main inline script");
+if(!entryHtml.includes('<script src="src/avatar-customizer.js?v=1.76"></script>'))fail("avatar customizer script missing");
+if(entryHtml.indexOf('<script src="src/avatar-customizer.js?v=1.76"></script>')<entryHtml.lastIndexOf("animate();"))fail("avatar customizer should load after the main inline script");
+if(!entryHtml.includes('<script src="src/shot-motion.js?v=1.77"></script>'))fail("shot motion script missing");
+if(entryHtml.indexOf('<script src="src/shot-motion.js?v=1.77"></script>')<entryHtml.indexOf('<script src="src/gear.js?v=1.78"></script>'))fail("shot motion should load after gear");
 if(!entryHtml.includes('<script src="src/perf.js?v=1.72"></script>'))fail("perf script missing");
 if(entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>')<entryHtml.lastIndexOf("animate();"))fail("perf script should load after the main inline script");
 if(!entryHtml.includes('<script src="src/face-overlays.js"></script>'))fail("face overlays script missing");
@@ -94,6 +101,7 @@ const manifest=read("src/assets-manifest.js");
 const configScript=read("src/config.js");
 const playerSelectScript=read("src/player-select.js");
 const playerLockerPreviewScript=read("src/player-locker-preview.js");
+const avatarCustomizerScript=read("src/avatar-customizer.js");
 const playerIdScript=read("src/player-id.js");
 const leaderboardApiScript=read("src/leaderboard-api.js");
 const leaderboardUiScript=read("src/leaderboard-ui.js");
@@ -101,6 +109,7 @@ const shareScript=read("src/share.js");
 const recorderScript=read("src/recorder.js");
 const shotPhysicsScript=read("src/shot-physics.js");
 const shotMotionScript=read("src/shot-motion.js");
+const resultStatsScript=read("src/result-stats.js");
 const gearScript=read("src/gear.js");
 const faceOverlaysScript=read("src/face-overlays.js");
 const audioScript=read("src/audio.js");
@@ -110,6 +119,10 @@ try{new Function(playerSelectScript);}
 catch(e){fail("player select script syntax error: "+e.message);}
 try{new Function(playerLockerPreviewScript);}
 catch(e){fail("player locker preview script syntax error: "+e.message);}
+try{new Function(avatarCustomizerScript);}
+catch(e){fail("avatar customizer script syntax error: "+e.message);}
+for(const key of ["AIBACustomizer","customStar","saveUse","applyCustomHead","customHead"])
+  if(!avatarCustomizerScript.includes(key))fail("avatar customizer script missing "+key);
 try{new Function(playerIdScript);}
 catch(e){fail("player id script syntax error: "+e.message);}
 try{new Function(leaderboardApiScript);}
@@ -129,9 +142,15 @@ try{new Function(shotMotionScript);}
 catch(e){fail("shot motion script syntax error: "+e.message);}
 for(const key of ["AIBAMotion","restoreLegacy","installMotionHooks","boardHit","attachBall","STANCE_YAW","tuneGuideHand"])
   if(!shotMotionScript.includes(key))fail("shot motion script missing "+key);
+try{new Function(resultStatsScript);}
+catch(e){fail("result stats script syntax error: "+e.message);}
+for(const key of ["noteResultAttempt","noteResultMake","summarizeResultStats"])
+  if(!resultStatsScript.includes(key))fail("result stats script missing "+key);
 try{new Function(gearScript);}
 catch(e){fail("gear script syntax error: "+e.message);}
 if(!gearScript.includes("AIBAGear")||!gearScript.includes("aiba_gear_v1"))fail("gear script missing AIBAGear exports");
+for(const key of ["黑面具","太阳镜","连帽衫","奇葩头套","mods"])
+  if(!gearScript.includes(key))fail("gear script missing head gear "+key);
 for(const name of ["playerSweetZone","playerChargeRate","startCharge","releaseShot"])
   if(!gearScript.includes('"'+name+'"'))fail("gear script no longer hooks "+name);
 const perfScript=read("src/perf.js");

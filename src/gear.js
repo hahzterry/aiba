@@ -10,7 +10,7 @@
   const SLOTS=[
     {id:"shoes",name:"球鞋",en:"SHOES"},
     {id:"sleeve",name:"护腕护肘",en:"SLEEVE"},
-    {id:"band",name:"头带",en:"HEADBAND"}
+    {id:"band",name:"头部装扮",en:"HEAD"}
   ];
   const CATALOG={
     shoes:[
@@ -29,7 +29,12 @@
       {id:"band-gold",name:"冷静金",color:"#ffd23f",stat:"clutch",amt:.2,desc:"关键时刻准星 +20%"},
       {id:"band-focus",name:"专注青",color:"#7ee7ff",stat:"aim",amt:.08,desc:"准星甜区 +8%"},
       {id:"band-iron",name:"铁人绿",color:"#69d98c",stat:"stamina",amt:.2,desc:"精力上限 +20%"},
-      {id:"band-volt",name:"闪电黄",color:"#f2ef6a",stat:"speed",amt:.1,desc:"投射蓄力 +10%"}
+      {id:"band-volt",name:"闪电黄",color:"#f2ef6a",stat:"speed",amt:.1,desc:"投射蓄力 +10%"},
+      {id:"head-mask",name:"黑面具",color:"#252a36",mods:{clutch:.22,speed:-.05},desc:"关键准星 +22% / 投速 -5%"},
+      {id:"head-cap",name:"棒球帽",color:"#7ee7ff",mods:{stamina:.18,aim:-.04},desc:"精力上限 +18% / 准星 -4%"},
+      {id:"head-shades",name:"太阳镜",color:"#111111",mods:{aim:.12,clutch:-.06},desc:"准星 +12% / 关键 -6%"},
+      {id:"head-hoodie",name:"连帽衫",color:"#9aa7b8",mods:{recovery:.32,speed:-.08},desc:"恢复 +32% / 投速 -8%"},
+      {id:"head-weird",name:"奇葩头套",color:"#ff8df0",mods:{speed:.14,aim:-.08},desc:"投速 +14% / 准星 -8%"}
     ]
   };
   const STAT_NAMES={speed:"投速",aim:"准星",clutch:"关键",stamina:"精力",recovery:"回复",cost:"节能"};
@@ -57,6 +62,18 @@
     const m={speed:1,aim:1,clutch:0,staminaMax:1,cost:1,recovery:1};
     const it=activeItem();
     if(!it)return m;
+    if(it.mods){
+      if(it.mods.speed)m.speed+=it.mods.speed;
+      if(it.mods.aim)m.aim+=it.mods.aim;
+      if(it.mods.clutch)m.clutch+=it.mods.clutch;
+      if(it.mods.stamina)m.staminaMax+=it.mods.stamina;
+      if(it.mods.cost)m.cost+=it.mods.cost;
+      if(it.mods.recovery)m.recovery+=it.mods.recovery;
+      m.speed=Math.max(.7,m.speed);
+      m.aim=Math.max(.72,m.aim);
+      m.cost=Math.max(.55,m.cost);
+      return m;
+    }
     if(it.stat==="speed")m.speed+=it.amt;
     else if(it.stat==="aim")m.aim+=it.amt;
     else if(it.stat==="clutch")m.clutch=it.amt;
@@ -78,6 +95,7 @@
 
   /* ---------------- 精力引擎 ---------------- */
   const STA={v:STA_BASE,max:STA_BASE,out:false,was:false,lastT:0,toastAt:0,lastUseAt:0};
+  const MET={lowMs:0,outCount:0};
   function staminaRatio(){return STA.max?STA.v/STA.max:1;}
   function fatigueFactor(){
     const r=staminaRatio();
@@ -127,6 +145,7 @@
     if(active&&!STA.was){
       STA.max=STA_BASE*mods().staminaMax;
       STA.v=STA.max;STA.out=false;
+      MET.lowMs=0;MET.outCount=0;
       announceGear();
     }
     STA.was=active;
@@ -134,7 +153,8 @@
       const m=mods();
       if(g.charging){STA.v=Math.max(0,STA.v-CHARGE_DRAIN*m.cost*dt);STA.lastUseAt=now;}
       else if(now-STA.lastUseAt>=REGEN_DELAY*1000)STA.v=Math.min(STA.max,STA.v+REGEN*m.recovery*dt);
-      if(!STA.out&&STA.v<=.01){STA.out=true;toastThrottled("💦 精力耗尽 · 喘口气再投!","#ff8d7a");}
+      if(staminaRatio()<TIRED_RATIO)MET.lowMs+=dt*1000;
+      if(!STA.out&&STA.v<=.01){STA.out=true;MET.outCount++;toastThrottled("💦 精力耗尽 · 喘口气再投!","#ff8d7a");}
       if(STA.out&&STA.v>=STA.max*WAKE_RATIO){STA.out=false;toastThrottled("💪 缓过来了 · 继续!","#7CFC6B");}
     }
     updateHud(active);
@@ -255,6 +275,7 @@
     mods,activeItem,activeSummary,clutchActive,
     baseStats,sectionMarkup,onStarPreview,
     stamina:()=>({v:STA.v,max:STA.max,out:STA.out}),
+    staminaMetrics:()=>({lowMs:MET.lowMs,outCount:MET.outCount,ratio:staminaRatio()}),
     _setStamina:v=>{STA.v=clamp(Number(v)||0,0,STA.max);}
   };
 
