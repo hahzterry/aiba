@@ -16,11 +16,11 @@
   }
   function dressPreview(guy,star){
     if(!guy)return;
-    if(star&&star.cover&&typeof global.applyStarStyle==="function")global.applyStarStyle(guy,star);
+    // 有球星就统一走 applyStarStyle:女性发型/体型档案/经典星随机造型全部生效
+    if(star&&star.col&&typeof global.applyStarStyle==="function")global.applyStarStyle(guy,star);
     else{
       if(typeof global.randomizeOutfit==="function")global.randomizeOutfit(guy);
-      if(star&&star.col&&typeof global.dressGuy==="function")global.dressGuy(guy,star.col[0],star.col[1],star.num);
-      else if(typeof global.dressGuy==="function")global.dressGuy(guy,0x202832,0x77e7ff,"?");
+      if(typeof global.dressGuy==="function")global.dressGuy(guy,0x202832,0x77e7ff,"?");
     }
   }
   function idlePose(guy){

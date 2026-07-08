@@ -497,3 +497,6 @@ table.std tr.adv td{box-shadow:inset 0 0 0 2px #ffd23f}
 #staminaWrap b{min-height:10px;color:#ffd23f;font-size:7px;text-shadow:1px 1px 0 #000}
 #staminaWrap[data-sta="out"] b{color:#ff8d7a}
 @keyframes staPulse{0%{opacity:1}50%{opacity:.55}100%{opacity:1}}
+
+/* v1.79 自建球员:装备说明行 */
+.customNote{margin:2px 0 0;padding:8px 10px;color:#8fa3c8;background:rgba(17,24,33,.6);border:1px dashed rgba(126,231,255,.28);font-size:8px;line-height:1.6}

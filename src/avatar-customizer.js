@@ -9,14 +9,17 @@
   const hex=n=>"#"+Number(n||0).toString(16).padStart(6,"0").slice(-6);
   const fromHex=v=>parseInt(String(v||"#ffffff").replace("#",""),16)||0xffffff;
 
+  /* 球衣配色:取自 NBA 官方品牌色值(球队 style guide 公开色),质感优先 */
   const PALETTES=Object.freeze({
     jersey:[
-      {id:"warrior",name:"湾区蓝",a:0x1d428a,b:0xffc72c},
-      {id:"mamba",name:"黑金",a:0x111111,b:0xfdb927},
-      {id:"bull",name:"红黑",a:0xce1141,b:0x111111},
-      {id:"mint",name:"霓虹薄荷",a:0x111b20,b:0x7CFC6B},
-      {id:"violet",name:"紫电",a:0x552583,b:0x7b2cff},
-      {id:"street",name:"街头灰",a:0x26323f,b:0x77e7ff}
+      {id:"laker",name:"湖人紫金",a:0x552583,b:0xfdb927},
+      {id:"celtic",name:"凯尔特人绿",a:0x007a33,b:0xede8d5},
+      {id:"bull",name:"公牛红黑",a:0xce1141,b:0x101010},
+      {id:"warrior",name:"勇士蓝金",a:0x1d428a,b:0xffc72c},
+      {id:"heat",name:"热火酒红",a:0x98002e,b:0xf9a01b},
+      {id:"knick",name:"尼克斯蓝橙",a:0x006bb6,b:0xf58426},
+      {id:"spur",name:"马刺黑银",a:0x14161c,b:0xc4ced4},
+      {id:"sun",name:"太阳紫橙",a:0x1d1160,b:0xe56020}
     ],
     skin:[
       {id:"light",name:"浅肤",v:0xf4c89c},
@@ -28,16 +31,16 @@
       {id:"black",name:"黑",v:0x101010},
       {id:"brown",name:"棕",v:0x4a2c12},
       {id:"gold",name:"金",v:0xd4a83a},
-      {id:"cyan",name:"青",v:0x37d8ff}
-    ],
-    gear:[
-      {id:"white",name:"白",v:0xffffff},
-      {id:"gold",name:"金",v:0xffd23f},
-      {id:"cyan",name:"青",v:0x77e7ff},
-      {id:"red",name:"红",v:0xe03a3e},
-      {id:"black",name:"黑",v:0x111111}
+      {id:"grey",name:"灰白",v:0xb9bdc4}
     ]
   });
+
+  /* 上衣款式:球衣背心 / 连帽衫(帽子戴头上) / 套头卫衣(帽子垂背后),都用球衣配色 */
+  const TOPS=Object.freeze([
+    {id:"vest",name:"球衣背心",copy:"经典无袖,露臂最利落"},
+    {id:"hoodie",name:"连帽衫",copy:"帽子戴头上,街头训练感"},
+    {id:"sweater",name:"套头卫衣",copy:"长袖+垂帽,冷天加练风"}
+  ]);
 
   const HAIRS=Object.freeze([
     {id:"short",name:"短发"},
@@ -60,19 +63,27 @@
     {id:"mask",name:"面具",tag:"MSK",mods:{window:-.03,speed:-.02,r:4},copy:"关键气场强,视野略窄"},
     {id:"cap",name:"帽子",tag:"CAP",mods:{speed:-.03,window:.02,r:1},copy:"稳定一点,出手慢一点"},
     {id:"shades",name:"太阳镜",tag:"SUN",mods:{window:.04,speed:-.04,r:2},copy:"看起来冷,起手略慢"},
-    {id:"hoodie",name:"连帽衫",tag:"HD",mods:{speed:-.07,window:.04,arc:.03,r:2},copy:"稳,但动作没那么快"},
     {id:"mascot",name:"奇葩头套",tag:"FUN",mods:{speed:.06,window:-.08,r:-1},copy:"移动感强,准星明显变窄"}
   ]);
 
+  /* 球鞋/护腕等装备类外观归 gear 装备模块统一叠加,这里只留固定默认值 */
+  const GEAR_DEFAULTS=Object.freeze({shoe:0xffffff});
+
   const defaults=Object.freeze({
-    name:"自建球员",num:"88",jersey:"warrior",skin:"tan",hair:"short",hairColor:"black",
-    shoe:"white",wrist:"cyan",sleeve:"black",head:"band",style:"steady",updatedAt:0
+    name:"自建球员",num:"88",jersey:"laker",skin:"tan",hair:"short",hairColor:"black",
+    top:"vest",head:"band",style:"steady",updatedAt:0
   });
   let state=load();
 
   function opt(list,id){return list.find(i=>i.id===id)||list[0];}
   function load(){
-    try{return {...defaults,...JSON.parse(localStorage.getItem(LS_KEY)||"{}")};}
+    try{
+      const raw=JSON.parse(localStorage.getItem(LS_KEY)||"{}");
+      // 旧档迁移:连帽衫从"头部造型"移到"上衣款式";装备类字段废弃
+      if(raw.head==="hoodie"){raw.head="band";if(!raw.top)raw.top="hoodie";}
+      delete raw.shoe;delete raw.wrist;delete raw.sleeve;
+      return {...defaults,...raw};
+    }
     catch(e){return {...defaults};}
   }
   function persist(){
@@ -93,14 +104,14 @@
   }
   function customStar(){
     const jersey=opt(PALETTES.jersey,state.jersey),skin=opt(PALETTES.skin,state.skin),hair=opt(PALETTES.hair,state.hairColor);
-    const shoe=opt(PALETTES.gear,state.shoe),wrist=opt(PALETTES.gear,state.wrist),sleeve=opt(PALETTES.gear,state.sleeve);
-    const head=opt(HEADS,state.head),style=opt(STYLES,state.style);
+    const head=opt(HEADS,state.head),style=opt(STYLES,state.style),top=opt(TOPS,state.top);
     return {
-      id:CUSTOM_ID,custom:true,cover:true,n:(state.name||defaults.name).slice(0,10),t:`自建球员 · ${style.name} · ${head.name}`,
+      id:CUSTOM_ID,custom:true,cover:true,n:(state.name||defaults.name).slice(0,10),t:`自建球员 · ${style.name} · ${top.id==="vest"?head.name:top.name}`,
       r:rating(),col:[jersey.a,jersey.b],num:String(state.num||"88").replace(/[^\d]/g,"").slice(0,2)||"88",
-      skin:skin.v,shoe:shoe.v,wrist:wrist.v,sleeve:sleeve.v,hair:hair.v,hairStyle:state.hair,beard:false,
-      headband:state.head==="band"?wrist.v:false,customHead:{id:state.head,color:wrist.v},shotProfile:profile(),
-      updatedAt:state.updatedAt||0
+      skin:skin.v,shoe:GEAR_DEFAULTS.shoe,hair:hair.v,hairStyle:state.hair,beard:false,
+      headband:state.head==="band"&&state.top==="vest"?jersey.b:false,
+      customHead:{id:state.head,color:jersey.b},customTop:{id:state.top,a:jersey.a,b:jersey.b},
+      shotProfile:profile(),updatedAt:state.updatedAt||0
     };
   }
   function listStars(){return [customStar()];}
@@ -164,13 +175,13 @@
           <label class="customField"><span>昵称</span><input value="${esc(state.name)}" maxlength="10" oninput="AIBACustomizerSet('name',this.value)"></label>
           <label class="customField"><span>号码</span><input value="${esc(state.num)}" maxlength="2" inputmode="numeric" oninput="AIBACustomizerSet('num',this.value)"></label>
           <div class="customGroup"><b>球衣配色</b><div class="customGrid">${jerseyChips()}</div></div>
+          <div class="customGroup"><b>上衣款式</b><div class="customGrid two">${chips(TOPS,"top")}</div></div>
           <div class="customGroup"><b>投篮模板</b><div class="customGrid two">${styleChips()}</div></div>
           <div class="customGroup"><b>头部造型</b><div class="customGrid two">${headChips()}</div></div>
           <div class="customGroup"><b>肤色</b><div class="customGrid">${chips(PALETTES.skin,"skin")}</div></div>
           <div class="customGroup"><b>发型</b><div class="customGrid">${chips(HAIRS,"hair")}</div></div>
           <div class="customGroup"><b>发色</b><div class="customGrid">${chips(PALETTES.hair,"hairColor")}</div></div>
-          <div class="customGroup"><b>球鞋</b><div class="customGrid">${chips(PALETTES.gear,"shoe")}</div></div>
-          <div class="customGroup"><b>护腕 / 头饰颜色</b><div class="customGrid">${chips(PALETTES.gear,"wrist")}</div></div>
+          <p class="customNote">球鞋 / 护腕 / 头带等装备外观由「装备工坊」统一提供加成与配色，这里不再单独设置。</p>
         </section>
       </div>
       <div class="customActions"><button class="btn" type="button" onclick="AIBACustomizerSaveUse()">保存并上场</button><button class="btn sm" type="button" onclick="AIBACustomizerReset()">恢复默认</button><button class="btn sm" type="button" onclick="showAIBAPlayerSelect()">返回</button></div>
@@ -233,17 +244,56 @@
       addBox(group,.38,.08,.34,0,1.81,0,mat);addBox(group,.3,.035,.22,0,1.755,.19,mat);addBox(group,.22,.03,.22,0,1.74,.3,mat);
     }else if(head==="shades"){
       addBox(group,.105,.055,.035,-.075,1.65,.205,dark);addBox(group,.105,.055,.035,.075,1.65,.205,dark);addBox(group,.06,.02,.035,0,1.65,.21,dark);
-    }else if(head==="hoodie"){
-      addBox(group,.47,.12,.42,0,1.79,-.02,mat);addBox(group,.08,.34,.42,-.22,1.61,-.02,mat);addBox(group,.08,.34,.42,.22,1.61,-.02,mat);addBox(group,.5,.08,.25,0,1.43,-.02,mat);
     }else if(head==="mascot"){
       addBox(group,.46,.46,.46,0,1.63,0,mat);addBox(group,.08,.08,.08,-.12,1.69,.24,dark);addBox(group,.08,.08,.08,.12,1.69,.24,dark);addBox(group,.24,.045,.04,0,1.55,.25,dark);addBox(group,.14,.18,.12,-.28,1.75,0,mat);addBox(group,.14,.18,.12,.28,1.75,0,mat);
     }
     guy.customHeadGroup=group;
     guy.g.add(group);
   }
+  function clearCustomTop(guy){
+    if(!guy||!guy.customTopGroup)return;
+    guy.g.remove(guy.customTopGroup);
+    guy.customTopGroup.traverse(obj=>{
+      if(obj.geometry&&obj.geometry.dispose)obj.geometry.dispose();
+      const mats=Array.isArray(obj.material)?obj.material:[obj.material];
+      mats.filter(Boolean).forEach(mat=>mat.dispose&&mat.dispose());
+    });
+    guy.customTopGroup=null;
+  }
+  function applyCustomTop(guy,star){
+    if(!global.THREE||!guy||!star||!star.customTop)return;
+    clearCustomTop(guy);
+    const top=star.customTop.id,main=new THREE.MeshLambertMaterial({color:star.customTop.a}),trim=new THREE.MeshLambertMaterial({color:star.customTop.b});
+    // 长袖:连帽衫/套头卫衣把两条袖套全部点亮并用球衣主色
+    if(guy.sleeves)guy.sleeves.forEach(s=>{
+      s.visible=top!=="vest";
+      if(top!=="vest")s.material.color.setHex(star.customTop.a);
+    });
+    if(top==="vest")return;
+    const group=new THREE.Group();
+    if(top==="hoodie"){
+      // 帽子戴头上:顶+两侧+后兜+额前帽檐,盖住头发
+      addBox(group,.44,.13,.42,0,1.85,-.02,main);
+      addBox(group,.095,.32,.4,-.215,1.63,-.03,main);
+      addBox(group,.095,.32,.4,.215,1.63,-.03,main);
+      addBox(group,.44,.34,.095,0,1.64,-.225,main);
+      addBox(group,.4,.07,.06,0,1.78,.185,trim);
+      addBox(group,.5,.09,.3,0,1.41,-.03,main);   // 披肩兜边
+    }else{
+      // 套头卫衣:帽子垂在背后 + 领口
+      addBox(group,.42,.13,.14,0,1.43,-.21,main);
+      addBox(group,.32,.11,.11,0,1.32,-.25,main);
+      addBox(group,.4,.06,.3,0,1.45,.01,trim);
+    }
+    guy.customTopGroup=group;
+    guy.g.add(group);
+  }
   function applyStyle(guy,star){
     if(!star||!star.custom)return;
     applyCustomHead(guy,star);
+    applyCustomTop(guy,star);
+    // 装备类外观交给 gear 模块,这里保持确定的默认:护腕隐藏
+    if(guy.wrists)guy.wrists.forEach(w=>{w.visible=false;});
   }
   function patchApplyStarStyle(){
     const orig=global.applyStarStyle;

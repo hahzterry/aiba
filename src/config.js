@@ -38,7 +38,10 @@
     {n:"雷吉·米勒",t:"米勒时刻",r:88,col:[0xfdbb30,0x002d62],num:31},
     {n:"利拉德",t:"利指导 · Logo Shot",r:90,col:[0xe03a3e,0x111111],num:0},
     {n:"科沃尔",t:"接球就有",r:86,col:[0xc8102e,0x26282a],num:26},
-    {n:"佩贾",t:"三分大赛两连冠",r:87,col:[0x5a2d81,0x8a8d8f],num:16}
+    {n:"佩贾",t:"三分大赛两连冠",r:87,col:[0x5a2d81,0x8a8d8f],num:16},
+    {n:"萨布丽娜",t:"三分大赛纪录 · 自由人",r:91,col:[0x6eceb2,0x101820],num:20,sex:"f",hairStyle:"ponytail",hair:0x3a2410,skin:0xf4c89c},
+    {n:"陶乐西",t:"白曼巴 · WNBA得分王",r:92,col:[0x2b1a4e,0xe56020],num:3,sex:"f",hairStyle:"bun",hair:0x1a1210,skin:0xe8c39a},
+    {n:"苏·伯德",t:"四冠传奇控卫",r:89,col:[0x2c5234,0xffc600],num:10,sex:"f",hairStyle:"ponytail",hair:0x4a2c12,skin:0xf4c89c}
   ]);
 
   const DEFAULT_SHOT_PROFILE=Object.freeze({speed:1,window:1,arc:1,arcLabel:"标准弧线",label:"标准出手"});
@@ -55,8 +58,37 @@
     j23:{speed:.84,window:.94,arc:1.13,arcLabel:"滞空高弧",label:"滞空出手"},
     a03:{speed:1.04,window:.99,arc:.96,arcLabel:"低平快拔",label:"快速拔起"},
     v15:{speed:.87,window:.92,arc:1.15,arcLabel:"高点大弧",label:"高点出手"},
-    t01:{speed:.92,window:.97,arc:1.12,arcLabel:"长臂高弧",label:"舒展远射"}
+    t01:{speed:.92,window:.97,arc:1.12,arcLabel:"长臂高弧",label:"舒展远射"},
+    "萨布丽娜":{speed:1.08,window:1.06,arc:1.05,arcLabel:"高弧快射",label:"快速出手"},
+    "陶乐西":{speed:1,window:1.05,arc:1.03,arcLabel:"标准高弧",label:"冷血出手"},
+    "苏·伯德":{speed:.99,window:1.04,arc:1,arcLabel:"平稳弧线",label:"节奏出手"}
   });
+
+  /* 体型档案:h=身高缩放 w=横向体格缩放,按真实球员身材粗调
+     (库里1.88偏瘦 / 伯德2.06 / 米勒瘦长 / AI 1.83小个 / KD高瘦 / 女性球员整体更小) */
+  const DEFAULT_BODY=Object.freeze({h:1,w:1});
+  const BODY_PROFILES=Object.freeze({
+    "库里":{h:.97,w:.96},
+    "克莱·汤普森":{h:1.01,w:1.02},
+    "雷·阿伦":{h:1,w:.99},
+    "拉里·伯德":{h:1.05,w:1.03},
+    "雷吉·米勒":{h:1.02,w:.92},
+    "利拉德":{h:.97,w:1.04},
+    "科沃尔":{h:1.02,w:1},
+    "佩贾":{h:1.05,w:1.01},
+    k24:{h:1.01,w:1},
+    j23:{h:1.01,w:1.02},
+    a03:{h:.93,w:.94},
+    v15:{h:1.01,w:1.03},
+    t01:{h:1.07,w:.93},
+    "萨布丽娜":{h:.94,w:.9},
+    "陶乐西":{h:.95,w:.93},
+    "苏·伯德":{h:.92,w:.88}
+  });
+  function bodyProfileFor(star){
+    if(star&&star.body)return star.body;
+    return BODY_PROFILES[star&&(star.id||star.n)]||DEFAULT_BODY;
+  }
 
   function shotProfileFor(star){
     if(star&&star.shotProfile)return star.shotProfile;
@@ -79,7 +111,10 @@
     CLASSIC_LEGENDS,
     DEFAULT_SHOT_PROFILE,
     SHOT_PROFILES,
+    DEFAULT_BODY,
+    BODY_PROFILES,
     shotProfileFor,
-    shotFlightTime
+    shotFlightTime,
+    bodyProfileFor
   });
 })(window);

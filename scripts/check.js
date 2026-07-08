@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.78-result-radar.html";
+const snapshot="block-3pt-kingv1.79-roster-heroes.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -25,6 +25,8 @@ const requiredFiles=[
   "src/recorder.js",
   "src/shot-physics.js",
   "src/shot-motion.js",
+  "src/roster-style.js",
+  "src/hero-moments.js",
   "src/result-stats.js",
   "src/gear.js",
   "src/perf.js",
@@ -65,10 +67,14 @@ if(entryHtml.indexOf('<script src="src/result-stats.js?v=1.78"></script>')<entry
 if(!entryHtml.includes('<script src="src/gear.js?v=1.78"></script>'))fail("gear script missing");
 if(entryHtml.indexOf('<script src="src/gear.js?v=1.78"></script>')<entryHtml.indexOf('<script src="src/result-stats.js?v=1.78"></script>'))fail("gear script should load after result stats");
 if(entryHtml.indexOf('<script src="src/gear.js?v=1.78"></script>')<entryHtml.lastIndexOf("animate();"))fail("gear script should load after the main inline script");
-if(!entryHtml.includes('<script src="src/avatar-customizer.js?v=1.76"></script>'))fail("avatar customizer script missing");
-if(entryHtml.indexOf('<script src="src/avatar-customizer.js?v=1.76"></script>')<entryHtml.lastIndexOf("animate();"))fail("avatar customizer should load after the main inline script");
+if(!entryHtml.includes('<script src="src/avatar-customizer.js?v=1.79"></script>'))fail("avatar customizer script missing");
+if(entryHtml.indexOf('<script src="src/avatar-customizer.js?v=1.79"></script>')<entryHtml.lastIndexOf("animate();"))fail("avatar customizer should load after the main inline script");
 if(!entryHtml.includes('<script src="src/shot-motion.js?v=1.77"></script>'))fail("shot motion script missing");
 if(entryHtml.indexOf('<script src="src/shot-motion.js?v=1.77"></script>')<entryHtml.indexOf('<script src="src/gear.js?v=1.78"></script>'))fail("shot motion should load after gear");
+if(!entryHtml.includes('<script src="src/roster-style.js?v=1.79"></script>'))fail("roster style script missing");
+if(entryHtml.indexOf('<script src="src/roster-style.js?v=1.79"></script>')<entryHtml.indexOf('<script src="src/avatar-customizer.js?v=1.79"></script>'))fail("roster style should load after avatar customizer");
+if(!entryHtml.includes('<script src="src/hero-moments.js?v=1.79"></script>'))fail("hero moments script missing");
+if(entryHtml.indexOf('<script src="src/hero-moments.js?v=1.79"></script>')<entryHtml.indexOf('<script src="src/shot-motion.js?v=1.77"></script>'))fail("hero moments should load after shot motion");
 if(!entryHtml.includes('<script src="src/perf.js?v=1.72"></script>'))fail("perf script missing");
 if(entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>')<entryHtml.lastIndexOf("animate();"))fail("perf script should load after the main inline script");
 if(!entryHtml.includes('<script src="src/face-overlays.js"></script>'))fail("face overlays script missing");
@@ -142,6 +148,18 @@ try{new Function(shotMotionScript);}
 catch(e){fail("shot motion script syntax error: "+e.message);}
 for(const key of ["AIBAMotion","restoreLegacy","installMotionHooks","boardHit","attachBall","STANCE_YAW","tuneGuideHand"])
   if(!shotMotionScript.includes(key))fail("shot motion script missing "+key);
+const rosterStyleScript=read("src/roster-style.js");
+try{new Function(rosterStyleScript);}
+catch(e){fail("roster style script syntax error: "+e.message);}
+for(const key of ["AIBARosterStyle","ponytail","bodyProfileFor","resetBody"])
+  if(!rosterStyleScript.includes(key))fail("roster style script missing "+key);
+const heroMomentsScript=read("src/hero-moments.js");
+try{new Function(heroMomentsScript);}
+catch(e){fail("hero moments script syntax error: "+e.message);}
+for(const key of ["AIBAHeroMoments","shouldHero","startHero","BATTLE_TARGET","RACK_RUSH_SPEED_TARGET"])
+  if(!heroMomentsScript.includes(key))fail("hero moments script missing "+key);
+if(!configScript.includes("BODY_PROFILES")||!configScript.includes("bodyProfileFor"))fail("config missing body profiles");
+if(!configScript.includes("萨布丽娜")||!configScript.includes("苏·伯德"))fail("config missing female legends");
 try{new Function(resultStatsScript);}
 catch(e){fail("result stats script syntax error: "+e.message);}
 for(const key of ["noteResultAttempt","noteResultMake","summarizeResultStats"])
