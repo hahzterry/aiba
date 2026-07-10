@@ -9,7 +9,7 @@
 - Vercel 自动部署：https://aiba-percent-battle.vercel.app/
 - GitHub Pages 备用：https://opstiger.github.io/aiba-percent-battle/
 
-当前版本：`v1.83-stamina-ring`
+当前版本：`v1.85-gameplay-visuals`
 
 ## 模式
 
@@ -50,7 +50,7 @@ node scripts/check.js
 ## 项目结构
 
 - `index.html`：当前可玩的入口文件。
-- `block-3pt-kingv1.83-stamina-ring.html`：当前版本快照，和 `index.html` 保持一致。
+- `block-3pt-kingv1.85-gameplay-visuals.html`：当前版本快照，和 `index.html` 保持一致。
 - `styles.css`：游戏 HUD、首页、面板和移动端样式。
 - `src/assets-manifest.js`：封面角色、音频等资源清单。
 - `src/player-select.js`：赛前选球员、本地记忆和球员风格展示。
@@ -64,6 +64,7 @@ node scripts/check.js
 - `src/hot-hand.js`：热手系统可视化（连中火焰轨迹、观众声浪分级、脚下热手提示）。
 - `src/perf.js`：运行时性能优化（静态几何矩阵冻结、摄像头模式近场观众 LOD）。
 - `src/perf-settings.js`：玩家可切的性能设置清单（省电分辨率/关光锥/观众密度/关粒子）+ 实时 FPS·draw call 读数，供真机自测。
+- `src/visual-director.js`：比赛画面的低成本天空层和球场材质调校，不启用实时阴影或后处理。
 - `src/player-id.js`：匿名玩家 ID、昵称和本地身份凭证。
 - `src/leaderboard-api.js`：在线成绩提交、离线队列和排行榜 API 客户端。
 - `src/leaderboard-ui.js`：昵称输入、成绩页云端排名、在线排行榜弹层和赛后雷达评分。

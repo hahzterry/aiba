@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>aiBA·百分大战 v1.83 STAMINA RING</title>
+<title>aiBA·百分大战 v1.85 GAMEPLAY VISUALS</title>
 <link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -14,7 +14,7 @@
 <div id="bootLoad" role="dialog" aria-modal="true" aria-busy="true" aria-label="游戏资源加载" tabindex="0">
   <div class="bootFrame">
     <div class="bootBrand"><span>ai</span>BA</div>
-    <div class="bootEdition">STAMINA RING / v1.83</div>
+    <div class="bootEdition">GAMEPLAY VISUALS / v1.85</div>
     <div class="bootRule"></div>
     <div id="bootStatus" class="bootStatus">正在展开赛场</div>
     <div class="bootMeter" aria-hidden="true"><i id="bootBar"></i></div>
@@ -113,13 +113,14 @@
 <script src="src/leaderboard-api.js"></script>
 <script src="src/leaderboard-ui.js?v=1.78"></script>
 <script src="src/share.js"></script>
-<script src="src/recorder.js?v=1.78"></script>
+<script src="src/recorder.js?v=1.84"></script>
 <script src="src/shot-physics.js"></script>
 <script src="src/face-overlays.js"></script>
 <script src="src/haptics.js?v=1.80"></script>
+<script src="src/visual-director.js?v=1.85"></script>
 <script>
 /* =====================================================
-   aiBA·百分大战 v1.83 STAMINA RING
+   aiBA·百分大战 v1.85 GAMEPLAY VISUALS
    Minecraft-style NBA 3-Point Contest · 单文件实现
    ===================================================== */
 "use strict";
@@ -149,7 +150,7 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------------- constants ---------------- */
-const GAME_VERSION="v1.83-stamina-ring";
+const GAME_VERSION="v1.85-gameplay-visuals";
 const GAME_NAME="aiBA·百分大战";
 const CONFIG=window.AIBA_CONFIG||{};
 // NBA 标准全场坐标：保留原篮筐/三分点，只向远端延长球场。
@@ -494,10 +495,10 @@ if(window.visualViewport)visualViewport.addEventListener("resize",debouncedResiz
 resize();
 
 /* lights */
-const ambient=new THREE.AmbientLight(0xffffff,0.5);scene.add(ambient);
-const hemi=new THREE.HemisphereLight(0x99aaff,0x1a1410,0.4);scene.add(hemi);
-const sun=new THREE.DirectionalLight(0xfff1cf,0.95);sun.position.set(7,16,8);scene.add(sun);
-const spot=new THREE.SpotLight(0xffffff,0.7,60,0.7,0.5);spot.position.set(0,14,-4);
+const ambient=new THREE.AmbientLight(0xffffff,0.32);scene.add(ambient);
+const hemi=new THREE.HemisphereLight(0x99aaff,0x1a1410,0.34);scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff1cf,0.8);sun.position.set(7,16,8);scene.add(sun);
+const spot=new THREE.SpotLight(0xffffff,1.0,60,0.7,0.5);spot.position.set(0,14,-4);
 spot.target.position.set(0,0,-6);indoorRoot.add(spot);indoorRoot.add(spot.target);
 
 /* ---------------- pixel texture helpers ---------------- */
@@ -564,7 +565,7 @@ function makeCourtTexture(theme){
   return pixTex(W*PXM,D*PXM,(g)=>{
     const u=x=>(x+W/2)*PXM,v=z=>(z-COURT.floorMinZ)*PXM;
     if(outdoor){
-      g.fillStyle="#58636c";g.fillRect(0,0,W*PXM,D*PXM);
+      g.fillStyle="#43535c";g.fillRect(0,0,W*PXM,D*PXM);
       for(let i=0;i<1800;i++){
         const c=70+((Math.random()*45)|0);g.fillStyle="rgba("+c+","+(c+5)+","+(c+8)+","+rnd(.08,.2)+")";
         const s=Math.random()<.86?1:2;g.fillRect((Math.random()*W*PXM)|0,(Math.random()*D*PXM)|0,s,s);
@@ -573,7 +574,7 @@ function makeCourtTexture(theme){
       // parquet 1m blocks
       for(let x=0;x<W;x++)for(let z=0;z<D;z++){
         const odd=(x+z)%2===0;
-        g.fillStyle=odd?"#a4763f":"#8f6432";
+        g.fillStyle=odd?"#98683a":"#7f542d";
         g.fillRect(x*PXM,z*PXM,PXM,PXM);
         g.fillStyle="rgba(0,0,0,.12)";
         if(Math.random()<.5)g.fillRect(x*PXM,z*PXM,PXM,4);
@@ -581,7 +582,7 @@ function makeCourtTexture(theme){
       }
     }
     // out of bounds apron
-    g.fillStyle=outdoor?"rgba(32,72,64,.58)":"rgba(30,55,110,.55)";
+    g.fillStyle=outdoor?"rgba(20,68,62,.72)":"rgba(20,45,91,.68)";
     g.fillRect(0,0,u(-7.9),D*PXM); g.fillRect(u(7.9),0,W*PXM,D*PXM);
     g.fillRect(0,0,W*PXM,v(COURT.nearBaseline-.32));
     g.fillRect(0,v(COURT.farBaseline+.32),W*PXM,D*PXM-v(COURT.farBaseline+.32));
@@ -592,10 +593,10 @@ function makeCourtTexture(theme){
     g.strokeStyle="rgba(242,242,242,.8)";g.lineWidth=7;g.lineCap="round";
     g.beginPath();g.moveTo(u(-COURT.halfWidth),v(COURT.midZ));g.lineTo(u(COURT.halfWidth),v(COURT.midZ));g.stroke();
     g.beginPath();g.arc(u(0),v(COURT.midZ),1.8*PXM,0,Math.PI*2);g.stroke();
-    // key
+    // key:低饱和填色把禁区从大地板中分出来,不增加额外几何
     const nearFreeThrowZ=COURT.nearBaseline+5.79;
     const farFreeThrowZ=COURT.farBaseline-5.79;
-    g.strokeRect(u(-2.45),v(COURT.nearBaseline),4.9*PXM,5.79*PXM);
+    g.fillStyle=outdoor?"rgba(23,92,88,.26)":"rgba(25,55,108,.28)";g.fillRect(u(-2.45),v(COURT.nearBaseline),4.9*PXM,5.79*PXM);g.strokeRect(u(-2.45),v(COURT.nearBaseline),4.9*PXM,5.79*PXM);
     g.beginPath();g.arc(u(0),v(nearFreeThrowZ),1.8*PXM,0,Math.PI*2);g.stroke();
     // 3pt line (暗白色,完整弧线)
     g.strokeStyle="#d8dde2";g.lineWidth=10;g.lineCap="round";
@@ -658,7 +659,7 @@ function makeCourtTexture(theme){
 function buildCourt(){
   const W=32,D=COURT.floorMaxZ-COURT.floorMinZ;
   courtIndoorTexture=makeCourtTexture("indoor");
-  courtFloor=new THREE.Mesh(new THREE.PlaneGeometry(W,D),new THREE.MeshLambertMaterial({map:courtIndoorTexture}));
+  courtFloor=new THREE.Mesh(new THREE.PlaneGeometry(W,D),new THREE.MeshPhongMaterial({map:courtIndoorTexture,color:0xf4eadc,specular:0x6f5337,shininess:22}));
   courtFloor.rotation.x=-Math.PI/2;
   courtFloor.position.set(0,0,(COURT.floorMinZ+COURT.floorMaxZ)/2);
   scene.add(courtFloor);
@@ -929,7 +930,7 @@ function buildNearCourtCrowd(){
     [-7.8,COURT.nearBaseline-.35,"hype"],[7.8,COURT.nearBaseline-.35,"distract"]
   ];
   const mobile=(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches)||Math.min(innerWidth,innerHeight)<700;
-  const max=mobile?24:30;
+  const max=mobile?12:30;
   slots.slice(0,max).forEach((s,i)=>{
     const pos=V3(s[0]+rnd(-.12,.12),0,s[1]+rnd(-.16,.16));
     const target=Math.abs(pos.x)>8?V3(0,0,Math.min(COURT.playMaxZ,pos.z+.45)):V3(0,0,HOOP.z+.9);
@@ -1544,9 +1545,9 @@ function updateBeachSunset(progress,dt){
   const lamp=smoothRange(.5,.85,progress);
   state.bulbMat.emissiveIntensity=lamp*2.4+finalBoost*1.2;state.bulbMat.color.setHex(lamp>.2?0xffcf89:0x4b4135);
   state.glowMat.opacity=lamp*.22+finalBoost*.1;state.lampLights.forEach(light=>{light.intensity=lamp*1.45+finalBoost*.75;});
-  ambient.intensity=.58-progress*.22+lamp*.12;
-  hemi.intensity=.72-progress*.28+lamp*.12;hemi.color.copy(state.tmpSky).lerp(state.hemiNight,.35);
-  sun.intensity=1.05-progress*.87;sun.color.copy(state.sunLightStart).lerp(state.sunLightEnd,progress);
+  ambient.intensity=.42-progress*.12+lamp*.08;
+  hemi.intensity=.58-progress*.18+lamp*.08;hemi.color.copy(state.tmpSky).lerp(state.hemiNight,.35);
+  sun.intensity=.9-progress*.72;sun.color.copy(state.sunLightStart).lerp(state.sunLightEnd,progress);
   state.nextGull-=dt;
   if(progress<.75&&state.nextGull<=0){spawnBeachGulls(state);state.nextGull=rnd(10,20);}
   for(let i=state.gulls.length-1;i>=0;i--){
@@ -1601,29 +1602,29 @@ function applyScenePreset(name,opts){
   currentWeather=preset.weather;
   indoorRoot.visible=!outdoor;
   rainState=null;
-  disposeEnvironmentRoot(environmentRoot);disposeEnvironmentRoot(weatherRoot);
+  disposeEnvironmentRoot(environmentRoot);disposeEnvironmentRoot(weatherRoot);if(outdoor&&window.AIBAVisual)environmentRoot.add(AIBAVisual.makeSkyDome(THREE,name,COURT.midZ));
   resetStreetCrowd();
   if(courtFloor){
     if(outdoor&&!courtOutdoorTexture)courtOutdoorTexture=makeCourtTexture("outdoorSunny");
     courtFloor.material.map=outdoor?courtOutdoorTexture:courtIndoorTexture;
-    courtFloor.material.color.setHex(rainy?0x9aa7ad:(beach?0xc0a9a0:0xffffff));courtFloor.material.needsUpdate=true;
+    courtFloor.material.color.setHex(rainy?0x9aa7ad:(beach?0xc0a9a0:0xffffff));if(window.AIBAVisual)AIBAVisual.tuneCourt(courtFloor,name);courtFloor.material.needsUpdate=true;
   }
   if(outdoor){
     if(beach){
       scene.background.setHex(0xf1a05f);scene.fog.color.setHex(0xb48272);scene.fog.near=44;scene.fog.far=105;
-      ambient.color.setHex(0xffe0c2);ambient.intensity=.58;
-      hemi.color.setHex(0xffbd86);hemi.groundColor.setHex(0x51444b);hemi.intensity=.72;
-      sun.color.setHex(0xffd5a0);sun.intensity=1.05;sun.position.set(-14,15,-8);spot.intensity=0;
+      ambient.color.setHex(0xffe0c2);ambient.intensity=.4;
+      hemi.color.setHex(0xffbd86);hemi.groundColor.setHex(0x51444b);hemi.intensity=.58;
+      sun.color.setHex(0xffd5a0);sun.intensity=.9;sun.position.set(-14,15,-8);spot.intensity=0;
     }else if(rainy){
       scene.background.setHex(0x657987);scene.fog.color.setHex(0x758690);scene.fog.near=28;scene.fog.far=68;
-      ambient.color.setHex(0xdce8ee);ambient.intensity=.48;
-      hemi.color.setHex(0x9db6c4);hemi.groundColor.setHex(0x405347);hemi.intensity=.58;
-      sun.color.setHex(0xc5d5dc);sun.intensity=.38;sun.position.set(-10,18,10);spot.intensity=0;
+      ambient.color.setHex(0xdce8ee);ambient.intensity=.32;
+      hemi.color.setHex(0x9db6c4);hemi.groundColor.setHex(0x405347);hemi.intensity=.46;
+      sun.color.setHex(0xc5d5dc);sun.intensity=.34;sun.position.set(-10,18,10);spot.intensity=0;
     }else{
-      scene.background.setHex(0x7fc6ed);scene.fog.color.setHex(0xa7c8d7);scene.fog.near=44;scene.fog.far=96;
-      ambient.color.setHex(0xffffff);ambient.intensity=.62;
-      hemi.color.setHex(0xc9ecff);hemi.groundColor.setHex(0x5e7748);hemi.intensity=.82;
-      sun.color.setHex(0xffedbd);sun.intensity=1.15;sun.position.set(-12,22,14);spot.intensity=0;
+      scene.background.setHex(0x236fa8);scene.fog.color.setHex(0x91b8c5);scene.fog.near=42;scene.fog.far=94;
+      ambient.color.setHex(0xeaf3f5);ambient.intensity=.36;
+      hemi.color.setHex(0xb7dded);hemi.groundColor.setHex(0x40583b);hemi.intensity=.55;
+      sun.color.setHex(0xffe2a3);sun.intensity=.9;sun.position.set(-12,22,14);spot.intensity=0;
     }
     if(beach)buildBeachSunset();
     else{
@@ -1634,9 +1635,9 @@ function applyScenePreset(name,opts){
     buildStreetCrowd({beach,rainy,flower});
   }else{
     scene.background.setHex(0x05060c);scene.fog.color.setHex(0x05060c);scene.fog.near=34;scene.fog.far=70;
-    ambient.color.setHex(0xffffff);ambient.intensity=.5;
-    hemi.color.setHex(0x99aaff);hemi.groundColor.setHex(0x1a1410);hemi.intensity=.4;
-    sun.color.setHex(0xfff1cf);sun.intensity=.95;sun.position.set(7,16,8);spot.intensity=.7;
+    ambient.color.setHex(0xdce7f0);ambient.intensity=.32;
+    hemi.color.setHex(0x8799c4);hemi.groundColor.setHex(0x15100d);hemi.intensity=.34;
+    sun.color.setHex(0xffe5b8);sun.intensity=.8;sun.position.set(7,16,8);spot.intensity=1.0;
     updJumbo();
   }
   document.documentElement.dataset.scenePreset=name;
@@ -2064,9 +2065,9 @@ function autoFrameCam(rig,pPos,pJump,faceDir,opts){
   _afCenter.addVectors(_afMin,_afMax).multiplyScalar(0.5);
   _afCenter.y+=opts.lookLift||0.08;
   // 从球员侧后方斜看,但距离由视锥计算得出。转播视角略高、略侧。
-  const sideK=opts.broadcast?0.72:0.52;
-  const backK=opts.broadcast?0.58:0.74;
-  const heightK=opts.broadcast?0.42:0.34;
+  const sideK=opts.sideK!=null?opts.sideK:(opts.broadcast?0.62:0.44);
+  const backK=opts.backK!=null?opts.backK:(opts.broadcast?0.67:0.82);
+  const heightK=opts.heightK!=null?opts.heightK:(opts.broadcast?0.34:0.25);
   _afBack.set(-dir.x*backK+perp.x*side*sideK,heightK,-dir.z*backK+perp.z*side*sideK).normalize();
   _afForward.copy(_afBack).negate();
   _afRight.crossVectors(_afForward,V3(0,1,0)).normalize();
@@ -2075,14 +2076,14 @@ function autoFrameCam(rig,pPos,pJump,faceDir,opts){
   const aspect=camera.aspect||(innerWidth/innerHeight)||1;
   const hFov=2*Math.atan(Math.tan(vFov/2)*aspect);
   const tanH=Math.tan(hFov/2),tanV=Math.tan(vFov/2);
-  const marginX=opts.marginX||1.44,marginY=opts.marginY||1.34;
+  const marginX=opts.marginX||1.32,marginY=opts.marginY||1.24;
   let dist=0;
   _afPts.forEach(p=>{
     _afTmp.copy(p).sub(_afCenter);
     const x=_afTmp.dot(_afRight),y=_afTmp.dot(_afUp),z=_afTmp.dot(_afForward);
     dist=Math.max(dist,Math.abs(x)*marginX/tanH-z,Math.abs(y)*marginY/tanV-z);
   });
-  dist=clamp(dist+0.85,opts.minDist||5.2,opts.maxDist||30);
+  dist=clamp(dist+(opts.pad==null?.45:opts.pad),opts.minDist||5.2,opts.maxDist||30);
   rig.pos.copy(_afCenter).addScaledVector(_afBack,dist);
   rig.look.copy(_afCenter);
 }
@@ -2101,25 +2102,25 @@ function updPlayCam(dt){
   }else if(CAM.mode===1){
     if(isBattle){
       // 取景方向锁定在球场纵轴，人物换点转身不再带着镜头绕场旋转。
-      autoFrameCam(camTarget,P.pos,P.jump,COURT_ATTACK_DIR,{marginX:1.48,marginY:1.36,minDist:5.8,maxDist:32});
+      autoFrameCam(camTarget,P.pos,P.jump,COURT_ATTACK_DIR,{marginX:1.34,marginY:1.28,minDist:5.6,maxDist:32,pad:.55});
       dampRig(dt,4.5);
     }else if(isRush){
-      autoFrameCam(camTarget,P.pos,P.jump,COURT_ATTACK_DIR,{marginX:1.44,marginY:1.34,minDist:5.6,maxDist:18});
+      autoFrameCam(camTarget,P.pos,P.jump,COURT_ATTACK_DIR,{marginX:1.12,marginY:1.12,minDist:4.8,maxDist:18,pad:.08,lookLift:-.52,sideK:.28,backK:.92,heightK:.2});
       dampRig(dt,5.5);
     }else{
-      camTarget.pos.set(P.pos.x-d.x*3.4,2.35+P.jump*0.4,P.pos.z-d.z*3.4);
-      camTarget.look.set(P.pos.x+d.x*2.6,1.7+P.jump*0.5,P.pos.z+d.z*2.6);
+      camTarget.pos.set(P.pos.x-d.x*2.85,2.18+P.jump*0.4,P.pos.z-d.z*2.85);
+      camTarget.look.set(P.pos.x+d.x*2.45,1.66+P.jump*0.5,P.pos.z+d.z*2.45);
       dampRig(dt,6);
     }
   }else{
     if(isBattle){
-      autoFrameCam(camTarget,P.pos,P.jump,COURT_ATTACK_DIR,{broadcast:true,marginX:1.58,marginY:1.42,minDist:6.2,maxDist:34,lookLift:0.18});
+      autoFrameCam(camTarget,P.pos,P.jump,COURT_ATTACK_DIR,{broadcast:true,marginX:1.46,marginY:1.34,minDist:6,maxDist:34,lookLift:0.18,pad:.62});
       dampRig(dt,4.5);
     }else if(isRush){
-      autoFrameCam(camTarget,P.pos,P.jump,COURT_ATTACK_DIR,{broadcast:true,marginX:1.52,marginY:1.4,minDist:6,maxDist:20,lookLift:.16});
+      autoFrameCam(camTarget,P.pos,P.jump,COURT_ATTACK_DIR,{broadcast:true,marginX:1.24,marginY:1.2,minDist:5.4,maxDist:20,lookLift:-.12,pad:.3});
       dampRig(dt,5.2);
     }else{
-      camTarget.pos.set(12.5,5.0,-2.5);
+      camTarget.pos.set(10.8,4.35,-1.4);
       const m=P.pos.clone().lerp(HOOP,0.45);
       camTarget.look.set(m.x,2.1,m.z);
       dampRig(dt,6);

@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.83-stamina-ring.html";
+const snapshot="block-3pt-kingv1.85-gameplay-visuals.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -32,6 +32,7 @@ const requiredFiles=[
   "src/gear.js",
   "src/perf.js",
   "src/perf-settings.js",
+  "src/visual-director.js",
   "src/face-overlays.js",
   "src/haptics.js",
   "src/audio.js",
@@ -53,7 +54,7 @@ const entryHtml=read(entry);
 const snapshotHtml=read(snapshot);
 if(entryHtml!==snapshotHtml)fail(entry+" and "+snapshot+" differ");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v1.83 STAMINA RING","STAMINA RING / v1.83","v1.83-stamina-ring"])
+for(const token of ["v1.85 GAMEPLAY VISUALS","GAMEPLAY VISUALS / v1.85","v1.85-gameplay-visuals"])
   if(!entryHtml.includes(token))fail("visible/game version token missing "+token);
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css">'))fail("stylesheet link missing");
 if(!entryHtml.includes('<script src="src/assets-manifest.js"></script>'))fail("assets manifest script missing");
@@ -64,7 +65,7 @@ if(!entryHtml.includes('<script src="src/player-id.js"></script>'))fail("player 
 if(!entryHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("leaderboard api script missing");
 if(!entryHtml.includes('<script src="src/leaderboard-ui.js?v=1.78"></script>'))fail("leaderboard ui script missing");
 if(!entryHtml.includes('<script src="src/share.js"></script>'))fail("share script missing");
-if(!entryHtml.includes('<script src="src/recorder.js?v=1.78"></script>'))fail("recorder script missing");
+if(!entryHtml.includes('<script src="src/recorder.js?v=1.84"></script>'))fail("recorder script missing");
 if(!entryHtml.includes('<script src="src/shot-physics.js"></script>'))fail("shot physics script missing");
 if(!entryHtml.includes('<script src="src/result-stats.js?v=1.78"></script>'))fail("result stats script missing");
 if(entryHtml.indexOf('<script src="src/result-stats.js?v=1.78"></script>')<entryHtml.lastIndexOf("animate();"))fail("result stats should load after the main inline script");
@@ -87,6 +88,7 @@ if(!entryHtml.includes('<script src="src/perf-settings.js?v=1.81"></script>'))fa
 if(entryHtml.indexOf('<script src="src/perf-settings.js?v=1.81"></script>')<entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>'))fail("perf settings should load after perf");
 if(!entryHtml.includes('<script src="src/face-overlays.js"></script>'))fail("face overlays script missing");
 if(!entryHtml.includes('<script src="src/haptics.js?v=1.80"></script>'))fail("haptics script missing");
+if(!entryHtml.includes('<script src="src/visual-director.js?v=1.85"></script>'))fail("visual director script missing");
 if(!entryHtml.includes('<script src="src/audio.js?v=1.83"></script>'))fail("audio script missing");
 if(!entryHtml.includes('<script src="src/vision.js"></script>'))fail("vision script missing");
 if(/<style>[\s\S]*?<\/style>/.test(entryHtml))fail("inline style block should stay split out");
@@ -129,6 +131,7 @@ const hotHandScript=read("src/hot-hand.js");
 const faceOverlaysScript=read("src/face-overlays.js");
 const hapticsScript=read("src/haptics.js");
 const audioScript=read("src/audio.js");
+const visualDirectorScript=read("src/visual-director.js");
 try{new Function(configScript);}
 catch(e){fail("config script syntax error: "+e.message);}
 try{new Function(playerSelectScript);}
@@ -150,6 +153,9 @@ catch(e){fail("share script syntax error: "+e.message);}
 try{new Function(recorderScript);}
 catch(e){fail("recorder script syntax error: "+e.message);}
 if(!recorderScript.includes("AIBAAudioCaptureStream"))fail("recorder should attach audio capture stream");
+if(!/function tick\(ctxObj\)\{\s*if\(!supported\(\)\|\|!state\.capturing\)return;/.test(recorderScript))fail("recorder tick must stay idle until capture starts");
+for(const token of ["MOBILE?540:720","MOBILE?15:24","MOBILE?1800000:3600000"])
+  if(!recorderScript.includes(token))fail("recorder mobile profile missing "+token);
 const firstMp4=recorderScript.indexOf("video/mp4"),firstWebm=recorderScript.indexOf("video/webm");
 if(firstMp4<0||firstWebm<0||firstMp4>firstWebm)fail("recorder should prefer mp4 before webm");
 try{new Function(shotPhysicsScript);}
@@ -212,6 +218,10 @@ catch(e){fail("config script runtime error: "+e.message);}
 if(!configSandbox.window.AIBA_CONFIG||!configSandbox.window.AIBA_CONFIG.DIFFS)fail("AIBA_CONFIG missing required data");
 try{new Function(audioScript);}
 catch(e){fail("audio script syntax error: "+e.message);}
+try{new Function(visualDirectorScript);}
+catch(e){fail("visual director script syntax error: "+e.message);}
+for(const key of ["AIBAVisual","makeSkyDome","tuneCourt"])
+  if(!visualDirectorScript.includes(key))fail("visual director missing "+key);
 if(/\bglobal\./.test(audioScript))fail("audio script must use browser globals, not bare global");
 if(!audioScript.includes("AIBAAudioCaptureStream"))fail("audio capture stream hook missing");
 for(const key of ["crowdHeat","setCrowdHeat","AIBAAudio"])

@@ -1,7 +1,12 @@
 /* ---------------- vertical highlight recorder ---------------- */
 (function(global){
   "use strict";
-  const W=720,H=1280,POST_MS=9000,RESULT_HOLD_MS=7200,FPS=24;
+  const MOBILE=(()=>{
+    try{return matchMedia("(pointer:coarse)").matches||Math.min(innerWidth,innerHeight)<700;}
+    catch(e){return false;}
+  })();
+  const W=MOBILE?540:720,H=MOBILE?960:1280,POST_MS=9000,RESULT_HOLD_MS=7200,FPS=MOBILE?15:24;
+  const VIDEO_BPS=MOBILE?1800000:3600000;
   const state={
     canvas:null,ctx:null,stream:null,rec:null,chunks:[],lastBlob:null,lastUrl:"",
     lastDraw:0,capturing:false,armed:false,saveWhenReady:false,lastLabel:"精彩时刻",startedAt:0,stopTimer:0,canvasTrack:null,audioTracks:[],resultCard:null,resultAt:0
@@ -212,7 +217,7 @@
     state.chunks.push(e.data);
   }
   function tick(ctxObj){
-    if(!supported())return;
+    if(!supported()||!state.capturing)return;
     const now=performance.now();
     if(now-state.lastDraw<1000/FPS)return;
     state.lastDraw=now;draw(ctxObj);
@@ -221,7 +226,7 @@
     opts=opts||{};state.lastLabel=label||state.lastLabel||"精彩时刻";state.lastBlob=null;
     draw({canvas:document.getElementById("c")});
     state.chunks=[];state.stream=freshStream();
-    const mt=mimeType(),optsRec={videoBitsPerSecond:3600000,audioBitsPerSecond:192000};if(mt)optsRec.mimeType=mt;
+    const mt=mimeType(),optsRec={videoBitsPerSecond:VIDEO_BPS,audioBitsPerSecond:MOBILE?128000:192000};if(mt)optsRec.mimeType=mt;
     state.rec=new MediaRecorder(state.stream,optsRec);
     state.rec.ondataavailable=onData;
     state.rec.onstop=finalizeClip;
