@@ -277,6 +277,7 @@
     const key=keyFor(record),el=document.getElementById(key);
     const line=rankLine(record);
     global.__aibaLastCloudRankText=line.main;
+    if(line.cls==="ok"&&global.AIBARecorder&&global.AIBARecorder.rankUpdated)global.AIBARecorder.rankUpdated();
     if(!el)return;
     el.className="cloudRankBox "+line.cls;
     el.innerHTML=`<small>GLOBAL RANK</small><b>${esc(line.main)}</b><span>${esc(line.sub)}</span>`;

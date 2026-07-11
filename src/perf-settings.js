@@ -7,8 +7,16 @@
   "use strict";
 
   const LS_KEY="aiba_perf_settings_v1";
-  const DEFAULTS={lowRes:false,hideCones:false,crowd:"full",hideParticles:false,fpsMeter:false};
+  const DEFAULTS={autoTune:true,lowRes:false,hideCones:false,crowd:"full",hideParticles:false,fpsMeter:false};
+  const AUTO_DEVICE=(()=>{
+    try{
+      const ua=navigator.userAgent||"";
+      return /iPhone|iPad|iPod/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)||
+        ((global.matchMedia&&global.matchMedia("(pointer:coarse)").matches)&&Math.min(innerWidth,innerHeight)<700);
+    }catch(e){return false;}
+  })();
   let S=load();
+  let autoTier=0,autoLowMs=0,autoCriticalMs=0,activeSince=0,lastActive=false;
   function load(){
     try{return Object.assign({},DEFAULTS,JSON.parse(localStorage.getItem(LS_KEY)||"{}"));}
     catch(e){return Object.assign({},DEFAULTS);}
@@ -17,18 +25,20 @@
   function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 
   /* ---------- 分辨率下限:省电时放开自适应降档空间 ---------- */
-  let rqOrig=null;
+  let rqOrig=null,lowResApplied=false;
   function applyLowRes(on){
     if(typeof RENDER_QUALITY==="undefined")return;
     const q=RENDER_QUALITY;
-    if(!rqOrig)rqOrig={min:q.min,target:q.target,scale:q.scale};
+    if(!rqOrig)rqOrig={min:q.min,target:q.target};
     if(on){
       q.min=Math.min(rqOrig.min,0.6);
       q.target=Math.min(rqOrig.target,0.9);
       q.scale=Math.min(q.scale,0.72);
     }else{
-      q.min=rqOrig.min;q.target=rqOrig.target;q.scale=rqOrig.scale;
+      q.min=rqOrig.min;q.target=rqOrig.target;
+      if(lowResApplied&&q.scale<q.min)q.scale=q.min;
     }
+    lowResApplied=!!on;
     if(typeof applyRenderScale==="function")applyRenderScale(true);
   }
 
@@ -67,6 +77,50 @@
     if(typeof firePts!=="undefined"&&firePts)firePts.visible=!hide;
     if(hide&&typeof confPts!=="undefined"&&confPts)confPts.visible=false;
   }
+
+  /* ---------- 手机自动降档:一局内只降不升,录屏期间冻结 ---------- */
+  function autoActive(){
+    try{return !!(G&&/^(round|tiebreak|battle|rackrush|pregame)$/.test(G.state));}
+    catch(e){return false;}
+  }
+  function recorderBusy(){
+    try{return !!(global.AIBARecorder&&global.AIBARecorder.capturing&&global.AIBARecorder.capturing());}
+    catch(e){return false;}
+  }
+  function applyCrowdPolicy(){
+    if(S.crowd==="off")applyCrowd("off");
+    else if(S.crowd==="thin"||autoTier>=1)applyCrowd("thin");
+    else applyCrowd("full");
+  }
+  function applyRuntimePolicy(){
+    applyLowRes(S.lowRes||autoTier>=2);
+    applyCones(S.hideCones||autoTier>=1);
+    applyCrowdPolicy();
+    applyParticles(S.hideParticles||autoTier>=2);
+    document.documentElement.dataset.autoPerfTier=String(autoTier);
+  }
+  function setAutoTier(next){
+    next=Math.max(autoTier,Math.min(2,next|0));
+    if(next===autoTier)return;
+    autoTier=next;autoLowMs=0;autoCriticalMs=0;applyRuntimePolicy();
+    try{
+      if(typeof toast==="function")toast(autoTier===1?"手机流畅模式已启用":"手机性能保护已加强",autoTier===1?"#7ee7ff":"#ffd23f");
+    }catch(e){}
+  }
+  function autoSample(fps,elapsedMs){
+    if(!AUTO_DEVICE||!S.autoTune)return;
+    const active=autoActive();
+    if(active&&!lastActive){activeSince=performance.now();autoLowMs=0;autoCriticalMs=0;}
+    lastActive=active;
+    if(!active||performance.now()-activeSince<3500||recorderBusy())return;
+    if(autoTier===0){
+      autoLowMs=fps<40?autoLowMs+elapsedMs:Math.max(0,autoLowMs-elapsedMs*.65);
+      if(autoLowMs>=3200)setAutoTier(1);
+    }else if(autoTier===1){
+      autoCriticalMs=fps<32?autoCriticalMs+elapsedMs:Math.max(0,autoCriticalMs-elapsedMs*.7);
+      if(autoCriticalMs>=2600)setAutoTier(2);
+    }
+  }
   // 隐藏纸屑时,拦住庆祝纸屑重新点亮
   function wrapConfetti(){
     const orig=global.startConfetti;
@@ -80,10 +134,7 @@
   }
 
   function applyAll(){
-    applyLowRes(S.lowRes);
-    applyCones(S.hideCones);
-    applyCrowd(S.crowd);
-    applyParticles(S.hideParticles);
+    applyRuntimePolicy();
     updateMeter(S.fpsMeter);
   }
 
@@ -105,15 +156,16 @@
   }
   function meterTick(now){
     requestAnimationFrame(meterTick);
-    if(!meterOn)return;
+    if(document.hidden){lastT=now;acc=0;frames=0;return;}
     frames++;
     acc+=now-(lastT||now);lastT=now;
     if(acc>=500){
       shownFps=Math.round(frames*1000/acc);
+      autoSample(shownFps,acc);
       const f=document.getElementById("pmFps");
-      if(f){f.textContent=shownFps;f.dataset.tier=shownFps>=50?"good":(shownFps>=35?"ok":"bad");}
+      if(meterOn&&f){f.textContent=shownFps;f.dataset.tier=shownFps>=50?"good":(shownFps>=35?"ok":"bad");}
       const sub=document.getElementById("pmSub");
-      if(sub){
+      if(meterOn&&sub){
         let calls="--",scale="--";
         try{if(typeof renderer!=="undefined"&&renderer.info)calls=renderer.info.render.calls;}catch(e){}
         try{if(typeof RENDER_QUALITY!=="undefined")scale=(RENDER_QUALITY.scale||1).toFixed(2);}catch(e){}
@@ -138,6 +190,7 @@
   function panelMarkup(){
     return `<div class="perfPanel">
       <div class="perfHead"><small>PERFORMANCE LAB</small><h1>性能设置</h1><p>逐项开关,配合右上角 FPS 读数,在你的手机上试出哪项最有效。iOS 卡顿多半来自填充率与 draw call,下面这些正是冲它去的。</p></div>
+      ${toggleRow("autoTune","自动流畅保护",AUTO_DEVICE?(autoTier?`本次已自动降到 ${autoTier} 档,录屏期间不会切档`:"持续低帧时自动精简观众与特效"):"手机端生效,桌面端保持原画质")}
       ${toggleRow("lowRes","省电分辨率","压低渲染分辨率下限,最直接的提帧手段(画面会略糊)")}
       ${toggleRow("hideCones","关灯光光锥","关掉体育馆透明光柱,iOS 填充率大头")}
       ${crowdRow()}
@@ -161,13 +214,13 @@
     if(p)p.outerHTML=panelMarkup();
   }
   function toggle(key){
-    S[key]=!S[key];save();applyAll();rerender();
+    S[key]=!S[key];save();if(key==="autoTune"){autoLowMs=0;autoCriticalMs=0;lastActive=false;if(!S.autoTune)autoTier=0;}applyAll();rerender();
   }
   function setCrowd(level){
-    S.crowd=level;save();applyCrowd(level);rerender();
+    S.crowd=level;save();applyCrowdPolicy();rerender();
   }
   function reset(){
-    S=Object.assign({},DEFAULTS);save();applyAll();rerender();
+    S=Object.assign({},DEFAULTS);autoTier=0;autoLowMs=0;autoCriticalMs=0;save();applyAll();rerender();
   }
   function close(){
     const g=(typeof G!=="undefined")?G:null;
@@ -204,5 +257,5 @@
   global.AIBAPerfCrowd=setCrowd;
   global.AIBAPerfReset=reset;
   global.AIBAPerfClose=close;
-  global.AIBAPerfSettings={open:openPanel,get:()=>Object.assign({},S),applyAll,fps:()=>shownFps};
+  global.AIBAPerfSettings={open:openPanel,get:()=>Object.assign({},S),applyAll,fps:()=>shownFps,auto:()=>({eligible:AUTO_DEVICE,tier:autoTier})};
 })(window);

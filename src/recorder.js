@@ -5,11 +5,12 @@
     try{return matchMedia("(pointer:coarse)").matches||Math.min(innerWidth,innerHeight)<700;}
     catch(e){return false;}
   })();
-  const W=MOBILE?540:720,H=MOBILE?960:1280,POST_MS=9000,RESULT_HOLD_MS=7200,FPS=MOBILE?15:24;
+  const W=MOBILE?540:720,H=MOBILE?960:1280,POST_MS=6200,RESULT_HOLD_MS=5200,FPS=MOBILE?15:24;
+  const MAX_CLIP_MS=18000,MIN_RESULT_MS=4800,RANK_HOLD_MS=1800;
   const VIDEO_BPS=MOBILE?1800000:3600000;
   const state={
     canvas:null,ctx:null,stream:null,rec:null,chunks:[],lastBlob:null,lastUrl:"",
-    lastDraw:0,capturing:false,armed:false,saveWhenReady:false,lastLabel:"精彩时刻",startedAt:0,stopTimer:0,canvasTrack:null,audioTracks:[],resultCard:null,resultAt:0
+    lastDraw:0,capturing:false,armed:false,saveWhenReady:false,lastLabel:"精彩时刻",startedAt:0,stopTimer:0,canvasTrack:null,audioTracks:[],resultCard:null,resultAt:0,stopAt:0
   };
   function supported(){
     return !!(global.MediaRecorder&&HTMLCanvasElement.prototype.captureStream);
@@ -223,7 +224,7 @@
     state.lastDraw=now;draw(ctxObj);
   }
   function startRecording(label,opts){
-    opts=opts||{};state.lastLabel=label||state.lastLabel||"精彩时刻";state.lastBlob=null;
+    opts=opts||{};state.lastLabel=label||state.lastLabel||"精彩时刻";state.lastBlob=null;clearTimeout(state.stopTimer);state.stopAt=0;
     draw({canvas:document.getElementById("c")});
     state.chunks=[];state.stream=freshStream();
     const mt=mimeType(),optsRec={videoBitsPerSecond:VIDEO_BPS,audioBitsPerSecond:MOBILE?128000:192000};if(mt)optsRec.mimeType=mt;
@@ -241,26 +242,44 @@
     if(state.capturing)return true;
     try{startRecording(label||"最后回合预录",{armed:true});return true;}catch(e){state.capturing=false;state.armed=false;updateStatus("精彩视频预录失败");return false;}
   }
+  function scheduleStop(ms,minHold,capToTarget){
+    if(!state.capturing)return false;
+    const now=performance.now(),age=Math.max(0,now-state.startedAt),minimum=Math.max(0,minHold||0);
+    let delay=Math.max(1200,ms||POST_MS);
+    if(capToTarget)delay=Math.min(delay,Math.max(minimum,MAX_CLIP_MS-age));
+    if(minimum)delay=Math.max(minimum,delay);
+    clearTimeout(state.stopTimer);state.stopAt=now+delay;state.stopTimer=setTimeout(stopRecording,delay);
+    return true;
+  }
   function mark(label,opts){
     if(!supported())return false;
     opts=opts||{};state.lastLabel=label||"精彩时刻";state.lastBlob=null;
-    if(state.capturing){state.armed=false;clearTimeout(state.stopTimer);state.stopTimer=setTimeout(stopRecording,opts.postMs||POST_MS);updateStatus("最后几球已捕捉,继续录制庆祝...");return true;}
+    if(state.capturing){state.armed=false;scheduleStop(opts.postMs||POST_MS,0);updateStatus("最后三球已捕捉,继续录制庆祝...");return true;}
     try{
       startRecording(state.lastLabel,{armed:false});
-      clearTimeout(state.stopTimer);state.stopTimer=setTimeout(stopRecording,opts.postMs||POST_MS);
+      scheduleStop(opts.postMs||POST_MS,0);
       return true;
     }catch(e){state.capturing=false;state.armed=false;updateStatus("精彩视频生成失败");return false;}
   }
   function extend(ms){
     if(!state.capturing)return false;
-    clearTimeout(state.stopTimer);state.stopTimer=setTimeout(stopRecording,Math.max(1200,ms||POST_MS));
+    scheduleStop(ms||POST_MS,0);
     updateStatus("正在录制庆祝和成绩卡...");
     return true;
   }
   function result(record,opts){
     state.resultCard=cardFromRecord(record,opts);
     state.resultAt=performance.now();
-    return extend((opts&&opts.postMs)||RESULT_HOLD_MS+1800);
+    if(!state.capturing)return false;
+    scheduleStop(Math.min((opts&&opts.postMs)||RESULT_HOLD_MS+1000,RESULT_HOLD_MS+1000),MIN_RESULT_MS,true);
+    updateStatus("正在录制庆祝、成绩卡和全球排名...");
+    return true;
+  }
+  function rankUpdated(){
+    if(!state.capturing||!state.resultCard)return false;
+    const now=performance.now(),remaining=Math.max(0,state.stopAt-now);
+    if(remaining<RANK_HOLD_MS)scheduleStop(RANK_HOLD_MS,RANK_HOLD_MS);
+    return true;
   }
   function stopRecording(){
     try{if(state.rec&&state.rec.state==="recording")state.rec.requestData();}catch(e){}
@@ -276,7 +295,7 @@
     if(state.lastUrl)URL.revokeObjectURL(state.lastUrl);
     state.lastUrl=URL.createObjectURL(state.lastBlob);
     try{if(state.canvasTrack)state.canvasTrack.stop();}catch(e){}
-    state.stream=null;state.rec=null;state.canvasTrack=null;state.audioTracks=[];state.chunks=[];
+    state.stream=null;state.rec=null;state.canvasTrack=null;state.audioTracks=[];state.chunks=[];state.stopAt=0;
     updateStatus(statusText());
     try{if(typeof toast==="function")toast(/mp4/i.test(state.lastBlob.type)?"精彩MP4已生成":"精彩视频已生成(WebM)","#7CFC6B");}catch(e){}
     if(state.saveWhenReady){state.saveWhenReady=false;save();}
@@ -299,5 +318,5 @@
     if(!supported())return "";
     return `<div class="clipExport"><button id="clipSaveBtn" class="btn sm" onclick="AIBARecorder.save()">🎞 保存MP4视频</button><small id="clipStatus">${wantsMp4()?statusText():"当前浏览器不支持MP4录制,将降级WebM"}</small></div>`;
   }
-  global.AIBARecorder=Object.freeze({tick,arm,mark,result,save,resultMarkup,statusText,supported});
+  global.AIBARecorder=Object.freeze({tick,arm,mark,result,rankUpdated,save,resultMarkup,statusText,supported,capturing:()=>state.capturing,debug:()=>({capturing:state.capturing,armed:state.armed,startedAt:state.startedAt,stopAt:state.stopAt})});
 })(window);

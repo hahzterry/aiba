@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.86-stable-boards.html";
+const snapshot="block-3pt-kingv1.87-mobile-flow.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -54,7 +54,7 @@ const entryHtml=read(entry);
 const snapshotHtml=read(snapshot);
 if(entryHtml!==snapshotHtml)fail(entry+" and "+snapshot+" differ");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v1.86 STABLE BOARDS","STABLE BOARDS / v1.86","v1.86-stable-boards"])
+for(const token of ["v1.87 MOBILE FLOW","MOBILE FLOW / v1.87","v1.87-mobile-flow"])
   if(!entryHtml.includes(token))fail("visible/game version token missing "+token);
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css">'))fail("stylesheet link missing");
 if(!entryHtml.includes('<script src="src/assets-manifest.js"></script>'))fail("assets manifest script missing");
@@ -63,9 +63,9 @@ if(!entryHtml.includes('<script src="src/player-select.js?v=1.76"></script>'))fa
 if(!entryHtml.includes('<script src="src/player-locker-preview.js?v=1.76"></script>'))fail("player locker preview script missing");
 if(!entryHtml.includes('<script src="src/player-id.js"></script>'))fail("player id script missing");
 if(!entryHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("leaderboard api script missing");
-if(!entryHtml.includes('<script src="src/leaderboard-ui.js?v=1.78"></script>'))fail("leaderboard ui script missing");
+if(!entryHtml.includes('<script src="src/leaderboard-ui.js?v=1.87"></script>'))fail("leaderboard ui script missing");
 if(!entryHtml.includes('<script src="src/share.js"></script>'))fail("share script missing");
-if(!entryHtml.includes('<script src="src/recorder.js?v=1.84"></script>'))fail("recorder script missing");
+if(!entryHtml.includes('<script src="src/recorder.js?v=1.87"></script>'))fail("recorder script missing");
 if(!entryHtml.includes('<script src="src/shot-physics.js"></script>'))fail("shot physics script missing");
 if(!entryHtml.includes('<script src="src/result-stats.js?v=1.78"></script>'))fail("result stats script missing");
 if(entryHtml.indexOf('<script src="src/result-stats.js?v=1.78"></script>')<entryHtml.lastIndexOf("animate();"))fail("result stats should load after the main inline script");
@@ -84,8 +84,8 @@ if(!entryHtml.includes('<script src="src/hot-hand.js?v=1.81"></script>'))fail("h
 if(entryHtml.indexOf('<script src="src/hot-hand.js?v=1.81"></script>')<entryHtml.indexOf('<script src="src/hero-moments.js?v=1.79"></script>'))fail("hot hand should load after hero moments");
 if(!entryHtml.includes('<script src="src/perf.js?v=1.72"></script>'))fail("perf script missing");
 if(entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>')<entryHtml.indexOf('<script src="src/hot-hand.js?v=1.81"></script>'))fail("perf script should load after hot hand");
-if(!entryHtml.includes('<script src="src/perf-settings.js?v=1.81"></script>'))fail("perf settings script missing");
-if(entryHtml.indexOf('<script src="src/perf-settings.js?v=1.81"></script>')<entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>'))fail("perf settings should load after perf");
+if(!entryHtml.includes('<script src="src/perf-settings.js?v=1.87"></script>'))fail("perf settings script missing");
+if(entryHtml.indexOf('<script src="src/perf-settings.js?v=1.87"></script>')<entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>'))fail("perf settings should load after perf");
 if(!entryHtml.includes('<script src="src/face-overlays.js"></script>'))fail("face overlays script missing");
 if(!entryHtml.includes('<script src="src/haptics.js?v=1.80"></script>'))fail("haptics script missing");
 if(!entryHtml.includes('<script src="src/visual-director.js?v=1.85"></script>'))fail("visual director script missing");
@@ -94,6 +94,20 @@ if(!entryHtml.includes('<script src="src/vision.js"></script>'))fail("vision scr
 if(/<style>[\s\S]*?<\/style>/.test(entryHtml))fail("inline style block should stay split out");
 if(/const COVER_STARS=\[/.test(entryHtml)||/const EXT_AUDIO=\{/.test(entryHtml))fail("asset manifest data leaked back into html");
 if(/assets\/aiba-covers\/[^"')]+\.png/.test(entryHtml))fail("runtime should not reference png cover assets");
+function functionSource(name){
+  const start=entryHtml.indexOf("function "+name+"(");
+  if(start<0)return "";
+  const end=entryHtml.indexOf("\nfunction ",start+10);
+  return entryHtml.slice(start,end<0?entryHtml.length:end);
+}
+if(!/function resetProgressiveSceneForRun\(\).*applyScenePreset\(currentScenePreset,\{persist:false\}\)/.test(entryHtml))fail("progressive scene reset helper missing");
+for(const name of ["startPractice","startRackRush","startBattle","startRound"]){
+  if(!functionSource(name).includes("resetProgressiveSceneForRun()"))fail(name+" must reset progressive scene before a new run");
+}
+for(const token of ['dataset.flowerCount="0"','dataset.environmentPhase=progress<.25?"golden"'])
+  if(!entryHtml.includes(token))fail("progressive scene initialization missing "+token);
+for(const token of ['rush.total>=88','G.timer<=12&&window.AIBARecorder','>=85&&window.AIBARecorder'])
+  if(!entryHtml.includes(token))fail("last-three-shot recorder arming missing "+token);
 
 function inlineScriptLineCount(html){
   return [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
@@ -148,6 +162,7 @@ try{new Function(leaderboardApiScript);}
 catch(e){fail("leaderboard api script syntax error: "+e.message);}
 try{new Function(leaderboardUiScript);}
 catch(e){fail("leaderboard ui script syntax error: "+e.message);}
+if(!leaderboardUiScript.includes("AIBARecorder.rankUpdated"))fail("leaderboard result should notify recorder when global rank arrives");
 try{new Function(shareScript);}
 catch(e){fail("share script syntax error: "+e.message);}
 try{new Function(recorderScript);}
@@ -156,6 +171,8 @@ if(!recorderScript.includes("AIBAAudioCaptureStream"))fail("recorder should atta
 if(!/function tick\(ctxObj\)\{\s*if\(!supported\(\)\|\|!state\.capturing\)return;/.test(recorderScript))fail("recorder tick must stay idle until capture starts");
 for(const token of ["MOBILE?540:720","MOBILE?15:24","MOBILE?1800000:3600000"])
   if(!recorderScript.includes(token))fail("recorder mobile profile missing "+token);
+for(const token of ["MAX_CLIP_MS=18000","MIN_RESULT_MS=4800","rankUpdated","最后三球已捕捉"])
+  if(!recorderScript.includes(token))fail("recorder highlight window missing "+token);
 const firstMp4=recorderScript.indexOf("video/mp4"),firstWebm=recorderScript.indexOf("video/webm");
 if(firstMp4<0||firstWebm<0||firstMp4>firstWebm)fail("recorder should prefer mp4 before webm");
 try{new Function(shotPhysicsScript);}
@@ -201,7 +218,7 @@ if(/HandLandmarker|minPoseDetectionConfidence|detectForVideo/.test(perfScript))f
 const perfSettingsScript=read("src/perf-settings.js");
 try{new Function(perfSettingsScript);}
 catch(e){fail("perf settings script syntax error: "+e.message);}
-for(const key of ["AIBAPerfSettings","aiba_perf_settings_v1","meterTick","applyLowRes"])
+for(const key of ["AIBAPerfSettings","aiba_perf_settings_v1","meterTick","applyLowRes","autoSample","recorderBusy","autoPerfTier"])
   if(!perfSettingsScript.includes(key))fail("perf settings script missing "+key);
 if(/HandLandmarker|minPoseDetectionConfidence|detectForVideo/.test(perfSettingsScript))fail("perf settings must not touch pose detection");
 try{new Function(faceOverlaysScript);}
