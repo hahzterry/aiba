@@ -334,11 +334,12 @@
     return params;
   }
   function boardScopeLabel(period,data){
+    const cached=data&&data.cached?" · 缓存":"";
     if(period==="today"){
-      if(data&&data.period==="date")return "今日全球记录";
-      return "今日榜";
+      if(data&&data.period==="date")return "今日全球记录"+cached;
+      return "今日榜"+cached;
     }
-    return "全球总榜";
+    return "全球总榜"+cached;
   }
   function boardRowsMarkup(def,rows){
     if(def.soon)return `<tr><td colspan="4">三分大赛云端榜稍后接入</td></tr>`;
@@ -347,6 +348,12 @@
     return rows.slice(0,8).map(row=>`<tr><td>${row.rank}</td><td>${esc(rowName(row))}</td><td>${rowScoreText(row,record)}</td><td>${row.makes==null?"-":row.makes+"/"+row.attempts}</td></tr>`).join("");
   }
   function boardCardMarkup(def,data,period){
+    if(data&&data.ok===false){
+      const err=String(data.error||"leaderboard_failed").replace(/^Error:\s*/,"");
+      return `<section class="leaderboardCard error"><div class="leaderboardCardHead"><span><small>${period==="today"?"今日榜":"全球总榜"}</small><b>${esc(def.title)}</b></span><em>${esc(def.hint)}</em></div>
+        <div class="note">读取失败：${esc(err)}<br>网络恢复后成绩会继续补交。</div>
+        <button class="btn sm" onclick="showLeaderboardHub('${esc(period)}','${esc(def.key)}')">重试</button></section>`;
+    }
     const pendingDaily=period==="today"&&data&&!data.soon&&data.period!=="date";
     const rows=pendingDaily?[]:(data&&data.rows||[]);
     return `<section class="leaderboardCard"><div class="leaderboardCardHead"><span><small>${esc(boardScopeLabel(period,data))}</small><b>${esc(def.title)}</b></span><em>${esc(def.hint)}</em></div>
@@ -365,6 +372,7 @@
       <div class="leaderboardTabs"><button class="${period==="today"?"on":""}" onclick="showLeaderboardHub('today','${esc(focus||"")}')">今日榜</button><button class="${period==="all"?"on":""}" onclick="showLeaderboardHub('all','${esc(focus||"")}')">总榜</button><button onclick="copyAIBAChallenge('${esc(focus||"speed100")}')">好友挑战</button></div>
       <div id="leaderboardHubRows" class="leaderboardCards"><div class="note">正在读取全球记录...</div></div><button class="btn sm" onclick="${focus?"goDiff(G.mode,true)":"showMenu()"}">返回</button>`);
     try{
+      if(global.AIBALeaderboard&&global.AIBALeaderboard.flush)global.AIBALeaderboard.flush().catch(()=>{});
       const results=await Promise.all(defs.map(def=>def.soon?Promise.resolve({ok:true,rows:[],soon:true}):global.AIBALeaderboard.leaderboard(boardParams(def,period,8,!!focus)).catch(e=>({ok:false,rows:[],error:String(e&&e.message||e)}))));
       const el=document.getElementById("leaderboardHubRows");
       if(el)el.innerHTML=defs.map((def,i)=>boardCardMarkup(def,results[i],period)).join("");

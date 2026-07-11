@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.85-gameplay-visuals.html";
+const snapshot="block-3pt-kingv1.86-stable-boards.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -54,7 +54,7 @@ const entryHtml=read(entry);
 const snapshotHtml=read(snapshot);
 if(entryHtml!==snapshotHtml)fail(entry+" and "+snapshot+" differ");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v1.85 GAMEPLAY VISUALS","GAMEPLAY VISUALS / v1.85","v1.85-gameplay-visuals"])
+for(const token of ["v1.86 STABLE BOARDS","STABLE BOARDS / v1.86","v1.86-stable-boards"])
   if(!entryHtml.includes(token))fail("visible/game version token missing "+token);
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css">'))fail("stylesheet link missing");
 if(!entryHtml.includes('<script src="src/assets-manifest.js"></script>'))fail("assets manifest script missing");
