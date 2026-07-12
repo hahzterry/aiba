@@ -268,13 +268,21 @@ let MUTED=false;
 let AUDIO_READY=false,AUDIO_PRIMED=false;
 let sceneAudioTick=0;
 const extA={};
+const audioIssueLogAt=Object.create(null),mediaRetryAt=Object.create(null);
+function noteAudioIssue(scope,error){
+  try{
+    const message=String(error&&error.message||error||"blocked").slice(0,96);
+    document.documentElement.dataset.audioIssue=scope+":"+message;
+    const now=Date.now();if(now-(audioIssueLogAt[scope]||0)>5000){audioIssueLogAt[scope]=now;console.warn("[aiBA audio] "+scope,message);}
+  }catch(e){}
+}
 function mediaBusForKey(k){
   if(k==="bgm")return musicBus||master;
   if(k==="crowd"||k==="crowdCheer")return arenaBus||master;
   return arenaBus||sfxBus||master;
 }
 function routeExternalMediaElement(k,a){
-  if(!AC||!a||a._aibaExtSource)return false;
+  if(!AC||AC.state!=="running"||!a||a._aibaExtSource)return false;
   try{a._aibaExtSource=AC.createMediaElementSource(a);a._aibaExtSource.connect(mediaBusForKey(k));return true;}catch(e){return false;}
 }
 function ensureAudioCaptureDestination(){
@@ -309,6 +317,7 @@ function syncAudioDebug(){
   }catch(e){}
 }
 function extInit(){
+  if(Object.keys(extA).length)return;
   for(const k in EXT_AUDIO){
     const u=EXT_AUDIO[k];if(!u)continue;
     try{
@@ -324,9 +333,10 @@ function extInit(){
 }
 function extPlay(k){
   const a=extA[k];if(!a||MUTED)return false;
+  if(Date.now()<(mediaRetryAt[k]||0))return false;
   try{
     routeExternalMediaElement(k,a);
-    const playSafe=x=>{const p=x.play();if(p&&p.then)p.then(()=>syncAudioDebug()).catch(()=>syncAudioDebug());};
+    const playSafe=x=>{const p=x.play();if(p&&p.then)p.then(()=>{mediaRetryAt[k]=0;delete document.documentElement.dataset.audioIssue;syncAudioDebug();}).catch(e=>{mediaRetryAt[k]=Date.now()+2500;noteAudioIssue("media-play",e);syncAudioDebug();});};
     if(a.loop){if(a.paused)playSafe(a);}
     else if(k==="gull"){a.currentTime=0;playSafe(a);}
     else{const c=a.cloneNode();c.volume=a.volume;routeExternalMediaElement(k,c);playSafe(c);}
@@ -334,6 +344,7 @@ function extPlay(k){
   return true;
 }
 function extStop(k){const a=extA[k];if(a)try{a.pause()}catch(e){}}
+extInit();
 function sceneAudioArenaLike(){
   return G.state==="cinematic"||G.state==="round"||G.state==="roundend"||G.state==="aishow"||G.state==="tiebreak"||G.state==="battle"||G.state==="battleend"||G.state==="rackrush"||G.state==="rushintro"||G.state==="rushbetween"||G.state==="rushend"||G.state==="wincine"||G.state==="victorycine"||G.state==="replay";
 }
@@ -460,7 +471,7 @@ function playVoiceUrl(u,role,opt){
     a.volume=opt.volume==null?(routed?0.92:0.78):opt.volume;
     a.currentTime=0;
     voiceMicTransient(role);
-    const p=a.play();if(p&&p.catch)p.catch(()=>{});
+    const p=a.play();if(p&&p.catch)p.catch(e=>noteAudioIssue("voice-play",e));
     const duck=voiceDuckForRole(role);
     duckBroadcast(opt.duckMs||duck.ms,opt.duckDepth||duck.depth);
   }catch(e){return false}
@@ -551,7 +562,7 @@ function audioInit(){
     const rg=AC.createGain();rg.gain.value=0.5;
     rum.connect(lpf);lpf.connect(rg);rg.connect(crowdBus);rum.start();
     extInit();
-    preloadVoiceClips();
+    document.documentElement.dataset.audioVoices="on-demand";
     if(extA.crowd||extA.crowdCheer)crowdBus.gain.value=0.035;
     syncSceneAmbience();
     // ---- 随机现场事件:人浪/零星掌声/口哨/远处喊叫 ----
@@ -566,7 +577,7 @@ function audioInit(){
     initVoice();
     try{if(AC.state==="suspended")AC.resume();}catch(e){}
     AUDIO_READY=AC.state==="running";syncAudioDebug();
-  }catch(e){}
+  }catch(e){noteAudioIssue("init",e);syncAudioDebug();}
 }
 function primeAudio(force){
   if(!AC||MUTED)return;
@@ -594,23 +605,25 @@ try{window.__aibaAudioState=audioState;}catch(e){}
 try{window.AIBAAudioCaptureStream=()=>ensureAudioCaptureDestination();}catch(e){}
 function ensureAudio(menuMusic,forcePrime){
   if(MUTED)return false;
+  if(menuMusic&&extA.bgm&&extA.bgm.paused)extPlay("bgm");
   audioInit();
   if(!AC)return false;
   primeAudio(!!forcePrime);
   const startMenu=()=>{
     AUDIO_READY=AC&&AC.state==="running";
+    if(AUDIO_READY)for(const k in extA)routeExternalMediaElement(k,extA[k]);
     if(menuMusic&&!audioState().menuMusic&&(G.state==="menu"||G.state==="diff"))music(true,false);
     syncSceneAmbience();
     syncAudioDebug();
   };
   try{
-    startMenu();
     if(AC.state==="suspended"){
+      if(menuMusic&&extA.bgm&&extA.bgm.paused)extPlay("bgm");
       const r=AC.resume();
-      if(r&&r.then)r.then(startMenu).catch(()=>{});
+      if(r&&r.then)r.then(()=>{delete document.documentElement.dataset.audioIssue;startMenu();}).catch(e=>{noteAudioIssue("resume",e);syncAudioDebug();});
       else startMenu();
     }else startMenu();
-  }catch(e){startMenu();}
+  }catch(e){noteAudioIssue("ensure",e);syncAudioDebug();}
   return true;
 }
 function mkNoiseBuf(sec){

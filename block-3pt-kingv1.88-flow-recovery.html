@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>aiBA·百分大战 v1.87 MOBILE FLOW</title>
+<title>aiBA·百分大战 v1.88 FLOW RECOVERY</title>
 <link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -14,7 +14,7 @@
 <div id="bootLoad" role="dialog" aria-modal="true" aria-busy="true" aria-label="游戏资源加载" tabindex="0">
   <div class="bootFrame">
     <div class="bootBrand"><span>ai</span>BA</div>
-    <div class="bootEdition">MOBILE FLOW / v1.87</div>
+    <div class="bootEdition">FLOW RECOVERY / v1.88</div>
     <div class="bootRule"></div>
     <div id="bootStatus" class="bootStatus">正在展开赛场</div>
     <div class="bootMeter" aria-hidden="true"><i id="bootBar"></i></div>
@@ -120,7 +120,7 @@
 <script src="src/visual-director.js?v=1.85"></script>
 <script>
 /* =====================================================
-   aiBA·百分大战 v1.87 MOBILE FLOW
+   aiBA·百分大战 v1.88 FLOW RECOVERY
    Minecraft-style NBA 3-Point Contest · 单文件实现
    ===================================================== */
 "use strict";
@@ -150,7 +150,7 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------------- constants ---------------- */
-const GAME_VERSION="v1.87-mobile-flow";
+const GAME_VERSION="v1.88-flow-recovery";
 const GAME_NAME="aiBA·百分大战";
 const CONFIG=window.AIBA_CONFIG||{};
 // NBA 标准全场坐标：保留原篮筐/三分点，只向远端延长球场。
@@ -392,7 +392,7 @@ function triggerMissRunVoice(){
    loop类: bgm / crowd / crowdCheer   一次性: applause / boo / horn / buzzer / bounce / swish */
 const EXT_AUDIO=ASSETS.audio||{};
 </script>
-<script src="src/audio.js?v=1.83"></script>
+<script src="src/audio.js?v=1.88"></script>
 <script src="src/nba-dna/ScoreEngine.js?v=20260701-analysis4"></script>
 <script src="src/nba-dna/PoseAnalyzer.js?v=20260701-analysis4"></script>
 <script src="src/nba-dna/PoseVisualizer.js?v=20260701-analysis4"></script>
@@ -1657,7 +1657,7 @@ function applyScenePreset(name,opts){
     }else toast("赛场 · "+preset.name,beach?"#ffc078":(outdoor?"#8fdfff":"#ffd23f"));
   }
   syncSceneAmbience();
-}function resetProgressiveSceneForRun(){const preset=SCENE_PRESETS[currentScenePreset];if(preset&&preset.progression!=="none")applyScenePreset(currentScenePreset,{persist:false});}
+}function resetProgressiveSceneForRun(){if(window.AIBASceneLifecycle)return AIBASceneLifecycle.resetForRun();const preset=SCENE_PRESETS[currentScenePreset];if(preset&&preset.progression!=="none")applyScenePreset(currentScenePreset,{persist:false});}
 function getEnvironmentProgress(){
   if(G.state==="boot"||G.state==="menu"||G.state==="diff"||G.state==="intro")return 0;
   if(G.mode==="battle")return clamp(Math.max(G.score||0,G.battleOppScore||0)/BATTLE_TARGET,0,1);
@@ -5634,6 +5634,7 @@ handBall.visible=false;
 bootGame();
 animate();
 </script>
+<script src="src/scene-lifecycle.js?v=1.88"></script>
 <script src="src/result-stats.js?v=1.78"></script>
 <script src="src/gear.js?v=1.81"></script>
 <script src="src/avatar-customizer.js?v=1.79"></script>

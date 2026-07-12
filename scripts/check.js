@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.87-mobile-flow.html";
+const snapshot="block-3pt-kingv1.88-flow-recovery.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -32,6 +32,7 @@ const requiredFiles=[
   "src/gear.js",
   "src/perf.js",
   "src/perf-settings.js",
+  "src/scene-lifecycle.js",
   "src/visual-director.js",
   "src/face-overlays.js",
   "src/haptics.js",
@@ -54,7 +55,7 @@ const entryHtml=read(entry);
 const snapshotHtml=read(snapshot);
 if(entryHtml!==snapshotHtml)fail(entry+" and "+snapshot+" differ");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v1.87 MOBILE FLOW","MOBILE FLOW / v1.87","v1.87-mobile-flow"])
+for(const token of ["v1.88 FLOW RECOVERY","FLOW RECOVERY / v1.88","v1.88-flow-recovery"])
   if(!entryHtml.includes(token))fail("visible/game version token missing "+token);
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css">'))fail("stylesheet link missing");
 if(!entryHtml.includes('<script src="src/assets-manifest.js"></script>'))fail("assets manifest script missing");
@@ -89,7 +90,7 @@ if(entryHtml.indexOf('<script src="src/perf-settings.js?v=1.87"></script>')<entr
 if(!entryHtml.includes('<script src="src/face-overlays.js"></script>'))fail("face overlays script missing");
 if(!entryHtml.includes('<script src="src/haptics.js?v=1.80"></script>'))fail("haptics script missing");
 if(!entryHtml.includes('<script src="src/visual-director.js?v=1.85"></script>'))fail("visual director script missing");
-if(!entryHtml.includes('<script src="src/audio.js?v=1.83"></script>'))fail("audio script missing");
+if(!entryHtml.includes('<script src="src/audio.js?v=1.88"></script>'))fail("audio script missing");
 if(!entryHtml.includes('<script src="src/vision.js"></script>'))fail("vision script missing");
 if(/<style>[\s\S]*?<\/style>/.test(entryHtml))fail("inline style block should stay split out");
 if(/const COVER_STARS=\[/.test(entryHtml)||/const EXT_AUDIO=\{/.test(entryHtml))fail("asset manifest data leaked back into html");
@@ -100,7 +101,8 @@ function functionSource(name){
   const end=entryHtml.indexOf("\nfunction ",start+10);
   return entryHtml.slice(start,end<0?entryHtml.length:end);
 }
-if(!/function resetProgressiveSceneForRun\(\).*applyScenePreset\(currentScenePreset,\{persist:false\}\)/.test(entryHtml))fail("progressive scene reset helper missing");
+if(!entryHtml.includes('<script src="src/scene-lifecycle.js?v=1.88"></script>'))fail("scene lifecycle script missing");
+if(!/function resetProgressiveSceneForRun\(\).*AIBASceneLifecycle\.resetForRun\(\).*applyScenePreset\(currentScenePreset,\{persist:false\}\)/.test(entryHtml))fail("progressive scene reset helper missing");
 for(const name of ["startPractice","startRackRush","startBattle","startRound"]){
   if(!functionSource(name).includes("resetProgressiveSceneForRun()"))fail(name+" must reset progressive scene before a new run");
 }
@@ -146,6 +148,7 @@ const faceOverlaysScript=read("src/face-overlays.js");
 const hapticsScript=read("src/haptics.js");
 const audioScript=read("src/audio.js");
 const visualDirectorScript=read("src/visual-director.js");
+const sceneLifecycleScript=read("src/scene-lifecycle.js");
 try{new Function(configScript);}
 catch(e){fail("config script syntax error: "+e.message);}
 try{new Function(playerSelectScript);}
@@ -239,8 +242,19 @@ try{new Function(visualDirectorScript);}
 catch(e){fail("visual director script syntax error: "+e.message);}
 for(const key of ["AIBAVisual","makeSkyDome","tuneCourt"])
   if(!visualDirectorScript.includes(key))fail("visual director missing "+key);
+try{new Function(sceneLifecycleScript);}
+catch(e){fail("scene lifecycle script syntax error: "+e.message);}
+for(const key of ["AIBASceneLifecycle","resetForRun","resetFlowerLayer","resetBeach"])
+  if(!sceneLifecycleScript.includes(key))fail("scene lifecycle missing "+key);
 if(/\bglobal\./.test(audioScript))fail("audio script must use browser globals, not bare global");
 if(!audioScript.includes("AIBAAudioCaptureStream"))fail("audio capture stream hook missing");
+if(/\n\s*preloadVoiceClips\(\);/.test(audioScript))fail("audio startup must not preload the full voice library");
+for(const key of ['dataset.audioVoices="on-demand"',"noteAudioIssue","AC.resume()"])
+  if(!audioScript.includes(key))fail("audio lazy startup missing "+key);
+const earlyExtInit=audioScript.indexOf("\nextInit();"),audioInitFn=audioScript.indexOf("function audioInit()");
+if(earlyExtInit<0||earlyExtInit>audioInitFn)fail("external BGM must be prepared before first user gesture");
+if(!/function ensureAudio\(menuMusic,forcePrime\)\{[\s\S]{0,180}extPlay\("bgm"\);[\s\S]{0,80}audioInit\(\);/.test(audioScript))fail("menu BGM must start before heavy WebAudio initialization");
+if(!audioScript.includes("mediaRetryAt[k]=Date.now()+2500"))fail("failed media playback should use retry cooldown");
 for(const key of ["crowdHeat","setCrowdHeat","AIBAAudio"])
   if(!audioScript.includes(key))fail("audio script missing crowd heat "+key);
 const voiceFiles=new Set([...audioScript.matchAll(/voiceUrl\("([^"]+\.wav)"\)/g)].map(m=>m[1]));
