@@ -285,6 +285,15 @@
     try{if(state.rec&&state.rec.state==="recording")state.rec.requestData();}catch(e){}
     try{if(state.rec&&state.rec.state!=="inactive")state.rec.stop();}catch(e){finalizeClip();}
   }
+  function cancel(){
+    clearTimeout(state.stopTimer);state.stopTimer=0;state.stopAt=0;state.capturing=false;state.armed=false;state.saveWhenReady=false;
+    const rec=state.rec;state.rec=null;
+    if(rec){rec.ondataavailable=null;rec.onstop=null;rec.onerror=null;try{if(rec.state!=="inactive")rec.stop();}catch(e){}}
+    try{if(state.canvasTrack)state.canvasTrack.stop();}catch(e){}
+    state.stream=null;state.canvasTrack=null;state.audioTracks=[];state.chunks=[];state.resultCard=null;state.resultAt=0;
+    updateStatus("精彩录制已取消");
+    return true;
+  }
   function finalizeClip(){
     if(!state.capturing&&!state.rec)return;
     state.capturing=false;state.armed=false;
@@ -318,5 +327,5 @@
     if(!supported())return "";
     return `<div class="clipExport"><button id="clipSaveBtn" class="btn sm" onclick="AIBARecorder.save()">🎞 保存MP4视频</button><small id="clipStatus">${wantsMp4()?statusText():"当前浏览器不支持MP4录制,将降级WebM"}</small></div>`;
   }
-  global.AIBARecorder=Object.freeze({tick,arm,mark,result,rankUpdated,save,resultMarkup,statusText,supported,capturing:()=>state.capturing,debug:()=>({capturing:state.capturing,armed:state.armed,startedAt:state.startedAt,stopAt:state.stopAt})});
+  global.AIBARecorder=Object.freeze({tick,arm,mark,result,rankUpdated,save,cancel,resultMarkup,statusText,supported,capturing:()=>state.capturing,debug:()=>({capturing:state.capturing,armed:state.armed,startedAt:state.startedAt,stopAt:state.stopAt})});
 })(window);

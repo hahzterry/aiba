@@ -122,6 +122,8 @@ html[data-scan-overlay="menu"] #scan{opacity:.018}
   font-family:"Orbitron","Courier New",monospace;font-size:20px;line-height:1;font-weight:bold;text-shadow:2px 2px 0 #000;cursor:pointer;pointer-events:auto}
 #pauseBtn.ready{display:flex}
 #pauseBtn:active{transform:translateY(2px);background:#2a2a2a}
+#homeBtn{position:fixed;top:max(10px,env(safe-area-inset-top));right:12px;z-index:58;width:40px;height:36px;display:none;align-items:center;justify-content:center;padding:0;background:rgba(0,0,0,.62);border:2px solid #39485b;color:#eef7ff;box-shadow:3px 3px 0 rgba(0,0,0,.55);font-family:"Orbitron","Courier New",monospace;font-size:22px;line-height:1;font-weight:bold;text-shadow:2px 2px 0 #000;cursor:pointer;pointer-events:auto}
+#homeBtn.ready{display:flex}#homeBtn:active{transform:translateY(2px);background:#202936}
 @keyframes soundPulse{50%{filter:brightness(1.8);transform:scale(1.06)}}
 #hudTarget{position:absolute;top:max(86px,calc(env(safe-area-inset-top) + 76px));left:14px;font-size:11px;
   font-weight:bold;text-shadow:1px 1px 0 #000;color:#ffd23f}
@@ -132,7 +134,7 @@ html[data-scan-overlay="menu"] #scan{opacity:.018}
   background:rgba(0,0,0,.6);border:2px solid #333;padding:8px 12px;display:none;z-index:45;
   font-size:13px;color:#dde;white-space:nowrap;display:none}
 #showUI .btn{margin:0 0 0 8px;padding:5px 9px;font-size:11px}
-/* vision-shot experimental controller */
+/* motion-shot controller */
 #visionPreview{--vision-accent:#70e8ff;position:fixed;left:max(10px,env(safe-area-inset-left));top:50%;transform:translateY(-50%);
   z-index:55;width:clamp(142px,24vw,204px);display:none;background:#050912;border:2px solid var(--vision-accent);
   box-shadow:5px 5px 0 rgba(0,0,0,.72),0 0 14px color-mix(in srgb,var(--vision-accent) 28%,transparent);pointer-events:auto}
@@ -155,7 +157,8 @@ html[data-scan-overlay="menu"] #scan{opacity:.018}
 .visionMode{width:88%;margin:10px auto 4px;display:grid;grid-template-columns:minmax(0,1fr) repeat(2,minmax(82px,112px));align-items:stretch;
   background:#0e141e;border:2px solid #354356;box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)}
 .visionModeLabel{padding:9px 11px;text-align:left}.visionModeLabel small{display:block;color:#778fa4;font-size:8px;letter-spacing:2px}.visionModeLabel b{font-size:12px;color:#eef7ff}
-.visionMode button{border:0;border-left:1px solid #354356;background:#161f2b;color:#8ea3b8;font-family:"Orbitron","Courier New",monospace;font-size:10px;line-height:1.2;font-weight:bold;cursor:pointer}
+.visionMode button{position:relative;display:grid;place-content:center;gap:3px;padding:6px 4px;border:0;border-left:1px solid #354356;background:#161f2b;color:#8ea3b8;font-family:"Orbitron","Courier New",monospace;font-size:10px;line-height:1.2;font-weight:bold;cursor:pointer}
+.visionMode button span{display:block}.controlRecommend{display:block;color:#ffd23f;font-size:7px;font-style:normal;line-height:1;letter-spacing:1px}
 .visionMode button.active{background:#123b42;color:#70e8ff;box-shadow:inset 0 -3px 0 #70e8ff}.visionMode button:disabled{opacity:.38;cursor:not-allowed}
 /* toasts & pops */
 #toast{position:fixed;top:24%;left:50%;transform:translateX(-50%);z-index:45;font-size:24px;font-weight:bold;
@@ -410,7 +413,7 @@ table.std tr.adv td{box-shadow:inset 0 0 0 2px #ffd23f}
 #bootLoad:before,#bootLoad:after{content:"";position:absolute;left:0;right:0;height:3px;background:#ff353d;box-shadow:0 0 16px rgba(255,53,61,.7)}
 #bootLoad:before{top:0}#bootLoad:after{bottom:0;background:#4adfff;box-shadow:0 0 16px rgba(74,223,255,.65)}
 #bootLoad.ready{cursor:pointer;background:rgba(2,3,8,.58);backdrop-filter:blur(3px) saturate(.9)}
-#bootLoad.leaving{opacity:0;pointer-events:none}
+#bootLoad.leaving{opacity:0;pointer-events:auto}
 .bootFrame{position:relative;width:min(540px,100%);padding:28px 30px 24px;border-left:3px solid #ff353d;border-right:3px solid #4adfff;
   background:rgba(2,4,10,.78);box-shadow:18px 0 0 rgba(255,53,61,.06),-18px 0 0 rgba(74,223,255,.05)}
 .bootFrame:before,.bootFrame:after{content:"";position:absolute;width:70px;height:12px;border-top:2px solid #fff;opacity:.4}

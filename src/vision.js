@@ -1,4 +1,22 @@
-/* ---------------- vision-shot experimental controller ---------------- */
+/* ---------------- motion-shot controller ---------------- */
+const VISION_CONTROL_STORAGE="aiba_shot_control_v1";
+function loadVisionControlPreference(){
+  try{return localStorage.getItem(VISION_CONTROL_STORAGE)==="vision"?"vision":"touch";}catch(e){return "touch";}
+}
+let VISION_CONTROL_PREFERENCE=loadVisionControlPreference();
+let visionPreferenceQueued=false;
+function saveVisionControlPreference(value){
+  VISION_CONTROL_PREFERENCE=value==="vision"?"vision":"touch";
+  try{localStorage.setItem(VISION_CONTROL_STORAGE,VISION_CONTROL_PREFERENCE);}catch(e){}
+}
+function restoreVisionControlPreference(){
+  if(VISION_CONTROL_PREFERENCE!=="vision"||!VISION.supported||VISION.desired||VISION.enabled||VISION.loading||G.state!=="diff"||visionPreferenceQueued)return;
+  visionPreferenceQueued=true;
+  setTimeout(()=>{
+    visionPreferenceQueued=false;
+    if(VISION_CONTROL_PREFERENCE==="vision"&&!VISION.desired&&!VISION.enabled&&!VISION.loading&&G.state==="diff")enableVisionControl();
+  },0);
+}
 const VISION={
   supported:!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia),desired:false,enabled:false,loading:false,liveControl:true,
   stream:null,landmarker:null,modelPromise:null,lastPose:null,lastHands:[],lastPoseAt:0,lastHandAt:0,lastDraw:0,lastVideoTime:-1,raf:0,ownsCharge:false,lastSample:null,inferAvg:0,
@@ -386,8 +404,9 @@ function visionFrame(now){
 }
 async function enableVisionControl(event){
   if(event){event.stopPropagation();event.preventDefault();}
-  if(!VISION.supported){toast("此浏览器不支持摄像头控制","#ff8d7a");return;}
+  if(!VISION.supported){toast("此浏览器不支持体感控制","#ff8d7a");return;}
   if(VISION.loading||VISION.enabled)return;
+  saveVisionControlPreference("vision");
   VISION.desired=true;VISION.loading=true;$("visionPreview").style.display="block";visionSetUI("align","正在启动本地识别",.08);
   try{
     const modelPromise=loadVisionModel();
@@ -400,22 +419,27 @@ async function enableVisionControl(event){
     if(G.state==="diff")goDiff(G.mode,true);
   }catch(e){
     VISION.desired=false;VISION.enabled=false;if(VISION.stream)VISION.stream.getTracks().forEach(t=>t.stop());VISION.stream=null;
-    $("visionPreview").style.display="block";visionSetUI("error",e&&e.name==="NotAllowedError"?"摄像头权限未开启":"视觉识别启动失败",0);
-    document.documentElement.dataset.visionControl="error";toast("视觉投篮未启动 · 已保留触屏控制","#ff8d7a");
+    $("visionPreview").style.display="block";visionSetUI("error",e&&e.name==="NotAllowedError"?"摄像头权限未开启":"体感识别启动失败",0);
+    document.documentElement.dataset.visionControl="error";toast("体感控制未启动 · 已保留触屏控制","#ff8d7a");
   }finally{VISION.loading=false;}
 }
 function disableVisionControl(event){
   if(event){event.stopPropagation();event.preventDefault();}
+  saveVisionControlPreference("touch");
+  suspendVisionControl();
+  if(G.state==="diff")goDiff(G.mode,true);
+}
+function suspendVisionControl(){
   VISION.desired=false;VISION.enabled=false;VISION.loading=false;cancelAnimationFrame(VISION.raf);cancelVisionOwnedCharge();
   if(VISION.stream)VISION.stream.getTracks().forEach(t=>t.stop());VISION.stream=null;const video=$("visionVideo");if(video)video.srcObject=null;
   visionResetTracking(true);resetVisionGesture(VISION.machine);VISION.lastSample=null;VISION.lastPose=null;VISION.lastHands=[];VISION.lastPoseAt=0;VISION.lastHandAt=0;VISION.lastDraw=0;VISION.lastVideoTime=-1;VISION.inferAvg=0;$("visionPreview").style.display="none";
   document.documentElement.dataset.visionControl="off";delete document.documentElement.dataset.visionPhase;delete document.documentElement.dataset.visionReady;delete document.documentElement.dataset.visionHands;
-  if(G.state==="diff")goDiff(G.mode,true);
 }
 function visionModeMarkup(){
   const active=VISION.desired||VISION.enabled;
-  return `<div class="visionMode"><span class="visionModeLabel"><small>SHOT CONTROL</small><b>投篮控制</b></span>
-    <button class="${active?"":"active"}" onclick="disableVisionControl(event)">触屏</button>
-    <button class="${active?"active":""}" onclick="enableVisionControl(event)" ${VISION.supported?"":"disabled"}>视觉实验</button></div>`;
+  restoreVisionControlPreference();
+  return `<div class="visionMode"><span class="visionModeLabel"><small>CONTROL MODE</small><b>操作模式</b></span>
+    <button class="${active?"":"active"}" onclick="disableVisionControl(event)"><span>触屏控制</span></button>
+    <button class="${active?"active":""}" onclick="enableVisionControl(event)" ${VISION.supported?"":"disabled"}><span>体感控制</span><em class="controlRecommend">推荐</em></button></div>`;
 }
 addEventListener("pagehide",()=>{if(VISION.stream)VISION.stream.getTracks().forEach(t=>t.stop());});

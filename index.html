@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>aiBA·百分大战 v1.88 FLOW RECOVERY</title>
+<title>aiBA·百分大战 v1.90 FLOW NAVIGATION</title>
 <link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -14,7 +14,7 @@
 <div id="bootLoad" role="dialog" aria-modal="true" aria-busy="true" aria-label="游戏资源加载" tabindex="0">
   <div class="bootFrame">
     <div class="bootBrand"><span>ai</span>BA</div>
-    <div class="bootEdition">FLOW RECOVERY / v1.88</div>
+    <div class="bootEdition">FLOW NAVIGATION / v1.90</div>
     <div class="bootRule"></div>
     <div id="bootStatus" class="bootStatus">正在展开赛场</div>
     <div class="bootMeter" aria-hidden="true"><i id="bootBar"></i></div>
@@ -71,8 +71,8 @@
   <div id="hint">按住屏幕蓄力 · 松开出手 · 停在绿色甜区</div>
 </div>
 
-<aside id="visionPreview" data-phase="align" aria-label="视觉投篮摄像头预览">
-  <div class="visionHead"><span><b>●</b> LOCAL POSE</span><button class="visionClose" type="button" aria-label="关闭视觉投篮" onclick="disableVisionControl(event)">×</button></div>
+<aside id="visionPreview" data-phase="align" aria-label="体感投篮摄像头预览">
+  <div class="visionHead"><span><b>●</b> LOCAL POSE</span><button class="visionClose" type="button" aria-label="关闭体感控制" onclick="disableVisionControl(event)">×</button></div>
   <div class="visionBody"><div class="visionStage"><video id="visionVideo" muted playsinline></video><canvas id="visionCanvas"></canvas><div class="visionScan"></div></div><div class="visionTrack" aria-hidden="true"><i id="visionTrackFill"></i></div></div>
   <div class="visionFoot"><span id="visionState">等待启动</span></div>
 </aside>
@@ -111,16 +111,16 @@
 <script src="src/player-locker-preview.js?v=1.76"></script>
 <script src="src/player-id.js"></script>
 <script src="src/leaderboard-api.js"></script>
-<script src="src/leaderboard-ui.js?v=1.87"></script>
+<script src="src/leaderboard-ui.js?v=1.89"></script>
 <script src="src/share.js"></script>
-<script src="src/recorder.js?v=1.87"></script>
+<script src="src/recorder.js?v=1.90"></script>
 <script src="src/shot-physics.js"></script>
 <script src="src/face-overlays.js"></script>
 <script src="src/haptics.js?v=1.80"></script>
 <script src="src/visual-director.js?v=1.85"></script>
 <script>
 /* =====================================================
-   aiBA·百分大战 v1.88 FLOW RECOVERY
+   aiBA·百分大战 v1.90 FLOW NAVIGATION
    Minecraft-style NBA 3-Point Contest · 单文件实现
    ===================================================== */
 "use strict";
@@ -150,7 +150,7 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------------- constants ---------------- */
-const GAME_VERSION="v1.88-flow-recovery";
+const GAME_VERSION="v1.90-flow-navigation";
 const GAME_NAME="aiBA·百分大战";
 const CONFIG=window.AIBA_CONFIG||{};
 // NBA 标准全场坐标：保留原篮筐/三分点，只向远端延长球场。
@@ -385,7 +385,7 @@ function triggerMissRunVoice(){
   return playMomentumCue(pickCue(pool),"#ff8d7a");
 }
 </script>
-<script src="src/vision.js"></script>
+<script src="src/vision.js?v=1.90"></script>
 <script>
 /* ====== 外部音频:本地观众声仅在比赛中循环,其余留空时使用内置合成音 ======
    后续素材可从 pixabay.com/sound-effects 搜索 "applause arena" "buzzer" "crowd boo"
@@ -3790,7 +3790,7 @@ function resumePauseMenu(){
   if(G.mode==="battle"&&G.state==="battle"&&!G.battleCut&&!G.battleOver)resumeBattleClock();
   hidePanel();updatePauseButton();
 }
-function clearLiveObjectsForMenu(){
+function clearLiveObjectsForMenu(){if(window.AIBANavigation)AIBANavigation.cleanup();
   if(passing){scene.remove(passing.mesh);passing=null;}
   balls.slice().forEach(b=>{scene.remove(b.mesh);scene.remove(b.blob);});balls.length=0;
   G.charging=false;G.canShoot=false;G.running=false;G.moving=false;G.glideCam=false;G.cutAway=null;G.battleCut=null;
@@ -4301,7 +4301,7 @@ function showRackRushLeaderboard(){
   const body=rows.length?rows.map((r,i)=>speed?
     `<tr class="${record&&r.completedAt===record.completedAt?"me":""}"><td>${i+1}</td><td>${formatRackRushClock(r.elapsedMs/1000)}</td><td>${r.total}</td><td>${Math.round(rackRushAccuracy(r)*100)}%</td><td>${r.makes}/${r.attempts}</td></tr>`:
     `<tr class="${record&&r.completedAt===record.completedAt?"me":""}"><td>${i+1}</td><td>${r.total}</td><td>${r.completed?"FINAL":"L"+r.highestLevel}</td><td>${Math.round(rackRushAccuracy(r)*100)}%</td><td>${formatRackRushTime(r.elapsedMs)}</td></tr>`).join(""):'<tr><td colspan="5">暂无记录</td></tr>';
-  showPanel(`<h1 class="title" style="font-size:22px">${speed?"百分竞速排行榜":"RACK RUSH 排行榜"}</h1><div class="note">${DIFFS[G.diff].n} · ${control==="vision"?"视觉体感":"触屏 / 键盘"} · 本机记录</div>
+  showPanel(`<h1 class="title" style="font-size:22px">${speed?"百分竞速排行榜":"RACK RUSH 排行榜"}</h1><div class="note">${DIFFS[G.diff].n} · ${control==="vision"?"体感控制":"触屏控制"} · 本机记录</div>
     <table class="std"><tr>${speed?"<td>#</td><td>用时</td><td>分数</td><td>命中</td><td>出手</td>":"<td>#</td><td>总分</td><td>关卡</td><td>命中</td><td>耗时</td>"}</tr>${body}</table>
     <button class="btn sm" onclick="showRackRushResult(G.rushResultRecord)">返回成绩</button>`);
 }
@@ -4395,7 +4395,7 @@ function startBattle(){
   autoFrameCam(camTarget,P.pos,0,COURT_ATTACK_DIR,{marginX:1.48,marginY:1.36,minDist:5.8,maxDist:32});
   glideTo(camTarget.pos.clone(),camTarget.look.clone(),1.4,()=>startPreGameShow({mode:"battle"},()=>countdownBattle(3)));
 }
-function countdownBattle(n){
+function countdownBattle(n){if(G.state!=="cinematic")return;
   const el=$("countN");
   if(n===3)playPregameCountdownCue();
   if(n===0){
@@ -4478,7 +4478,7 @@ function startRound(){
   rig.pos.set(0,11,7);rig.look.copy(HOOP);
   glideTo(eye,HOOP.clone().add(V3(0,0.15,0)),2.2,()=>startPreGameShow({mode:"contest"},()=>countdown(3)));
 }
-function countdown(n){
+function countdown(n){if(G.state!=="cinematic")return;
   const el=$("countN");
   if(n===3)playPregameCountdownCue();
   if(n===0){
@@ -5101,7 +5101,7 @@ function showBattleResult(win){
   const record=G.battleResultRecord||makeBattleRecord(win,battleElapsedMs());if(window.AIBARecorder&&AIBARecorder.result)AIBARecorder.result(record,{title,score:`${Math.min(G.score,BATTLE_TARGET)} : ${Math.min(G.battleOppScore,BATTLE_TARGET)}`,sub:`百分耗时 ${formatBattleTime(record.elapsedMs)} · ${DIFFS[G.diff].n}`,postMs:9000});
   showPanel(`${AIBAResultHeaderMarkup(record,{headline:title,score:Math.min(G.score,BATTLE_TARGET)+" : "+Math.min(G.battleOppScore,BATTLE_TARGET),label:"FINAL SCORE",mode:"PERCENT BATTLE"})}
     ${window.AIBAResultBadgeMarkup?AIBAResultBadgeMarkup(record):""}<details class="resultDetails"><summary>查看比赛数据 (VIEW DATA)</summary><div class="card">对手:<b>${G.battleOpp.n}</b><br>
-      百分耗时 <b style="color:#ffd23f">${formatBattleTime(record.elapsedMs)}</b> · ${record.control==="vision"?"视觉手势":"触屏/键盘"}<br>
+      百分耗时 <b style="color:#ffd23f">${formatBattleTime(record.elapsedMs)}</b> · ${record.control==="vision"?"体感控制":"触屏控制"}<br>
       最高连中 <b class="flame">x${G.stats.best}</b> · 中场10分 <b>${G.stats.deepM}/${G.stats.deepT}</b><br>
       难度:<b>${DIFFS[G.diff].n}</b></div></details>
     ${window.AIBACloudRankMarkup?AIBACloudRankMarkup(record):""}${scoreQuoteMarkup()}${window.AIBARecorder?AIBARecorder.resultMarkup():""}
@@ -5522,7 +5522,7 @@ let jumboAcc=0,lowBeep=0,menuFrameAcc=0,visionAmbienceAcc=0;
 function animate(){
   requestAnimationFrame(animate);
   let dt=Math.min(0.05,clock.getDelta());
-  updateVisualOverlays();
+  updateVisualOverlays();if(window.AIBANavigation)AIBANavigation.sync();
   // 菜单有全屏封面覆盖，15fps 足够保留背景氛围，避免手机开赛前就满负荷。
   if(G.state==="menu"||G.state==="diff"){
     menuFrameAcc+=dt;
@@ -5634,6 +5634,7 @@ handBall.visible=false;
 bootGame();
 animate();
 </script>
+<script src="src/navigation.js?v=1.90"></script>
 <script src="src/scene-lifecycle.js?v=1.88"></script>
 <script src="src/result-stats.js?v=1.78"></script>
 <script src="src/gear.js?v=1.81"></script>

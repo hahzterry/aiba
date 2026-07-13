@@ -22,7 +22,7 @@
     return name&&!isDefaultName(name)?name:"未命名球员";
   }
   function labelControl(v){
-    return v==="vision"?"视觉体感":"触屏 / 键盘";
+    return v==="vision"?"体感控制":"触屏控制";
   }
   function diffName(k){
     try{return DIFFS[k]&&DIFFS[k].n||k||"";}catch(e){return k||"";}

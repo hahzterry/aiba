@@ -9,7 +9,7 @@
 - Vercel 自动部署：https://aiba-percent-battle.vercel.app/
 - GitHub Pages 备用：https://opstiger.github.io/aiba-percent-battle/
 
-当前版本：`v1.88-flow-recovery`
+当前版本：`v1.90-flow-navigation`
 
 ## 模式
 
@@ -22,10 +22,11 @@
 - 按住屏幕蓄力，松开投篮。
 - 赛前更衣室可穿 3 件装备（球鞋 / 护腕护肘 / 头带），但同时只有 1 件的加成生效；加成覆盖投射速度、准星甜区、关键时刻准星和精力。
 - 比赛中左下角有精力条：连续出手会耗尽精力进入力竭，必须停手休息回到 28% 才能继续投；低精力时出手变慢、准星变差。
-- 视觉先锋版可在难度页选择“视觉实验”，用上半身投篮动作蓄力与出手。
+- 难度页可选择“体感控制”，用上半身投篮动作蓄力与出手；游戏会记住上次使用的操作模式。
 - 百分大战中，点击场上点位或用左右方向键移动。
 - RACK RUSH 中人物固定在弧顶；普通命中 2 分、每第 5 球 3 分，最后 10 秒命中额外加 1 分。
 - 手机浏览器需要先点一下页面或右上角声音按钮来解锁音频，这是移动端浏览器的自动播放限制。
+- 进入模式后可用右上角返回按钮随时回到首页；比赛进行中会先打开暂停确认。
 
 ## 本地运行
 
@@ -50,7 +51,7 @@ node scripts/check.js
 ## 项目结构
 
 - `index.html`：当前可玩的入口文件。
-- `block-3pt-kingv1.88-flow-recovery.html`：当前版本快照，和 `index.html` 保持一致。
+- `block-3pt-kingv1.90-flow-navigation.html`：当前版本快照，和 `index.html` 保持一致。
 - `styles.css`：游戏 HUD、首页、面板和移动端样式。
 - `src/assets-manifest.js`：封面角色、音频等资源清单。
 - `src/player-select.js`：赛前选球员、本地记忆和球员风格展示。
@@ -71,8 +72,9 @@ node scripts/check.js
 - `src/result-stats.js`：赛后雷达所需的出手节奏、关键球、点位难度和稳定性统计。
 - `src/audio.js`：外部音频、合成音效、现场氛围和按需加载的语音播报，避免首击加载整套语音库。
 - `src/scene-lifecycle.js`：鲜花/夕阳球场的新局原地复位，不销毁重建整套场景。
+- `src/navigation.js`：全流程返回首页、比赛退出清理与首屏加载层防点击穿透。
 - `src/face-overlays.js`：可选球员卡通脸贴图模块，当前用于库里头像试验。
-- `src/vision.js`：摄像头、MediaPipe、视觉投篮识别与预览。
+- `src/vision.js`：摄像头、MediaPipe、体感投篮识别与预览。
 - `scripts/check.js`：提交前静态验收脚本。
 - `assets/`：游戏图片、视频和音频资源。
 - `vendor/`：随项目带的第三方运行文件，包括 Three.js 与 MediaPipe Tasks Vision。
