@@ -65,3 +65,23 @@ function barHiddenFor(shot){
   const rack=(shot.deep!=null||shot.super)?5:shot.rack;
   return rack>=DIFFS[G.diff].hideBar;
 }
+
+function mixNumber(a,b,t){return a+(b-a)*t;}
+
+// Low over-the-shoulder player-lock view. Battle mode gradually widens it for deep spots.
+function updatePlayerLockCamera(dt){
+  const distance=P.pos.distanceTo(HOOP);
+  const farMix=G.mode==="battle"?clamp((distance-7)/8,0,1):0;
+  autoFrameCam(camTarget,P.pos,P.jump,COURT_ATTACK_DIR,{
+    marginX:mixNumber(1.12,1.34,farMix),
+    marginY:mixNumber(1.12,1.28,farMix),
+    minDist:mixNumber(4.8,5.6,farMix),
+    maxDist:mixNumber(18,32,farMix),
+    pad:mixNumber(.08,.55,farMix),
+    lookLift:mixNumber(-.52,.08,farMix),
+    sideK:mixNumber(.28,.44,farMix),
+    backK:mixNumber(.92,.82,farMix),
+    heightK:mixNumber(.2,.25,farMix)
+  });
+  dampRig(dt,mixNumber(5.5,4.5,farMix));
+}

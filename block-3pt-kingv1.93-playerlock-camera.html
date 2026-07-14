@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>aiBA·百分大战 v1.92 GAME FLOW</title>
+<title>aiBA·百分大战 v1.93 PLAYER LOCK</title>
 <link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 <link rel="stylesheet" href="styles.css?v=1.92">
 </head>
@@ -14,7 +14,7 @@
 <div id="bootLoad" role="dialog" aria-modal="true" aria-busy="true" aria-label="游戏资源加载" tabindex="0">
   <div class="bootFrame">
     <div class="bootBrand"><span>ai</span>BA</div>
-    <div class="bootEdition">GAME FLOW / v1.92</div>
+    <div class="bootEdition">PLAYER LOCK / v1.93</div>
     <div class="bootRule"></div>
     <div id="bootStatus" class="bootStatus">正在展开赛场</div>
     <div class="bootMeter" aria-hidden="true"><i id="bootBar"></i></div>
@@ -120,7 +120,7 @@
 <script src="src/visual-director.js?v=1.85"></script>
 <script>
 /* =====================================================
-   aiBA·百分大战 v1.92 GAME FLOW
+   aiBA·百分大战 v1.93 PLAYER LOCK
    Minecraft-style NBA 3-Point Contest · 单文件实现
    ===================================================== */
 "use strict";
@@ -150,7 +150,7 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------------- constants ---------------- */
-const GAME_VERSION="v1.92-rookie-pregame";
+const GAME_VERSION="v1.93-playerlock-camera";
 const GAME_NAME="aiBA·百分大战";
 const CONFIG=window.AIBA_CONFIG||{};
 // NBA 标准全场坐标：保留原篮筐/三分点，只向远端延长球场。
@@ -2013,7 +2013,7 @@ function benchVis(){
 /* player world state */
 const P={pos:V3(0,0,-0.6),face:0,walking:false,walkT:0,jump:0,eyeDip:0};
 function faceTo(from,to){return Math.atan2(to.x-from.x,to.z-from.z);}
-const CAM={mode:0,names:["第一人称","第三人称","转播视角"]};
+const CAM={mode:0,names:["第一人称","球员跟随","转播视角"]};
 function cycleCam(){
   CAM.mode=(CAM.mode+1)%3;
   $("camBtn").textContent="📷 "+CAM.names[CAM.mode];
@@ -2091,22 +2091,18 @@ function updPlayCam(dt){
   dt=dt||0.016;
   const d=V3(Math.sin(P.face),0,Math.cos(P.face));
   // 百分大战按站位动态取景,中场这种极端距离也要把人物+篮筐一起框住。
-  const s=curShot();
   const isBattle=G.mode==="battle";
   const isRush=G.mode==="rackrush";
+  const isContest=G.mode==="contest";
   if(CAM.mode===0){
     // 第一人称跟头,刚性贴合;离开第一人称时下一帧再做硬切
     rig.pos.copy(eyePos());
     rig.look.set(HOOP.x,HOOP.y+0.15,HOOP.z);
     camSnap=true;
   }else if(CAM.mode===1){
-    if(isBattle){
-      // 取景方向锁定在球场纵轴，人物换点转身不再带着镜头绕场旋转。
-      autoFrameCam(camTarget,P.pos,P.jump,COURT_ATTACK_DIR,{marginX:1.34,marginY:1.28,minDist:5.6,maxDist:32,pad:.55});
-      dampRig(dt,4.5);
-    }else if(isRush){
-      autoFrameCam(camTarget,P.pos,P.jump,COURT_ATTACK_DIR,{marginX:1.12,marginY:1.12,minDist:4.8,maxDist:18,pad:.08,lookLift:-.52,sideK:.28,backK:.92,heightK:.2});
-      dampRig(dt,5.5);
+    if(isBattle||isRush||isContest){
+      // 投篮机同款低位越肩球员锁定镜头；百分大战会随距离平滑拉远。
+      updatePlayerLockCamera(dt);
     }else{
       camTarget.pos.set(P.pos.x-d.x*2.85,2.18+P.jump*0.4,P.pos.z-d.z*2.85);
       camTarget.look.set(P.pos.x+d.x*2.45,1.66+P.jump*0.5,P.pos.z+d.z*2.45);
@@ -5630,7 +5626,7 @@ handBall.visible=false;
 bootGame();
 animate();
 </script>
-<script src="src/game-flow.js?v=1.92"></script>
+<script src="src/game-flow.js?v=1.93"></script>
 <script src="src/navigation.js?v=1.90"></script>
 <script src="src/scene-lifecycle.js?v=1.88"></script>
 <script src="src/result-stats.js?v=1.78"></script>

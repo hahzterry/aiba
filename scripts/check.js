@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.92-rookie-pregame.html";
+const snapshot="block-3pt-kingv1.93-playerlock-camera.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -57,7 +57,7 @@ const entryHtml=read(entry);
 const snapshotHtml=read(snapshot);
 if(entryHtml!==snapshotHtml)fail(entry+" and "+snapshot+" differ");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v1.92 GAME FLOW","GAME FLOW / v1.92","v1.92-rookie-pregame"])
+for(const token of ["v1.93 PLAYER LOCK","PLAYER LOCK / v1.93","v1.93-playerlock-camera"])
   if(!entryHtml.includes(token))fail("visible/game version token missing "+token);
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=1.92">'))fail("stylesheet link missing");
 if(!entryHtml.includes('<script src="src/assets-manifest.js"></script>'))fail("assets manifest script missing");
@@ -95,7 +95,7 @@ if(!entryHtml.includes('<script src="src/visual-director.js?v=1.85"></script>'))
 if(!entryHtml.includes('<script src="src/audio.js?v=1.88"></script>'))fail("audio script missing");
 if(!entryHtml.includes('<script src="src/vision.js?v=1.91"></script>'))fail("vision script missing");
 if(!entryHtml.includes('<script src="src/navigation.js?v=1.90"></script>'))fail("navigation script missing");
-if(!entryHtml.includes('<script src="src/game-flow.js?v=1.92"></script>'))fail("game flow script missing");
+if(!entryHtml.includes('<script src="src/game-flow.js?v=1.93"></script>'))fail("game flow script missing");
 if(/<style>[\s\S]*?<\/style>/.test(entryHtml))fail("inline style block should stay split out");
 if(/const COVER_STARS=\[/.test(entryHtml)||/const EXT_AUDIO=\{/.test(entryHtml))fail("asset manifest data leaked back into html");
 if(/assets\/aiba-covers\/[^"')]+\.png/.test(entryHtml))fail("runtime should not reference png cover assets");
@@ -307,7 +307,7 @@ for(const token of ["function cancel()",",cancel,resultMarkup"])
 const gameFlow=read("src/game-flow.js");
 try{new Function(gameFlow);}
 catch(e){fail("game flow script syntax error: "+e.message);}
-for(const token of ["rookieMeterProgress","G.diff===\"easy\"","updatePregameWarmupShot","updatePregameChalk"])
+for(const token of ["rookieMeterProgress","G.diff===\"easy\"","updatePregameWarmupShot","updatePregameChalk","updatePlayerLockCamera"])
   if(!gameFlow.includes(token))fail("game flow token missing "+token);
 
 const sandbox={window:{}};
