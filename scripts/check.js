@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.90-flow-navigation.html";
+const snapshot="block-3pt-kingv1.91-portrait-vision.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -56,9 +56,9 @@ const entryHtml=read(entry);
 const snapshotHtml=read(snapshot);
 if(entryHtml!==snapshotHtml)fail(entry+" and "+snapshot+" differ");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v1.90 FLOW NAVIGATION","FLOW NAVIGATION / v1.90","v1.90-flow-navigation"])
+for(const token of ["v1.91 PORTRAIT VISION","PORTRAIT VISION / v1.91","v1.91-portrait-vision"])
   if(!entryHtml.includes(token))fail("visible/game version token missing "+token);
-if(!entryHtml.includes('<link rel="stylesheet" href="styles.css">'))fail("stylesheet link missing");
+if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=1.91">'))fail("stylesheet link missing");
 if(!entryHtml.includes('<script src="src/assets-manifest.js"></script>'))fail("assets manifest script missing");
 if(!entryHtml.includes('<script src="src/config.js"></script>'))fail("config script missing");
 if(!entryHtml.includes('<script src="src/player-select.js?v=1.76"></script>'))fail("player select script missing");
@@ -67,7 +67,7 @@ if(!entryHtml.includes('<script src="src/player-id.js"></script>'))fail("player 
 if(!entryHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("leaderboard api script missing");
 if(!entryHtml.includes('<script src="src/leaderboard-ui.js?v=1.89"></script>'))fail("leaderboard ui script missing");
 if(!entryHtml.includes('<script src="src/share.js"></script>'))fail("share script missing");
-if(!entryHtml.includes('<script src="src/recorder.js?v=1.90"></script>'))fail("recorder script missing");
+if(!entryHtml.includes('<script src="src/recorder.js?v=1.91"></script>'))fail("recorder script missing");
 if(!entryHtml.includes('<script src="src/shot-physics.js"></script>'))fail("shot physics script missing");
 if(!entryHtml.includes('<script src="src/result-stats.js?v=1.78"></script>'))fail("result stats script missing");
 if(entryHtml.indexOf('<script src="src/result-stats.js?v=1.78"></script>')<entryHtml.lastIndexOf("animate();"))fail("result stats should load after the main inline script");
@@ -92,7 +92,7 @@ if(!entryHtml.includes('<script src="src/face-overlays.js"></script>'))fail("fac
 if(!entryHtml.includes('<script src="src/haptics.js?v=1.80"></script>'))fail("haptics script missing");
 if(!entryHtml.includes('<script src="src/visual-director.js?v=1.85"></script>'))fail("visual director script missing");
 if(!entryHtml.includes('<script src="src/audio.js?v=1.88"></script>'))fail("audio script missing");
-if(!entryHtml.includes('<script src="src/vision.js?v=1.90"></script>'))fail("vision script missing");
+if(!entryHtml.includes('<script src="src/vision.js?v=1.91"></script>'))fail("vision script missing");
 if(!entryHtml.includes('<script src="src/navigation.js?v=1.90"></script>'))fail("navigation script missing");
 if(/<style>[\s\S]*?<\/style>/.test(entryHtml))fail("inline style block should stay split out");
 if(/const COVER_STARS=\[/.test(entryHtml)||/const EXT_AUDIO=\{/.test(entryHtml))fail("asset manifest data leaked back into html");
@@ -151,6 +151,7 @@ const hapticsScript=read("src/haptics.js");
 const audioScript=read("src/audio.js");
 const visualDirectorScript=read("src/visual-director.js");
 const sceneLifecycleScript=read("src/scene-lifecycle.js");
+const styles=read("styles.css");
 try{new Function(configScript);}
 catch(e){fail("config script syntax error: "+e.message);}
 try{new Function(playerSelectScript);}
@@ -178,6 +179,8 @@ for(const token of ["MOBILE?540:720","MOBILE?15:24","MOBILE?1800000:3600000"])
   if(!recorderScript.includes(token))fail("recorder mobile profile missing "+token);
 for(const token of ["MAX_CLIP_MS=18000","MIN_RESULT_MS=4800","rankUpdated","最后三球已捕捉"])
   if(!recorderScript.includes(token))fail("recorder highlight window missing "+token);
+for(const token of ["function drawContain","AIBAVisionFrame","portrait?(MOBILE?142:170)"])
+  if(!recorderScript.includes(token))fail("portrait recorder pip missing "+token);
 const firstMp4=recorderScript.indexOf("video/mp4"),firstWebm=recorderScript.indexOf("video/webm");
 if(firstMp4<0||firstWebm<0||firstMp4>firstWebm)fail("recorder should prefer mp4 before webm");
 try{new Function(shotPhysicsScript);}
@@ -285,6 +288,10 @@ try{new Function(vision);}
 catch(e){fail("vision script syntax error: "+e.message);}
 for(const token of ["aiba_shot_control_v1","触屏控制","体感控制","controlRecommend","restoreVisionControlPreference"])
   if(!vision.includes(token))fail("motion control preference token missing "+token);
+for(const token of ["VISION_INFERENCE_MAX_PIXELS=288*512","visionCaptureConstraints","aspectRatio:{ideal:portrait?9/16:4/3}","visionInferenceSource","AIBAVisionFrame","请保持手机竖屏"])
+  if(!vision.includes(token))fail("portrait vision token missing "+token);
+for(const token of ['aspect-ratio:var(--vision-aspect,9/16)','data-orientation="portrait"'])
+  if(!styles.includes(token))fail("portrait vision style missing "+token);
 if(vision.includes("视觉实验"))fail("legacy vision experiment label remains");
 if(vision.includes('import("./vendor/'))fail("vision module import path should be relative from src/");
 if(/HandLandmarker|hand_landmarker\.task/.test(vision))fail("game vision path should not load hand landmarker");

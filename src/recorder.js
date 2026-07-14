@@ -73,6 +73,15 @@
     const s=Math.max(w/sw,h/sh),dw=sw*s,dh=sh*s;
     ctx.drawImage(img,x+(w-dw)*.5,y+(h-dh)*.5,dw,dh);
   }
+  function drawContain(ctx,img,x,y,w,h,mirror){
+    const sw=img.videoWidth||img.naturalWidth||img.width,sh=img.videoHeight||img.naturalHeight||img.height;
+    if(!sw||!sh)return;
+    const s=Math.min(w/sw,h/sh),dw=sw*s,dh=sh*s,dx=(w-dw)*.5,dy=(h-dh)*.5;
+    ctx.save();
+    if(mirror){ctx.translate(x+w,y);ctx.scale(-1,1);ctx.drawImage(img,dx,dy,dw,dh);}
+    else ctx.drawImage(img,x+dx,y+dy,dw,dh);
+    ctx.restore();
+  }
   function roundRect(ctx,x,y,w,h,r){
     ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
     ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
@@ -173,11 +182,16 @@
   function drawVisionPip(ctx){
     const v=document.getElementById("visionVideo");
     if(!v||v.readyState<2||!v.videoWidth)return;
-    const x=34,y=H-386,w=196,h=148;
+    const frame=global.AIBAVisionFrame&&global.AIBAVisionFrame.descriptor?global.AIBAVisionFrame.descriptor():null;
+    const vw=(frame&&frame.width)||v.videoWidth,vh=(frame&&frame.height)||v.videoHeight,portrait=vh>vw;
+    let w=portrait?(MOBILE?142:170):196,h=Math.round(w*vh/vw),maxH=portrait?(MOBILE?254:304):160;
+    if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}
+    const resultVisible=!!state.resultCard,x=resultVisible?W-w-30:30,y=resultVisible?68:H-154-h;
     ctx.save();ctx.fillStyle="rgba(0,0,0,.62)";roundRect(ctx,x-7,y-28,w+14,h+35,8);ctx.fill();
     ctx.strokeStyle="#70e8ff";ctx.lineWidth=3;roundRect(ctx,x-7,y-28,w+14,h+35,8);ctx.stroke();
     ctx.fillStyle="#70e8ff";ctx.font="700 13px Orbitron, monospace";ctx.fillText("LOCAL POSE",x,y-9);
-    ctx.beginPath();roundRect(ctx,x,y,w,h,6);ctx.clip();drawCover(ctx,v,x,y,w,h);
+    ctx.beginPath();roundRect(ctx,x,y,w,h,6);ctx.clip();ctx.fillStyle="#050912";ctx.fillRect(x,y,w,h);drawContain(ctx,v,x,y,w,h,true);
+    const overlay=document.getElementById("visionCanvas");if(overlay&&overlay.width){ctx.globalAlpha=.78;drawContain(ctx,overlay,x,y,w,h,true);ctx.globalAlpha=1;}
     ctx.restore();
   }
   function draw(ctxObj){

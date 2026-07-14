@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>aiBA·百分大战 v1.90 FLOW NAVIGATION</title>
+<title>aiBA·百分大战 v1.91 PORTRAIT VISION</title>
 <link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=1.91">
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -14,7 +14,7 @@
 <div id="bootLoad" role="dialog" aria-modal="true" aria-busy="true" aria-label="游戏资源加载" tabindex="0">
   <div class="bootFrame">
     <div class="bootBrand"><span>ai</span>BA</div>
-    <div class="bootEdition">FLOW NAVIGATION / v1.90</div>
+    <div class="bootEdition">PORTRAIT VISION / v1.91</div>
     <div class="bootRule"></div>
     <div id="bootStatus" class="bootStatus">正在展开赛场</div>
     <div class="bootMeter" aria-hidden="true"><i id="bootBar"></i></div>
@@ -113,14 +113,14 @@
 <script src="src/leaderboard-api.js"></script>
 <script src="src/leaderboard-ui.js?v=1.89"></script>
 <script src="src/share.js"></script>
-<script src="src/recorder.js?v=1.90"></script>
+<script src="src/recorder.js?v=1.91"></script>
 <script src="src/shot-physics.js"></script>
 <script src="src/face-overlays.js"></script>
 <script src="src/haptics.js?v=1.80"></script>
 <script src="src/visual-director.js?v=1.85"></script>
 <script>
 /* =====================================================
-   aiBA·百分大战 v1.90 FLOW NAVIGATION
+   aiBA·百分大战 v1.91 PORTRAIT VISION
    Minecraft-style NBA 3-Point Contest · 单文件实现
    ===================================================== */
 "use strict";
@@ -150,7 +150,7 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------------- constants ---------------- */
-const GAME_VERSION="v1.90-flow-navigation";
+const GAME_VERSION="v1.91-portrait-vision";
 const GAME_NAME="aiBA·百分大战";
 const CONFIG=window.AIBA_CONFIG||{};
 // NBA 标准全场坐标：保留原篮筐/三分点，只向远端延长球场。
@@ -385,7 +385,7 @@ function triggerMissRunVoice(){
   return playMomentumCue(pickCue(pool),"#ff8d7a");
 }
 </script>
-<script src="src/vision.js?v=1.90"></script>
+<script src="src/vision.js?v=1.91"></script>
 <script>
 /* ====== 外部音频:本地观众声仅在比赛中循环,其余留空时使用内置合成音 ======
    后续素材可从 pixabay.com/sound-effects 搜索 "applause arena" "buzzer" "crowd boo"

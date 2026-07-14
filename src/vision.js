@@ -1,5 +1,15 @@
 /* ---------------- motion-shot controller ---------------- */
 const VISION_CONTROL_STORAGE="aiba_shot_control_v1";
+const VISION_INFERENCE_MAX_PIXELS=288*512;
+function visionPointerCoarse(){
+  try{return matchMedia("(pointer:coarse)").matches;}catch(e){return false;}
+}
+function visionMobileDevice(){return visionPointerCoarse()||Math.min(innerWidth,innerHeight)<700;}
+function visionWantsPortrait(){return visionMobileDevice()&&innerHeight>=innerWidth;}
+function visionCaptureConstraints(){
+  const portrait=visionWantsPortrait();
+  return {facingMode:{ideal:"user"},width:{ideal:portrait?288:360},height:{ideal:portrait?512:270},aspectRatio:{ideal:portrait?9/16:4/3},frameRate:{ideal:18,max:24}};
+}
 function loadVisionControlPreference(){
   try{return localStorage.getItem(VISION_CONTROL_STORAGE)==="vision"?"vision":"touch";}catch(e){return "touch";}
 }
@@ -24,11 +34,34 @@ const VISION={
   body:{samples:[],startedAt:0,ready:false,noseY:.23,shoulderY:.39,hipY:.66,centerX:.5,shoulderW:.22,bodyH:.27,releaseLineY:.32,hipVisible:false,lastAt:0},
   tracking:{left:null,right:null,prevLeft:null,prevRight:null,lastValidAt:0,lastAnyAt:0},
   readyArea:{x:.5,bottom:1,w:.88,h:.35},releaseLineY:.32,
+  frame:{width:0,height:0,aspect:9/16,portrait:true,requestedPortrait:false,inferCanvas:null,inferCtx:null,inferWidth:0,inferHeight:0},orientationBlocked:false,
   connections:[[11,12],[11,13],[13,15],[15,17],[15,19],[15,21],[12,14],[14,16],[16,18],[16,20],[16,22],[11,23],[12,24],[23,24]],
   handConnections:[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]]
 };
 const VISION_READY_HOLD_MS=120;
 const VISION_RELEASE_LOST_MS=140;
+function visionSyncFrameGeometry(video){
+  if(!video)return VISION.frame;
+  const w=video.videoWidth||0,h=video.videoHeight||0;if(!w||!h)return VISION.frame;
+  const frame=VISION.frame,pixels=w*h,scale=Math.min(1,Math.sqrt(VISION_INFERENCE_MAX_PIXELS/pixels));
+  frame.width=w;frame.height=h;frame.aspect=w/h;frame.portrait=h>w;frame.inferWidth=Math.max(2,Math.round(w*scale/2)*2);frame.inferHeight=Math.max(2,Math.round(h*scale/2)*2);
+  const stage=video.closest&&video.closest(".visionStage"),preview=$("visionPreview");
+  if(stage)stage.style.setProperty("--vision-aspect",w+" / "+h);
+  if(preview)preview.dataset.orientation=frame.portrait?"portrait":"landscape";
+  document.documentElement.dataset.visionFrame=w+"x"+h;
+  return frame;
+}
+function visionInferenceSource(video){
+  const frame=visionSyncFrameGeometry(video),pixels=frame.width*frame.height;
+  if(!pixels||pixels<=VISION_INFERENCE_MAX_PIXELS)return video;
+  const w=frame.inferWidth,h=frame.inferHeight;
+  if(!frame.inferCanvas){frame.inferCanvas=document.createElement("canvas");frame.inferCtx=frame.inferCanvas.getContext("2d",{alpha:false});}
+  if(frame.inferCanvas.width!==w||frame.inferCanvas.height!==h){frame.inferCanvas.width=w;frame.inferCanvas.height=h;}
+  frame.inferCtx.drawImage(video,0,0,w,h);frame.inferWidth=w;frame.inferHeight=h;
+  return frame.inferCanvas;
+}
+function visionOrientationInvalid(){return visionPointerCoarse()&&innerWidth>innerHeight;}
+window.AIBAVisionFrame=Object.freeze({descriptor:()=>({width:VISION.frame.width,height:VISION.frame.height,aspect:VISION.frame.aspect,portrait:VISION.frame.portrait,mirrored:true,inferWidth:VISION.frame.inferWidth,inferHeight:VISION.frame.inferHeight})});
 function visionGameActive(){return (G.state==="round"||G.state==="tiebreak"||G.state==="battle"||G.state==="rackrush")&&G.canShoot&&!G.cutAway&&!G.battleCut;}
 function resetVisionGesture(sm){
   sm.phase="idle";sm.holdStart=0;sm.chargeStart=0;sm.lastSeen=0;sm.cooldownUntil=0;sm.releaseFlashUntil=0;
@@ -266,7 +299,7 @@ function drawVisionReleaseLine(g,lineY,w,h,active){
 }
 function drawVisionPose(lm,handLandmarks,sample,phase){
   const cv=$("visionCanvas"),video=$("visionVideo");if(!cv||!video)return;
-  const w=video.videoWidth||640,h=video.videoHeight||480;if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}
+  const frame=visionSyncFrameGeometry(video),w=frame.inferWidth||288,h=frame.inferHeight||512;if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}
   const g=cv.getContext("2d");g.clearRect(0,0,w,h);
   drawVisionReleaseLine(g,(sample&&sample.releaseLineY)||VISION.releaseLineY,w,h,phase==="charging"||phase==="release");
   drawVisionReadyArea(g,(sample&&sample.readyArea)||VISION.readyArea,w,h,"#70e8ff",phase==="armed");
@@ -354,13 +387,19 @@ function visionFrame(now){
   if(!VISION.desired)return;VISION.raf=requestAnimationFrame(visionFrame);
   if(!VISION.enabled||!VISION.landmarker)return;
   const video=$("visionVideo");if(!video||video.readyState<2||video.currentTime===VISION.lastVideoTime)return;
+  if(visionOrientationInvalid()){
+    if(!VISION.orientationBlocked){VISION.orientationBlocked=true;resetVisionGesture(VISION.machine);cancelVisionOwnedCharge();visionResetTracking(true);}
+    if(now-(VISION.lastDraw||0)>240){VISION.lastDraw=now;drawVisionPose(VISION.lastPose,[],VISION.lastSample,"idle");visionSetUI("align","请保持手机竖屏",0);}
+    return;
+  }
+  if(VISION.orientationBlocked){VISION.orientationBlocked=false;VISION.lastVideoTime=-1;visionResetTracking(true);resetVisionGesture(VISION.machine);}
   const cadence=visionCadence(),task=visionDetectTask(now,cadence),shouldDraw=now-(VISION.lastDraw||0)>=cadence.drawMs;
   if(!task&&!shouldDraw)return;
   VISION.lastVideoTime=video.currentTime;
   const started=performance.now();
   try{
     if(task==="pose"){
-      const result=VISION.landmarker.detectForVideo(video,now);VISION.lastPose=result&&result.landmarks&&result.landmarks[0]?result.landmarks[0]:null;VISION.lastPoseAt=now;
+      const result=VISION.landmarker.detectForVideo(visionInferenceSource(video),now);VISION.lastPose=result&&result.landmarks&&result.landmarks[0]?result.landmarks[0]:null;VISION.lastPoseAt=now;
     }
     if(task)noteVisionInference(started);
   }
@@ -410,9 +449,10 @@ async function enableVisionControl(event){
   VISION.desired=true;VISION.loading=true;$("visionPreview").style.display="block";visionSetUI("align","正在启动本地识别",.08);
   try{
     const modelPromise=loadVisionModel();
-    const streamPromise=navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:"user",width:{ideal:360},height:{ideal:270},frameRate:{ideal:18,max:24}}});
+    VISION.frame.requestedPortrait=visionWantsPortrait();document.documentElement.dataset.visionRequested=VISION.frame.requestedPortrait?"portrait":"landscape";
+    const streamPromise=navigator.mediaDevices.getUserMedia({audio:false,video:visionCaptureConstraints()});
     const results=await Promise.all([modelPromise,streamPromise]);VISION.stream=results[1];
-    const video=$("visionVideo");video.srcObject=VISION.stream;await video.play();
+    const video=$("visionVideo");video.srcObject=VISION.stream;await video.play();visionSyncFrameGeometry(video);
     VISION.enabled=true;VISION.lastSample=null;VISION.lastPose=null;VISION.lastHands=[];VISION.lastPoseAt=0;VISION.lastHandAt=0;VISION.lastDraw=0;VISION.lastVideoTime=-1;VISION.inferAvg=0;visionResetTracking(true);resetVisionGesture(VISION.machine);visionSetUI("idle","双手放入下方蓄力框",0);
     cancelAnimationFrame(VISION.raf);VISION.raf=requestAnimationFrame(visionFrame);
     document.documentElement.dataset.visionControl="ready";
@@ -433,7 +473,7 @@ function suspendVisionControl(){
   VISION.desired=false;VISION.enabled=false;VISION.loading=false;cancelAnimationFrame(VISION.raf);cancelVisionOwnedCharge();
   if(VISION.stream)VISION.stream.getTracks().forEach(t=>t.stop());VISION.stream=null;const video=$("visionVideo");if(video)video.srcObject=null;
   visionResetTracking(true);resetVisionGesture(VISION.machine);VISION.lastSample=null;VISION.lastPose=null;VISION.lastHands=[];VISION.lastPoseAt=0;VISION.lastHandAt=0;VISION.lastDraw=0;VISION.lastVideoTime=-1;VISION.inferAvg=0;$("visionPreview").style.display="none";
-  document.documentElement.dataset.visionControl="off";delete document.documentElement.dataset.visionPhase;delete document.documentElement.dataset.visionReady;delete document.documentElement.dataset.visionHands;
+  VISION.orientationBlocked=false;document.documentElement.dataset.visionControl="off";delete document.documentElement.dataset.visionPhase;delete document.documentElement.dataset.visionReady;delete document.documentElement.dataset.visionHands;delete document.documentElement.dataset.visionFrame;
 }
 function visionModeMarkup(){
   const active=VISION.desired||VISION.enabled;
@@ -443,3 +483,4 @@ function visionModeMarkup(){
     <button class="${active?"active":""}" onclick="enableVisionControl(event)" ${VISION.supported?"":"disabled"}><span>体感控制</span><em class="controlRecommend">推荐</em></button></div>`;
 }
 addEventListener("pagehide",()=>{if(VISION.stream)VISION.stream.getTracks().forEach(t=>t.stop());});
+addEventListener("orientationchange",()=>{if(!VISION.enabled)return;setTimeout(()=>{VISION.lastVideoTime=-1;visionResetTracking(true);resetVisionGesture(VISION.machine);visionSyncFrameGeometry($("visionVideo"));},220);});
