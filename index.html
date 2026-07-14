@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>aiBA·百分大战 v1.91 PORTRAIT VISION</title>
+<title>aiBA·百分大战 v1.92 GAME FLOW</title>
 <link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">
-<link rel="stylesheet" href="styles.css?v=1.91">
+<link rel="stylesheet" href="styles.css?v=1.92">
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -14,7 +14,7 @@
 <div id="bootLoad" role="dialog" aria-modal="true" aria-busy="true" aria-label="游戏资源加载" tabindex="0">
   <div class="bootFrame">
     <div class="bootBrand"><span>ai</span>BA</div>
-    <div class="bootEdition">PORTRAIT VISION / v1.91</div>
+    <div class="bootEdition">GAME FLOW / v1.92</div>
     <div class="bootRule"></div>
     <div id="bootStatus" class="bootStatus">正在展开赛场</div>
     <div class="bootMeter" aria-hidden="true"><i id="bootBar"></i></div>
@@ -106,12 +106,12 @@
 <script>typeof THREE==="undefined"&&document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>')</script>
 <script>typeof THREE==="undefined"&&document.write('<script src="https://lib.baomitu.com/three.js/r128/three.min.js"><\/script>')</script>
 <script src="src/assets-manifest.js"></script>
-<script src="src/config.js"></script>
+<script src="src/config.js?v=1.92"></script>
 <script src="src/player-select.js?v=1.76"></script>
 <script src="src/player-locker-preview.js?v=1.76"></script>
 <script src="src/player-id.js"></script>
 <script src="src/leaderboard-api.js"></script>
-<script src="src/leaderboard-ui.js?v=1.89"></script>
+<script src="src/leaderboard-ui.js?v=1.92"></script>
 <script src="src/share.js"></script>
 <script src="src/recorder.js?v=1.91"></script>
 <script src="src/shot-physics.js"></script>
@@ -120,7 +120,7 @@
 <script src="src/visual-director.js?v=1.85"></script>
 <script>
 /* =====================================================
-   aiBA·百分大战 v1.91 PORTRAIT VISION
+   aiBA·百分大战 v1.92 GAME FLOW
    Minecraft-style NBA 3-Point Contest · 单文件实现
    ===================================================== */
 "use strict";
@@ -150,7 +150,7 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------------- constants ---------------- */
-const GAME_VERSION="v1.91-portrait-vision";
+const GAME_VERSION="v1.92-rookie-pregame";
 const GAME_NAME="aiBA·百分大战";
 const CONFIG=window.AIBA_CONFIG||{};
 // NBA 标准全场坐标：保留原篮筐/三分点，只向远端延长球场。
@@ -2728,7 +2728,7 @@ function updVictoryCine(dt){
   }
 }
 const PREGAME={
-  on:false,t:0,idx:0,dur:0,shots:[],actors:[],snaps:[],prevState:null,cb:null
+  on:false,t:0,idx:0,dur:0,shots:[],actors:[],snaps:[],prevState:null,cb:null,chalk:null
 };
 const PREGAME_ACTIONS=["shoot","stretch","dunk","chalk","hang","finger","huddle","wave","pump"];
 const PREGAME_CAMS=["orbit","push","low","overhead","freeze","follow","pan","pull"];
@@ -2806,8 +2806,8 @@ function pregameBuildShots(opts){
   while(t<wanted){
     const actor=actors[i%actors.length]||actors[0];
     let action;
-    if(i===0)action=pregamePick(["shoot","stretch","chalk"]);
-    else if(i===1&&actors.length>1)action=pregamePick(["finger","shoot","pump","dunk"]);
+    if(i===0)action="shoot";
+    else if(i===1)action=pregamePick(["chalk","hang","dunk"]);
     else action=pregamePick(PREGAME_ACTIONS);
     if(action===lastAction)action=pregamePick(PREGAME_ACTIONS);
     if(action==="huddle"&&actors.length<2)action="pump";
@@ -2838,8 +2838,8 @@ function pregameActionBase(actor,action,u){
     }
   }
   if(action==="dunk"||action==="hang"){
-    const rimSpot=V3(actor.role==="opponent"?0.75:-0.75,0,HOOP.z+0.95);
-    base.lerp(rimSpot,ease01(clamp(u*1.25,0,1)));
+    const rimSpot=V3(action==="hang"?0:(actor.role==="opponent"?0.16:-0.16),0,HOOP.z+(action==="hang"?0.34:0.52));
+    base.lerp(rimSpot,ease01(clamp(u/(action==="hang"?0.3:0.42),0,1)));
   }
   return pregameClampPos(base);
 }
@@ -2863,10 +2863,7 @@ function pregameAnimate(actor,action,u,seg){
   pregamePlace(actor,base,face);pregameNeutral(guy);
   if(ball)ball.visible=false;
   if(action==="shoot"){
-    const ph=clamp(u*1.28,0,1.1),c=shotCurves(ph);
-    const y=poseGuy(guy,c,0)+Math.max(0,c.jmp*0.55-c.over*0.55);
-    guy.g.position.y=y;
-    if(ball){ball.visible=true;ball.material=actor.role==="hero"?shotMat(curShot()):matBall;poseBallPos(ball.position,c);}
+    updatePregameWarmupShot(actor,guy,ball,u);
   }else if(action==="stretch"){
     const sway=Math.sin(u*Math.PI*2);
     guy.g.rotation.x=0.05+0.14*Math.max(0,sway);
@@ -2877,8 +2874,9 @@ function pregameAnimate(actor,action,u,seg){
   }else if(action==="dunk"||action==="hang"){
     const take=ease01(clamp((u-0.08)/0.38,0,1)),land=1-ease01(clamp((u-0.72)/0.28,0,1));
     const hang=action==="hang"?smoothRange(.18,.36,u)*(1-smoothRange(.86,1,u)):Math.sin(clamp(u,0,1)*Math.PI);
-    guy.g.position.y=0.18+Math.max(take*land,hang)*0.95;
-    guy.arms.forEach(a=>a.rotation.x=-2.75);guy.elbows.forEach(e=>e.rotation.x=action==="hang"?-0.25:-0.75);
+    const gripRise=Math.max(0.98,HOOP.y-2.01+0.015);
+    guy.g.position.y=0.08+Math.max(take*land,hang)*gripRise;
+    guy.arms.forEach(a=>a.rotation.x=action==="hang"?-Math.PI:-2.82);guy.elbows.forEach(e=>e.rotation.x=action==="hang"?0:-0.75);
     guy.legs[0].rotation.x=-0.42;guy.legs[1].rotation.x=0.34;guy.knees.forEach(k=>k.rotation.x=0.72);
     if(ball){ball.visible=action==="dunk"?u<0.64:false;ball.material=matBall;ball.position.set(-0.12,1.58,0.18);}
   }else if(action==="chalk"){
@@ -2887,6 +2885,7 @@ function pregameAnimate(actor,action,u,seg){
     guy.arms[0].rotation.z=-0.25-toss*0.45;guy.arms[1].rotation.z=0.25+toss*0.45;
     guy.elbows.forEach(e=>e.rotation.x=-1.35+toss*0.8);
     guy.g.position.y=Math.max(0,Math.sin(u*Math.PI))*0.08;
+    updatePregameChalk(actor,u,t);
   }else if(action==="finger"){
     guy.arms[0].rotation.x=-2.15;guy.arms[0].rotation.z=-0.55;guy.elbows[0].rotation.x=-0.55;
     guy.arms[1].rotation.x=-0.55;guy.elbows[1].rotation.x=-0.55;
@@ -2907,7 +2906,10 @@ function pregameAnimate(actor,action,u,seg){
 function pregameFocus(seg){
   const out=V3(0,0,0),list=seg.group?PREGAME.actors:[seg.actor];
   list.forEach(a=>out.add(a.guy.g.position));out.multiplyScalar(1/Math.max(1,list.length));
-  out.y=1.18;return out;
+  if(seg.action==="dunk"||seg.action==="hang"){
+    out.x=(out.x+HOOP.x)*0.5;out.z=(out.z+HOOP.z)*0.5;out.y=2.18;
+  }else out.y=1.18;
+  return out;
 }
 function pregameUpdateCamera(seg,u,dt){
   const focus=pregameFocus(seg),actor=seg.actor,guy=actor.guy;
@@ -2966,7 +2968,7 @@ function pregameReadyCameraTarget(){
 function finishPreGameShow(){
   const cb=PREGAME.cb,prev=PREGAME.prevState;
   PREGAME.snaps.forEach(pregameRestoreGuy);
-  PREGAME.on=false;PREGAME.t=0;PREGAME.idx=0;PREGAME.shots=[];PREGAME.actors=[];PREGAME.snaps=[];PREGAME.cb=null;
+  PREGAME.on=false;PREGAME.t=0;PREGAME.idx=0;PREGAME.shots=[];PREGAME.actors=[];PREGAME.snaps=[];PREGAME.cb=null;hidePregameChalk();
   $("vsBanner").style.display="none";
   P.jump=0;P.eyeDip=0;P.walking=false;G.state=prev;G.moving=false;G.glideCam=false;
   const ready=pregameReadyCameraTarget();
@@ -2981,6 +2983,7 @@ function updPreGameShow(dt){
   }
   const seg=PREGAME.shots[PREGAME.idx];if(!seg)return;
   const u=clamp((PREGAME.t-seg.start)/seg.dur,0,1);
+  hidePregameChalk();
   PREGAME.actors.forEach(a=>{if(seg.group||a===seg.actor)pregameAnimate(a,seg.action,u,seg);else pregameIdle(a,PREGAME.t);});
   pregameUpdateCamera(seg,u,dt);
 }
@@ -3232,13 +3235,6 @@ function setHandBall(){
   handBall.material=m;pBall.material=m;
   handBall.visible=true;pBall.visible=true;
 }
-function barHiddenFor(s){
-  if(G.mode==="battle")return G.shotIdx>=BATTLE_BAR_VISIBLE_SHOTS;
-  if(G.mode==="rackrush")return rackRushBarHidden();
-  if(!s||G.practice)return false;
-  const rk=(s.deep!=null||s.super)?5:s.rack;
-  return rk>=DIFFS[G.diff].hideBar;
-}
 function updPowerUI(){
   const s=curShot();const isDeep=s&&(s.deep!=null||s.super);
   const hide=barHiddenFor(s);
@@ -3247,7 +3243,7 @@ function updPowerUI(){
     hidePlayerPowerUI();
     if(!G.blindToasted){
       G.blindToasted=true;
-      toast(G.mode==="battle"?"前5球热手结束 · 蓄力条隐藏,靠手感出手":(G.mode==="rackrush"?"本关进入手感投篮 · 蓄力条隐藏":"🙈 盲投模式!投篮条已隐藏 · 凭手感节奏出手"),"#ffd23f");
+      toast(G.diff==="easy"?"新秀挑战升级 · 最后30%隐藏投篮条":(G.mode==="battle"?"前5球热手结束 · 蓄力条隐藏,靠手感出手":(G.mode==="rackrush"?"本关进入手感投篮 · 蓄力条隐藏":"盲投模式!投篮条已隐藏 · 凭手感节奏出手")),"#ffd23f");
     }
     return;
   }
@@ -3899,7 +3895,7 @@ function showModeInfo(mode){
   if(mode==="battle"){
     showPanel(`<h1 class="title" style="font-size:22px">百分大战 100</h1>
       <div class="card">两人同时开投,先到 <b>100</b> 分获胜。五个常规点每球 <b>3 分</b>,两个彩球点每球 <b>5 分</b>,中场命中 <b>10 分</b>。</div>
-      <div class="card">前 <b>${BATTLE_BAR_VISIBLE_SHOTS}</b> 球显示蓄力条,之后隐藏。按住蓄力,松开出手;手机保持水平,倾斜会带歪球路。</div>
+      <div class="card">新秀难度在比赛前 <b>70%</b> 显示投篮条；更高难度只保留前 <b>${BATTLE_BAR_VISIBLE_SHOTS}</b> 球。后程靠出手手感完成比赛。</div>
       <button class="btn green" onclick="ensureAudio(true,true);goDiff('battle')">开始百分大战</button>
       <button class="btn sm" onclick="showMenu()">返回封面</button>`);
     return;
@@ -3922,7 +3918,7 @@ function showModeInfo(mode){
   }
   showPanel(`<h1 class="title" style="font-size:22px">三分挑战</h1>
     <div class="card">经典三分赛规则: <b>70 秒</b>, 5 个普通球架,外加 2 个深远点。花球和深远球更值钱。</div>
-    <div class="card">按住蓄力,松开出手。高难度会隐藏投篮条,更考验出手节奏。</div>
+    <div class="card">按住蓄力,松开出手。新秀难度最后 30% 也会隐藏投篮条，更高难度更早进入手感投篮。</div>
     <button class="btn gold" onclick="ensureAudio(true,true);goDiff('contest')">开始三分挑战</button>
     <button class="btn sm" onclick="showMenu()">返回封面</button>`);
 }
@@ -3951,7 +3947,7 @@ function goDiff(mode,quiet){
     airhorn();
     paSay("欢迎来到 aiBA "+SCENE_PRESETS[currentScenePreset].name+"。灯光就位,比赛开始倒计时。",true);
   }
-  let h='<h1 class="title" style="font-size:24px">选择难度</h1>'+(window.AIBAProfileMiniMarkup?AIBAProfileMiniMarkup():"")+(window.AIBAModeLeaderboardMarkup?AIBAModeLeaderboardMarkup(G.mode):"")+(window.AIBAPlayerSelectMarkup?AIBAPlayerSelectMarkup(LEGENDS,G.mode):"");
+  let h=(window.AIBAModeLeaderboardMarkup?AIBAModeLeaderboardMarkup(G.mode):"")+'<h1 class="title" style="font-size:24px">选择难度</h1>'+(window.AIBAPlayerSelectMarkup?AIBAPlayerSelectMarkup(LEGENDS,G.mode):"");
   h+=sceneSelectMarkup();
   h+=visionModeMarkup();
   if(G.mode==="battle")h+='<div class="note">百分大战中,难度会影响你的甜区宽度和对手命中节奏。</div>';
@@ -4025,7 +4021,7 @@ function showBattleIntro(){
       2. 五个常规点命中 <b>3 分</b>,两个彩球点命中 <b style="color:#54e05a">5 分</b>。<br>
       3. 中场 LOGO 超远点命中 <b style="color:#ffd23f">10 分</b>。<br>
       4. 点击场上光圈直接移动到投篮点(或 A/D、方向键)。<br>
-      5. 前 <b>${BATTLE_BAR_VISIBLE_SHOTS}</b> 球显示蓄力条,之后进入手感盲投。<br>
+      5. ${G.diff==="easy"?"前 <b>70%</b> 显示投篮条,最后 30% 靠手感。":`前 <b>${BATTLE_BAR_VISIBLE_SHOTS}</b> 球显示投篮条,之后进入手感盲投。`}<br>
       6. 普通点每点 5 球,用完 10 秒恢复;两个彩球点各自 10 秒恢复。<br>
       7. 中场 10 分只在任意一方跨过 10/20/30... 分时出现一次。<br>
       8. 对手与你同场竞投,球在空中可能<b style="color:#ff8d7a">相撞改变结果</b>!</div>
@@ -5634,6 +5630,7 @@ handBall.visible=false;
 bootGame();
 animate();
 </script>
+<script src="src/game-flow.js?v=1.92"></script>
 <script src="src/navigation.js?v=1.90"></script>
 <script src="src/scene-lifecycle.js?v=1.88"></script>
 <script src="src/result-stats.js?v=1.78"></script>
@@ -5644,6 +5641,6 @@ animate();
 <script src="src/hero-moments.js?v=1.79"></script>
 <script src="src/hot-hand.js?v=1.81"></script>
 <script src="src/perf.js?v=1.72"></script>
-<script src="src/perf-settings.js?v=1.87"></script>
+<script src="src/perf-settings.js?v=1.92"></script>
 </body>
 </html>

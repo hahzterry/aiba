@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.91-portrait-vision.html";
+const snapshot="block-3pt-kingv1.92-rookie-pregame.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -32,6 +32,7 @@ const requiredFiles=[
   "src/gear.js",
   "src/perf.js",
   "src/perf-settings.js",
+  "src/game-flow.js",
   "src/navigation.js",
   "src/scene-lifecycle.js",
   "src/visual-director.js",
@@ -56,16 +57,16 @@ const entryHtml=read(entry);
 const snapshotHtml=read(snapshot);
 if(entryHtml!==snapshotHtml)fail(entry+" and "+snapshot+" differ");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v1.91 PORTRAIT VISION","PORTRAIT VISION / v1.91","v1.91-portrait-vision"])
+for(const token of ["v1.92 GAME FLOW","GAME FLOW / v1.92","v1.92-rookie-pregame"])
   if(!entryHtml.includes(token))fail("visible/game version token missing "+token);
-if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=1.91">'))fail("stylesheet link missing");
+if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=1.92">'))fail("stylesheet link missing");
 if(!entryHtml.includes('<script src="src/assets-manifest.js"></script>'))fail("assets manifest script missing");
-if(!entryHtml.includes('<script src="src/config.js"></script>'))fail("config script missing");
+if(!entryHtml.includes('<script src="src/config.js?v=1.92"></script>'))fail("config script missing");
 if(!entryHtml.includes('<script src="src/player-select.js?v=1.76"></script>'))fail("player select script missing");
 if(!entryHtml.includes('<script src="src/player-locker-preview.js?v=1.76"></script>'))fail("player locker preview script missing");
 if(!entryHtml.includes('<script src="src/player-id.js"></script>'))fail("player id script missing");
 if(!entryHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("leaderboard api script missing");
-if(!entryHtml.includes('<script src="src/leaderboard-ui.js?v=1.89"></script>'))fail("leaderboard ui script missing");
+if(!entryHtml.includes('<script src="src/leaderboard-ui.js?v=1.92"></script>'))fail("leaderboard ui script missing");
 if(!entryHtml.includes('<script src="src/share.js"></script>'))fail("share script missing");
 if(!entryHtml.includes('<script src="src/recorder.js?v=1.91"></script>'))fail("recorder script missing");
 if(!entryHtml.includes('<script src="src/shot-physics.js"></script>'))fail("shot physics script missing");
@@ -86,14 +87,15 @@ if(!entryHtml.includes('<script src="src/hot-hand.js?v=1.81"></script>'))fail("h
 if(entryHtml.indexOf('<script src="src/hot-hand.js?v=1.81"></script>')<entryHtml.indexOf('<script src="src/hero-moments.js?v=1.79"></script>'))fail("hot hand should load after hero moments");
 if(!entryHtml.includes('<script src="src/perf.js?v=1.72"></script>'))fail("perf script missing");
 if(entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>')<entryHtml.indexOf('<script src="src/hot-hand.js?v=1.81"></script>'))fail("perf script should load after hot hand");
-if(!entryHtml.includes('<script src="src/perf-settings.js?v=1.87"></script>'))fail("perf settings script missing");
-if(entryHtml.indexOf('<script src="src/perf-settings.js?v=1.87"></script>')<entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>'))fail("perf settings should load after perf");
+if(!entryHtml.includes('<script src="src/perf-settings.js?v=1.92"></script>'))fail("perf settings script missing");
+if(entryHtml.indexOf('<script src="src/perf-settings.js?v=1.92"></script>')<entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>'))fail("perf settings should load after perf");
 if(!entryHtml.includes('<script src="src/face-overlays.js"></script>'))fail("face overlays script missing");
 if(!entryHtml.includes('<script src="src/haptics.js?v=1.80"></script>'))fail("haptics script missing");
 if(!entryHtml.includes('<script src="src/visual-director.js?v=1.85"></script>'))fail("visual director script missing");
 if(!entryHtml.includes('<script src="src/audio.js?v=1.88"></script>'))fail("audio script missing");
 if(!entryHtml.includes('<script src="src/vision.js?v=1.91"></script>'))fail("vision script missing");
 if(!entryHtml.includes('<script src="src/navigation.js?v=1.90"></script>'))fail("navigation script missing");
+if(!entryHtml.includes('<script src="src/game-flow.js?v=1.92"></script>'))fail("game flow script missing");
 if(/<style>[\s\S]*?<\/style>/.test(entryHtml))fail("inline style block should stay split out");
 if(/const COVER_STARS=\[/.test(entryHtml)||/const EXT_AUDIO=\{/.test(entryHtml))fail("asset manifest data leaked back into html");
 if(/assets\/aiba-covers\/[^"')]+\.png/.test(entryHtml))fail("runtime should not reference png cover assets");
@@ -302,6 +304,11 @@ for(const token of ["homeBtn","requestHome","cleanup","removeEventListener(\"poi
   if(!navigation.includes(token))fail("navigation flow token missing "+token);
 for(const token of ["function cancel()",",cancel,resultMarkup"])
   if(!recorderScript.includes(token))fail("recorder cancellation missing "+token);
+const gameFlow=read("src/game-flow.js");
+try{new Function(gameFlow);}
+catch(e){fail("game flow script syntax error: "+e.message);}
+for(const token of ["rookieMeterProgress","G.diff===\"easy\"","updatePregameWarmupShot","updatePregameChalk"])
+  if(!gameFlow.includes(token))fail("game flow token missing "+token);
 
 const sandbox={window:{}};
 vm.createContext(sandbox);

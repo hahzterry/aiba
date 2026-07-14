@@ -87,12 +87,18 @@
   function modeMarkup(mode){
     const focus=mode==="battle"?"battle":(mode==="rackrush"?"rackrush":(mode==="contest"?"contest":""));
     if(!focus)return "";
+    return `<nav class="modeUtilityBar" aria-label="模式辅助入口">
+      <button type="button" onclick="showModeUtility('${focus}')">排行与挑战</button>
+      <button type="button" onclick="AIBAPerfSettings.open()">游戏设置</button>
+    </nav>`;
+  }
+  function showModeUtility(focus){
+    focus=focus==="battle"||focus==="rackrush"||focus==="contest"?focus:"speed100";
     const label=focus==="battle"?"百分大战":(focus==="rackrush"?"投篮机":"三分挑战");
-    return `<div class="modeLeaderboardDock">
-      <button type="button" onclick="showLeaderboardHub('today','${focus}')">${esc(label)}今日榜</button>
-      <button type="button" onclick="showLeaderboardHub('all','${focus}')">总榜</button>
-      <button type="button" onclick="copyAIBAChallenge('${focus}')">复制挑战</button>
-    </div>`;
+    if(typeof showPanel!=="function")return;
+    showPanel(`<h1 class="title" style="font-size:22px">排行与挑战</h1><div class="note">${esc(label)} · 全球记录与好友同题挑战</div>
+      <div class="modeUtilityMenu"><button class="btn" type="button" onclick="showLeaderboardHub('today','${focus}')">今日榜</button><button class="btn" type="button" onclick="showLeaderboardHub('all','${focus}')">全球总榜</button><button class="btn gold" type="button" onclick="copyAIBAChallenge('${focus}')">复制挑战链接</button></div>
+      <button class="btn sm" type="button" onclick="goDiff(G.mode,true)">返回难度</button>`);
   }
   function refreshProfileUI(){
     const p=profile();
@@ -120,10 +126,11 @@
       if(typeof toast==="function")toast("昵称已保存在本机,稍后同步","#ffd23f");
     }
   }
-  function showNicknameEditor(){
+  function showNicknameEditor(returnTo){
     const p=profile(),name=displayName(p);
     if(typeof showPanel!=="function")return;
-    showPanel(`<h1 class="title" style="font-size:22px">取个球场名</h1><div class="note">用于成绩单、精彩视频和全球排行榜。下次打开会自动记住。</div><div class="playerNameEditor"><input id="playerNameInput" maxlength="18" autocomplete="nickname" placeholder="输入你的昵称" value="${esc(name)}"><button class="btn gold" onclick="savePlayerNameFromInput(document.getElementById('playerNameInput').value)">保存昵称</button></div><button class="btn sm" onclick="goDiff(G.mode||'rackrush')">返回选择难度</button><button class="btn sm" onclick="showMenu()">返回封面</button>`);
+    const back=returnTo==="settings"?"AIBAPerfSettings.open()":"goDiff(G.mode||'rackrush')";
+    showPanel(`<h1 class="title" style="font-size:22px">取个球场名</h1><div class="note">用于成绩单、精彩视频和全球排行榜。下次打开会自动记住。</div><div class="playerNameEditor"><input id="playerNameInput" maxlength="18" autocomplete="nickname" placeholder="输入你的昵称" value="${esc(name)}"><button class="btn gold" onclick="savePlayerNameFromInput(document.getElementById('playerNameInput').value)">保存昵称</button></div><button class="btn sm" onclick="${back}">返回</button>`);
     setTimeout(()=>{const el=document.getElementById("playerNameInput");if(el)el.focus();},0);
   }
   function clamp(v,min,max){
@@ -426,6 +433,7 @@
   global.AIBAProfileMiniMarkup=miniMarkup;
   global.AIBALeaderboardHomeMarkup=homeMarkup;
   global.AIBAModeLeaderboardMarkup=modeMarkup;
+  global.showModeUtility=showModeUtility;
   global.savePlayerNameFromInput=savePlayerNameFromInput;
   global.showNicknameEditor=showNicknameEditor;
   global.showLeaderboardHub=showLeaderboardHub;
@@ -436,6 +444,6 @@
   global.AIBAResultHeaderMarkup=resultHeaderMarkup;
   global.AIBAResultMetricsFor=metricsFor;
   global.showOnlineLeaderboardForRecord=showOnlineLeaderboardForRecord;
-  global.AIBALeaderboardUI=Object.freeze({submitRecord,rankMarkup,showOnlineLeaderboardForRecord,refreshProfileUI,resultBadgeMarkup,resultHeaderMarkup,showLeaderboardHub,copyChallenge,homeMarkup,modeMarkup,recordRankText});
+  global.AIBALeaderboardUI=Object.freeze({submitRecord,rankMarkup,showOnlineLeaderboardForRecord,refreshProfileUI,resultBadgeMarkup,resultHeaderMarkup,showLeaderboardHub,showModeUtility,copyChallenge,homeMarkup,modeMarkup,recordRankText});
   setTimeout(refreshProfileUI,0);
 })(window);

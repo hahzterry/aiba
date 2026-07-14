@@ -9,7 +9,7 @@
 - Vercel 自动部署：https://aiba-percent-battle.vercel.app/
 - GitHub Pages 备用：https://opstiger.github.io/aiba-percent-battle/
 
-当前版本：`v1.91-portrait-vision`
+当前版本：`v1.92-rookie-pregame`
 
 ## 模式
 
@@ -52,7 +52,7 @@ node scripts/check.js
 ## 项目结构
 
 - `index.html`：当前可玩的入口文件。
-- `block-3pt-kingv1.91-portrait-vision.html`：当前版本快照，和 `index.html` 保持一致。
+- `block-3pt-kingv1.92-rookie-pregame.html`：当前版本快照，和 `index.html` 保持一致。
 - `styles.css`：游戏 HUD、首页、面板和移动端样式。
 - `src/assets-manifest.js`：封面角色、音频等资源清单。
 - `src/player-select.js`：赛前选球员、本地记忆和球员风格展示。
@@ -65,11 +65,12 @@ node scripts/check.js
 - `src/haptics.js`：震动反馈词表与关键时刻接线（砸框轻震/关键命中长震/胜利节奏震，安卓生效，iOS 不支持网页震动）。
 - `src/hot-hand.js`：热手系统可视化（连中火焰轨迹、观众声浪分级、脚下热手提示）。
 - `src/perf.js`：运行时性能优化（静态几何矩阵冻结、摄像头模式近场观众 LOD）。
-- `src/perf-settings.js`：玩家可切的性能设置与手机自动流畅保护；持续低帧时分级精简观众、光锥、粒子和分辨率，录屏期间冻结切档。
+- `src/perf-settings.js`：游戏设置、昵称入口与手机自动流畅保护；持续低帧时分级精简观众、光锥、粒子和分辨率，录屏期间冻结切档。
 - `src/visual-director.js`：比赛画面的低成本天空层和球场材质调校，不启用实时阴影或后处理。
 - `src/player-id.js`：匿名玩家 ID、昵称和本地身份凭证。
 - `src/leaderboard-api.js`：在线成绩提交、离线队列和排行榜 API 客户端。
 - `src/leaderboard-ui.js`：昵称输入、成绩页云端排名、在线排行榜弹层和赛后雷达评分。
+- `src/game-flow.js`：新秀局程投篮条规则与低成本赛前镁粉特效。
 - `src/result-stats.js`：赛后雷达所需的出手节奏、关键球、点位难度和稳定性统计。
 - `src/audio.js`：外部音频、合成音效、现场氛围和按需加载的语音播报，避免首击加载整套语音库。
 - `src/scene-lifecycle.js`：鲜花/夕阳球场的新局原地复位，不销毁重建整套场景。

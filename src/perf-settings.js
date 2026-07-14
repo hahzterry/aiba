@@ -187,9 +187,18 @@
     return `<div class="perfRow perfSeg"><span class="perfRowMain"><b>观众密度</b><em>近场观众是 draw call 大头,关掉最省</em></span>
       <span class="perfSegBtns">${opts.map(o=>`<button type="button" class="${S.crowd===o[0]?"on":""}" onclick="AIBAPerfCrowd('${o[0]}')">${o[1]}</button>`).join("")}</span></div>`;
   }
+  function identityRow(){
+    let name="";
+    try{
+      const p=global.AIBAIdentity&&global.AIBAIdentity.publicProfile?global.AIBAIdentity.publicProfile():null;
+      if(p&&p.has_nickname)name=String(p.display_name||"").trim();
+    }catch(e){}
+    return `<button class="perfIdentity" type="button" onclick="showNicknameEditor('settings')"><span><small>PLAYER</small><b>${esc(name||"未设置昵称")}</b></span><em>${name?"修改昵称":"设置昵称"} ›</em></button>`;
+  }
   function panelMarkup(){
     return `<div class="perfPanel">
-      <div class="perfHead"><small>PERFORMANCE LAB</small><h1>性能设置</h1><p>逐项开关,配合右上角 FPS 读数,在你的手机上试出哪项最有效。iOS 卡顿多半来自填充率与 draw call,下面这些正是冲它去的。</p></div>
+      <div class="perfHead"><small>GAME SETTINGS</small><h1>游戏设置</h1><p>昵称与画面流畅度都在这里调整。</p></div>
+      ${identityRow()}
       ${toggleRow("autoTune","自动流畅保护",AUTO_DEVICE?(autoTier?`本次已自动降到 ${autoTier} 档,录屏期间不会切档`:"持续低帧时自动精简观众与特效"):"手机端生效,桌面端保持原画质")}
       ${toggleRow("lowRes","省电分辨率","压低渲染分辨率下限,最直接的提帧手段(画面会略糊)")}
       ${toggleRow("hideCones","关灯光光锥","关掉体育馆透明光柱,iOS 填充率大头")}
@@ -235,7 +244,7 @@
   function mountButton(){
     if(document.getElementById("perfBtn"))return;
     const b=document.createElement("button");
-    b.id="perfBtn";b.type="button";b.title="性能设置";b.textContent="⚙";
+    b.id="perfBtn";b.type="button";b.title="游戏设置";b.textContent="⚙";
     const stop=e=>{e.stopPropagation();};
     b.addEventListener("pointerdown",stop);
     b.addEventListener("touchstart",stop,{passive:true});

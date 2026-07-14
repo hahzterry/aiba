@@ -2,7 +2,7 @@
   "use strict";
 
   const DIFFS=Object.freeze({
-    easy:{n:"新秀",zone:11,fill:80,ai:-0.085,hideBar:99,latK:0.012,d:"甜区超大 · 投篮条全程可见"},
+    easy:{n:"新秀",zone:11,fill:80,ai:-0.085,hideBar:99,latK:0.012,d:"甜区超大 · 前70%显示投篮条 · 最后30%靠手感"},
     normal:{n:"全明星",zone:5.5,fill:95,ai:0,hideBar:1,latK:0.02,d:"甜区收窄 · 第2个球架起隐藏投篮条"},
     hard:{n:"名人堂",zone:3.2,fill:110,ai:0.055,hideBar:1,latK:0.028,d:"甜区极窄 · 第2架起盲投 · 手机倾斜更敏感"}
   });
