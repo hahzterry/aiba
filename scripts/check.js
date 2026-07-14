@@ -8,7 +8,7 @@ const childProcess=require("child_process");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const snapshot="block-3pt-kingv1.93-playerlock-camera.html";
+const snapshot="block-3pt-kingv1.94-portrait-lock.html";
 const requiredFiles=[
   entry,
   snapshot,
@@ -57,9 +57,9 @@ const entryHtml=read(entry);
 const snapshotHtml=read(snapshot);
 if(entryHtml!==snapshotHtml)fail(entry+" and "+snapshot+" differ");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v1.93 PLAYER LOCK","PLAYER LOCK / v1.93","v1.93-playerlock-camera"])
+for(const token of ["v1.94 PORTRAIT LOCK","PORTRAIT LOCK / v1.94","v1.94-portrait-lock"])
   if(!entryHtml.includes(token))fail("visible/game version token missing "+token);
-if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=1.92">'))fail("stylesheet link missing");
+if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=1.94">'))fail("stylesheet link missing");
 if(!entryHtml.includes('<script src="src/assets-manifest.js"></script>'))fail("assets manifest script missing");
 if(!entryHtml.includes('<script src="src/config.js?v=1.92"></script>'))fail("config script missing");
 if(!entryHtml.includes('<script src="src/player-select.js?v=1.76"></script>'))fail("player select script missing");
@@ -68,7 +68,7 @@ if(!entryHtml.includes('<script src="src/player-id.js"></script>'))fail("player 
 if(!entryHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("leaderboard api script missing");
 if(!entryHtml.includes('<script src="src/leaderboard-ui.js?v=1.92"></script>'))fail("leaderboard ui script missing");
 if(!entryHtml.includes('<script src="src/share.js"></script>'))fail("share script missing");
-if(!entryHtml.includes('<script src="src/recorder.js?v=1.91"></script>'))fail("recorder script missing");
+if(!entryHtml.includes('<script src="src/recorder.js?v=1.94"></script>'))fail("recorder script missing");
 if(!entryHtml.includes('<script src="src/shot-physics.js"></script>'))fail("shot physics script missing");
 if(!entryHtml.includes('<script src="src/result-stats.js?v=1.78"></script>'))fail("result stats script missing");
 if(entryHtml.indexOf('<script src="src/result-stats.js?v=1.78"></script>')<entryHtml.lastIndexOf("animate();"))fail("result stats should load after the main inline script");
@@ -93,7 +93,7 @@ if(!entryHtml.includes('<script src="src/face-overlays.js"></script>'))fail("fac
 if(!entryHtml.includes('<script src="src/haptics.js?v=1.80"></script>'))fail("haptics script missing");
 if(!entryHtml.includes('<script src="src/visual-director.js?v=1.85"></script>'))fail("visual director script missing");
 if(!entryHtml.includes('<script src="src/audio.js?v=1.88"></script>'))fail("audio script missing");
-if(!entryHtml.includes('<script src="src/vision.js?v=1.91"></script>'))fail("vision script missing");
+if(!entryHtml.includes('<script src="src/vision.js?v=1.94"></script>'))fail("vision script missing");
 if(!entryHtml.includes('<script src="src/navigation.js?v=1.90"></script>'))fail("navigation script missing");
 if(!entryHtml.includes('<script src="src/game-flow.js?v=1.93"></script>'))fail("game flow script missing");
 if(/<style>[\s\S]*?<\/style>/.test(entryHtml))fail("inline style block should stay split out");
@@ -290,7 +290,7 @@ try{new Function(vision);}
 catch(e){fail("vision script syntax error: "+e.message);}
 for(const token of ["aiba_shot_control_v1","触屏控制","体感控制","controlRecommend","restoreVisionControlPreference"])
   if(!vision.includes(token))fail("motion control preference token missing "+token);
-for(const token of ["VISION_INFERENCE_MAX_PIXELS=288*512","visionCaptureConstraints","aspectRatio:{ideal:portrait?9/16:4/3}","visionInferenceSource","AIBAVisionFrame","请保持手机竖屏"])
+for(const token of ["VISION_INFERENCE_MAX_PIXELS=288*512","visionCaptureConstraints","aspectRatio:{ideal:portrait?9/16:4/3}","visionInferenceSource","AIBAVisionFrame","displayAspect","cropPortrait","请保持手机竖屏"])
   if(!vision.includes(token))fail("portrait vision token missing "+token);
 for(const token of ['aspect-ratio:var(--vision-aspect,9/16)','data-orientation="portrait"'])
   if(!styles.includes(token))fail("portrait vision style missing "+token);

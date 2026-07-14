@@ -34,7 +34,7 @@ const VISION={
   body:{samples:[],startedAt:0,ready:false,noseY:.23,shoulderY:.39,hipY:.66,centerX:.5,shoulderW:.22,bodyH:.27,releaseLineY:.32,hipVisible:false,lastAt:0},
   tracking:{left:null,right:null,prevLeft:null,prevRight:null,lastValidAt:0,lastAnyAt:0},
   readyArea:{x:.5,bottom:1,w:.88,h:.35},releaseLineY:.32,
-  frame:{width:0,height:0,aspect:9/16,portrait:true,requestedPortrait:false,inferCanvas:null,inferCtx:null,inferWidth:0,inferHeight:0},orientationBlocked:false,
+  frame:{width:0,height:0,aspect:9/16,sourcePortrait:true,displayAspect:9/16,portrait:true,cropPortrait:false,requestedPortrait:false,inferCanvas:null,inferCtx:null,inferWidth:0,inferHeight:0},orientationBlocked:false,
   connections:[[11,12],[11,13],[13,15],[15,17],[15,19],[15,21],[12,14],[14,16],[16,18],[16,20],[16,22],[11,23],[12,24],[23,24]],
   handConnections:[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]]
 };
@@ -44,10 +44,13 @@ function visionSyncFrameGeometry(video){
   if(!video)return VISION.frame;
   const w=video.videoWidth||0,h=video.videoHeight||0;if(!w||!h)return VISION.frame;
   const frame=VISION.frame,pixels=w*h,scale=Math.min(1,Math.sqrt(VISION_INFERENCE_MAX_PIXELS/pixels));
-  frame.width=w;frame.height=h;frame.aspect=w/h;frame.portrait=h>w;frame.inferWidth=Math.max(2,Math.round(w*scale/2)*2);frame.inferHeight=Math.max(2,Math.round(h*scale/2)*2);
+  const sourceAspect=w/h,sourcePortrait=h>w,displayPortrait=frame.requestedPortrait||sourcePortrait;
+  frame.width=w;frame.height=h;frame.aspect=sourceAspect;frame.sourcePortrait=sourcePortrait;frame.portrait=displayPortrait;
+  frame.displayAspect=displayPortrait?9/16:sourceAspect;frame.cropPortrait=displayPortrait&&sourceAspect>.68;
+  frame.inferWidth=Math.max(2,Math.round(w*scale/2)*2);frame.inferHeight=Math.max(2,Math.round(h*scale/2)*2);
   const stage=video.closest&&video.closest(".visionStage"),preview=$("visionPreview");
-  if(stage)stage.style.setProperty("--vision-aspect",w+" / "+h);
-  if(preview)preview.dataset.orientation=frame.portrait?"portrait":"landscape";
+  if(stage)stage.style.setProperty("--vision-aspect",displayPortrait?"9 / 16":w+" / "+h);
+  if(preview){preview.dataset.orientation=displayPortrait?"portrait":"landscape";preview.dataset.crop=frame.cropPortrait?"portrait":"none";preview.dataset.sourceOrientation=sourcePortrait?"portrait":"landscape";}
   document.documentElement.dataset.visionFrame=w+"x"+h;
   return frame;
 }
@@ -61,7 +64,7 @@ function visionInferenceSource(video){
   return frame.inferCanvas;
 }
 function visionOrientationInvalid(){return visionPointerCoarse()&&innerWidth>innerHeight;}
-window.AIBAVisionFrame=Object.freeze({descriptor:()=>({width:VISION.frame.width,height:VISION.frame.height,aspect:VISION.frame.aspect,portrait:VISION.frame.portrait,mirrored:true,inferWidth:VISION.frame.inferWidth,inferHeight:VISION.frame.inferHeight})});
+window.AIBAVisionFrame=Object.freeze({descriptor:()=>({width:VISION.frame.width,height:VISION.frame.height,aspect:VISION.frame.aspect,sourcePortrait:VISION.frame.sourcePortrait,displayAspect:VISION.frame.displayAspect,portrait:VISION.frame.portrait,cropPortrait:VISION.frame.cropPortrait,requestedPortrait:VISION.frame.requestedPortrait,mirrored:true,inferWidth:VISION.frame.inferWidth,inferHeight:VISION.frame.inferHeight})});
 function visionGameActive(){return (G.state==="round"||G.state==="tiebreak"||G.state==="battle"||G.state==="rackrush")&&G.canShoot&&!G.cutAway&&!G.battleCut;}
 function resetVisionGesture(sm){
   sm.phase="idle";sm.holdStart=0;sm.chargeStart=0;sm.lastSeen=0;sm.cooldownUntil=0;sm.releaseFlashUntil=0;
