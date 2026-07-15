@@ -5,12 +5,15 @@ const fs=require("fs");
 const path=require("path");
 const vm=require("vm");
 const childProcess=require("child_process");
+const {generate:generateNext}=require("./build-next");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
+const nextEntry="next/index.html";
 const snapshot="block-3pt-kingv1.94-portrait-lock.html";
 const requiredFiles=[
   entry,
+  nextEntry,
   snapshot,
   "styles.css",
   "src/assets-manifest.js",
@@ -40,6 +43,12 @@ const requiredFiles=[
   "src/haptics.js",
   "src/audio.js",
   "src/vision.js",
+  "src/core/runtime.js",
+  "src/core/player-id-sandbox.js",
+  "src/core/leaderboard-sandbox.js",
+  "scripts/build-next.js",
+  "docs/ARCHITECTURE.md",
+  "docs/MODULAR_REFACTOR_PLAN.md",
   "assets/aiba-faces/curry-smile-pixel-128.png",
   "vendor/three.min.r128.js",
   "assets/aiba-vision/pose_landmarker_lite.task"
@@ -54,8 +63,18 @@ for(const file of requiredFiles){
 }
 
 const entryHtml=read(entry);
+const nextHtml=read(nextEntry);
 const snapshotHtml=read(snapshot);
 if(entryHtml!==snapshotHtml)fail(entry+" and "+snapshot+" differ");
+if(nextHtml!==generateNext(entryHtml))fail(nextEntry+" is stale; run node scripts/build-next.js");
+if(!nextHtml.includes('<base href="../">'))fail("next entry base href missing");
+if(!nextHtml.includes("window.__AIBA_NEXT__=true;window.__AIBA_DISABLE_PRODUCTION_WRITES__=true"))fail("next entry flags missing");
+if(!nextHtml.includes('<script src="src/core/runtime.js"></script>'))fail("next runtime bridge missing");
+if(!nextHtml.includes('<script src="src/core/player-id-sandbox.js"></script>'))fail("next identity sandbox missing");
+if(!nextHtml.includes('<script src="src/core/leaderboard-sandbox.js"></script>'))fail("next leaderboard sandbox missing");
+if(nextHtml.includes('<script src="src/player-id.js"></script>'))fail("next entry must not load production identity");
+if(nextHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("next entry must not load production leaderboard API");
+if(nextHtml.indexOf('src/core/runtime.js')>nextHtml.indexOf('src/config.js'))fail("next runtime must load before config");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
 for(const token of ["v1.94 PORTRAIT LOCK","PORTRAIT LOCK / v1.94","v1.94-portrait-lock"])
   if(!entryHtml.includes(token))fail("visible/game version token missing "+token);
@@ -309,6 +328,18 @@ try{new Function(gameFlow);}
 catch(e){fail("game flow script syntax error: "+e.message);}
 for(const token of ["rookieMeterProgress","G.diff===\"easy\"","updatePregameWarmupShot","updatePregameChalk","updatePlayerLockCamera"])
   if(!gameFlow.includes(token))fail("game flow token missing "+token);
+
+for(const rel of ["src/core/runtime.js","src/core/player-id-sandbox.js","src/core/leaderboard-sandbox.js"]){
+  try{new Function(read(rel));}
+  catch(e){fail(rel+" syntax error: "+e.message);}
+}
+const runtimeScript=read("src/core/runtime.js");
+for(const token of ["aiba_next_v1:","scopeLocalStorage","attachLegacy","service:registered"])
+  if(!runtimeScript.includes(token))fail("runtime bridge token missing "+token);
+const identitySandbox=read("src/core/player-id-sandbox.js");
+const leaderboardSandbox=read("src/core/leaderboard-sandbox.js");
+if(/\bfetch\s*\(/.test(identitySandbox+leaderboardSandbox))fail("next sandboxes must not access the network");
+if(!leaderboardSandbox.includes("experimental_leaderboard_disabled"))fail("leaderboard sandbox marker missing");
 
 const sandbox={window:{}};
 vm.createContext(sandbox);
