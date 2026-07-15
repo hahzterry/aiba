@@ -269,6 +269,9 @@ vm.createContext(configSandbox);
 try{vm.runInContext(configScript,configSandbox,{filename:"src/config.js"});}
 catch(e){fail("config script runtime error: "+e.message);}
 if(!configSandbox.window.AIBA_CONFIG||!configSandbox.window.AIBA_CONFIG.DIFFS)fail("AIBA_CONFIG missing required data");
+if(configSandbox.window.AIBA_CONFIG.SHOT_PROFILES.t01.arc!==.9)fail("T-Mac should have the lowest supported shot arc");
+if(configSandbox.window.AIBA_CONFIG.SHOT_PROFILES["雷·阿伦"].arc!==.94)fail("Ray Allen shot arc should be second-lowest");
+if(configSandbox.window.AIBA_CONFIG.SHOT_PROFILES.t01.arc>=configSandbox.window.AIBA_CONFIG.SHOT_PROFILES["雷·阿伦"].arc)fail("T-Mac arc should stay lower than Ray Allen");
 try{new Function(audioScript);}
 catch(e){fail("audio script syntax error: "+e.message);}
 try{new Function(visualDirectorScript);}

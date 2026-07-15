@@ -48,7 +48,7 @@
   const SHOT_PROFILES=Object.freeze({
     "库里":{speed:1.13,window:1.1,arc:1.1,arcLabel:"高弧快射",label:"极速出手"},
     "克莱·汤普森":{speed:1.09,window:1.08,arc:.98,arcLabel:"平快定点",label:"快速定点"},
-    "雷·阿伦":{speed:1.02,window:1.09,arc:1.04,arcLabel:"标准高弧",label:"标准快出手"},
+    "雷·阿伦":{speed:1.02,window:1.09,arc:.94,arcLabel:"低平快弧",label:"标准快出手"},
     "拉里·伯德":{speed:.88,window:1.1,arc:1.12,arcLabel:"慢节奏高抛",label:"沉稳高出手"},
     "雷吉·米勒":{speed:1,window:1.02,arc:1,arcLabel:"标准弧线",label:"标准出手"},
     "利拉德":{speed:1.07,window:.98,arc:1.08,arcLabel:"远射高弧",label:"快速远射"},
@@ -58,7 +58,7 @@
     j23:{speed:.84,window:.94,arc:1.13,arcLabel:"滞空高弧",label:"滞空出手"},
     a03:{speed:1.04,window:.99,arc:.96,arcLabel:"低平快拔",label:"快速拔起"},
     v15:{speed:.87,window:.92,arc:1.15,arcLabel:"高点大弧",label:"高点出手"},
-    t01:{speed:.92,window:.97,arc:1.12,arcLabel:"长臂高弧",label:"舒展远射"},
+    t01:{speed:.92,window:.97,arc:.90,arcLabel:"极低平弧",label:"舒展远射"},
     "萨布丽娜":{speed:1.08,window:1.06,arc:1.05,arcLabel:"高弧快射",label:"快速出手"},
     "陶乐西":{speed:1,window:1.05,arc:1.03,arcLabel:"标准高弧",label:"冷血出手"},
     "苏·伯德":{speed:.99,window:1.04,arc:1,arcLabel:"平稳弧线",label:"节奏出手"}
