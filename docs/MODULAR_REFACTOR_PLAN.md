@@ -87,7 +87,7 @@ Rack Rush has its own timer, run record and ranking variant. It is the clearest 
 
 Migrate one mode per commit:
 
-1. contest
+1. contest: experimental flow migration complete; replay intentionally remains shared
 2. percent battle
 3. practice/shared shot session
 4. NBA DNA flow only if it still depends on the core shell

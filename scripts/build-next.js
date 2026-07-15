@@ -37,9 +37,17 @@ function generate(source){
     '/* ---------------- RACK RUSH: 投篮机闯关 ---------------- */',
     'const BATTLE_RUNS_KEY=',
     '/* RACK RUSH is owned by src/modes/rack-rush.js in the experimental entry. */\n');
+  html=replaceRange(html,
+    'function beginStage(){',
+    '/* ---------------- replay system ---------------- */',
+    '/* Contest round flow is owned by src/modes/contest.js in the experimental entry. */\n/* ---------------- replay system ---------------- */');
+  html=replaceRange(html,
+    'function simAI(o){',
+    '/* ---------------- input ---------------- */',
+    '/* Contest bracket and finals are owned by src/modes/contest.js in the experimental entry. */\n/* ---------------- input ---------------- */');
   html=replaceOnce(html,
     '</script>\n<script src="src/game-flow.js?v=1.93"></script>',
-    '</script>\n<script src="src/core/legacy-adapter.js"></script>\n<script src="src/modes/rack-rush.js"></script>\n<script src="src/game-flow.js?v=1.93"></script>');
+    '</script>\n<script src="src/core/legacy-adapter.js"></script>\n<script src="src/modes/rack-rush.js"></script>\n<script src="src/modes/contest.js"></script>\n<script src="src/game-flow.js?v=1.93"></script>');
   return html;
 }
 

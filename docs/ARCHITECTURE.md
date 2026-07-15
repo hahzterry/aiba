@@ -80,6 +80,13 @@ app shell
 6. Production and experimental entries use different storage namespaces.
 7. Behavior migration and behavior redesign are separate commits.
 
+## Experimental Migration Status
+
+- `src/modes/rack-rush.js` owns Rack Rush setup, timers, rules, records and results under `/next/`.
+- `src/modes/contest.js` owns contest drawing order, rounds, bracket, finals, tiebreak and championship results under `/next/`.
+- Contest replay remains in the legacy core because its camera, ball ghost and render-loop integration are shared rendering concerns.
+- Percent Battle remains inline and is the next mode boundary to evaluate.
+
 ## Acceptance Matrix
 
 Every ownership migration must run the script gate and manually cover the affected rows.
