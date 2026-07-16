@@ -117,7 +117,9 @@ The main loop remains the last large extraction because audio, vision, recording
 - complete: ball racks, first-person hands, voxel player factories, bench actors and automatic play cameras
 - complete: base shot-pose curves, passing and movement between shooting spots
 - complete: hero/opponent/victory cinematics, randomized pregame actions, Percent Battle presentation and shared particles/tweens
-- next: shot lifecycle and ball simulation, replay, then the authoritative input and main-loop boundary
+- complete: shot lifecycle, ball simulation/collision, replay, winning-shot cinema and projected battle controls
+- complete: authoritative pointer/keyboard/tilt input, one frame loop and one scene-initialization pass
+- next: move the remaining constants/state/audio orchestration into data and service modules, then run the cutover matrix
 - keep player selection and NBA DNA as their existing standalone modules until the shared navigation flow no longer depends on inline globals
 
 ## Phase 5: Cutover

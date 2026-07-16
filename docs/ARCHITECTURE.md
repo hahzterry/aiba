@@ -105,8 +105,16 @@ app shell
 - `src/presentation/cinematics.js` owns hero shots, opponent live shows, lead-change cutaways, celebrations and victory cameras.
 - `src/presentation/pregame.js` owns randomized warmup actions, actor restoration and the pregame camera sequence.
 - `src/presentation/battle.js` owns Percent Battle cutaway completion, overtake gating, final-run presentation and score calls.
+- `src/gameplay/shots.js` owns shot selection, charge/release, scoring and authoritative basketball simulation.
+- `src/gameplay/collisions.js` owns shared airborne-ball collision response.
+- `src/presentation/replay.js` owns highlight selection playback and replay cameras.
+- `src/presentation/win-cinematic.js` owns the Percent Battle winning-shot sequence.
+- `src/ui/battle-controls.js` owns projected battle spots and the player-following power meter.
+- `src/core/input.js` owns pointer, keyboard and device-tilt input registration.
+- `src/core/game-loop.js` owns the single animation loop and frame dispatch.
+- `src/core/scene-init.js` owns one-time scene construction before the compatibility adapter is created.
 - Desktop and portrait captures cover indoor and outdoor scene construction after the court-element migration.
-- The generated experimental entry is now about 1,600 lines, down from roughly 5,600 in the production entry.
+- The generated experimental entry is now about 540 lines, down from roughly 5,600 in the production entry.
 
 ## Acceptance Matrix
 

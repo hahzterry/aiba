@@ -121,7 +121,6 @@ if(nextHtml.includes("function sceneSelectMarkup(")||nextHtml.includes("function
 if(nextHtml.includes("function pickDiff(")||nextHtml.includes("function showBattleIntro("))fail("next entry still contains inline pregame implementation");
 if(nextHtml.includes("const renderer=new THREE.WebGLRenderer")||nextHtml.includes("function updateRenderQuality(")||nextHtml.includes("const ambient=new THREE.AmbientLight"))fail("next entry still contains inline rendering core implementation");
 if(nextHtml.includes("bootGame();\nanimate();"))fail("next entry still starts boot and loop inline");
-if(!nextHtml.includes("updatePractice(dt);"))fail("next main loop does not dispatch practice updates");
 if(nextHtml.includes("function startBattle(")||nextHtml.includes("function battleRefreshSpot(")||nextHtml.includes("function startOppShooter(")||nextHtml.includes("function finishBattle("))fail("next entry still contains inline Percent Battle implementation");
 if(nextHtml.indexOf('<script src="src/core/legacy-adapter.js?v=refactor15"></script>')>nextHtml.indexOf('<script src="src/modes/rack-rush.js"></script>'))fail("legacy adapter must load before Rack Rush module");
 if(nextHtml.indexOf('<script src="src/modes/rack-rush.js"></script>')>nextHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Rack Rush module must load before late hooks");
@@ -404,12 +403,12 @@ catch(e){fail("game flow script syntax error: "+e.message);}
 for(const token of ["rookieMeterProgress","G.diff===\"easy\"","updatePregameWarmupShot","updatePregameChalk","updatePlayerLockCamera"])
   if(!gameFlow.includes(token))fail("game flow token missing "+token);
 
-for(const rel of ["src/core/runtime.js","src/core/player-id-sandbox.js","src/core/leaderboard-sandbox.js","src/core/legacy-adapter.js","src/core/bootstrap-next.js","src/rendering/core.js","src/rendering/materials.js","src/rendering/court.js","src/rendering/arena.js","src/rendering/spectators.js","src/rendering/hoop.js","src/rendering/environments.js","src/rendering/props.js","src/rendering/characters.js","src/rendering/camera.js","src/rendering/motion.js","src/rendering/effects.js","src/presentation/cinematics.js","src/presentation/pregame.js","src/presentation/battle.js","src/modes/rack-rush.js","src/modes/contest.js","src/modes/practice.js","src/modes/percent-battle/state.js","src/modes/percent-battle/spots.js","src/modes/percent-battle/opponent.js","src/modes/percent-battle/results.js","src/modes/percent-battle/index.js","src/ui/panels.js","src/ui/loading.js","src/ui/menu.js","src/ui/setup.js","src/ui/pregame.js","src/ui/pause.js"]){
+for(const rel of ["src/core/runtime.js","src/core/player-id-sandbox.js","src/core/leaderboard-sandbox.js","src/core/input.js","src/core/game-loop.js","src/core/scene-init.js","src/core/legacy-adapter.js","src/core/bootstrap-next.js","src/rendering/core.js","src/rendering/materials.js","src/rendering/court.js","src/rendering/arena.js","src/rendering/spectators.js","src/rendering/hoop.js","src/rendering/environments.js","src/rendering/props.js","src/rendering/characters.js","src/rendering/camera.js","src/rendering/motion.js","src/rendering/effects.js","src/gameplay/shots.js","src/gameplay/collisions.js","src/presentation/cinematics.js","src/presentation/pregame.js","src/presentation/battle.js","src/presentation/replay.js","src/presentation/win-cinematic.js","src/modes/rack-rush.js","src/modes/contest.js","src/modes/practice.js","src/modes/percent-battle/state.js","src/modes/percent-battle/spots.js","src/modes/percent-battle/opponent.js","src/modes/percent-battle/results.js","src/modes/percent-battle/index.js","src/ui/panels.js","src/ui/loading.js","src/ui/menu.js","src/ui/setup.js","src/ui/pregame.js","src/ui/pause.js","src/ui/battle-controls.js"]){
   try{new Function(read(rel));}
   catch(e){fail(rel+" syntax error: "+e.message);}
 }
 const ownershipModuleFiles=["core","materials","court","arena","spectators","hoop","environments","props","characters","camera","motion","effects"].map(name=>"src/rendering/"+name+".js")
-  .concat(["src/presentation/cinematics.js","src/presentation/pregame.js","src/presentation/battle.js"]);
+  .concat(["src/gameplay/shots.js","src/gameplay/collisions.js","src/presentation/cinematics.js","src/presentation/pregame.js","src/presentation/battle.js","src/presentation/replay.js","src/presentation/win-cinematic.js","src/ui/battle-controls.js","src/core/input.js","src/core/game-loop.js","src/core/scene-init.js"]);
 try{new Function(ownershipModuleFiles.map(read).join("\n;\n"));}
 catch(e){fail("ownership modules have conflicting top-level declarations: "+e.message);}
 const runtimeScript=read("src/core/runtime.js");
@@ -491,6 +490,34 @@ for(const token of ['src/rendering/effects.js?v=refactor27','src/presentation/ci
   if(!nextHtml.includes(token))fail("next entry missing presentation module "+token);
 for(const token of ["function startHero(","function startAIShow(","function startVictoryCine(","function startPreGameShow(","function battleScoreCallout(","function startConfetti("])
   if(nextHtml.includes(token))fail("next entry still contains inline presentation "+token);
+const gameplayShots=read("src/gameplay/shots.js");
+for(const token of ['runtime.register("gameplay:shots"',"const balls=","function startCharge","function releaseShot","function madeBall","function updBalls"])
+  if(!gameplayShots.includes(token))fail("gameplay shots token missing "+token);
+const gameplayCollisions=read("src/gameplay/collisions.js");
+for(const token of ['runtime.register("gameplay:collisions"',"function checkBallCollisions","function ballCollide"])
+  if(!gameplayCollisions.includes(token))fail("gameplay collisions token missing "+token);
+const presentationReplay=read("src/presentation/replay.js");
+for(const token of ['runtime.register("presentation:replay"',"function startReplay","function updReplay","function aiProb"])
+  if(!presentationReplay.includes(token))fail("presentation replay token missing "+token);
+const battleControls=read("src/ui/battle-controls.js");
+for(const token of ['runtime.register("ui:battle-controls"',"function buildSpotDots","function updatePlayerPowerUI","function updSpotDots"])
+  if(!battleControls.includes(token))fail("battle controls token missing "+token);
+const winCinematic=read("src/presentation/win-cinematic.js");
+for(const token of ['runtime.register("presentation:win-cinematic"',"const winCine=","function startWinCine","function updWinCine"])
+  if(!winCinematic.includes(token))fail("winning cinematic token missing "+token);
+const coreInput=read("src/core/input.js"),coreLoop=read("src/core/game-loop.js"),sceneInit=read("src/core/scene-init.js");
+for(const token of ['runtime.register("core:input"',"function onDown","function onUp","const TILT="])
+  if(!coreInput.includes(token))fail("core input token missing "+token);
+for(const token of ['runtime.register("core:game-loop"',"function animate","window.animate=animate","updatePractice(dt)"])
+  if(!coreLoop.includes(token))fail("core game-loop token missing "+token);
+for(const token of ['runtime.register("core:scene-init"',"buildCourt();","buildCharacters();","applyScenePreset(currentScenePreset"])
+  if(!sceneInit.includes(token))fail("scene init token missing "+token);
+for(const token of ['src/gameplay/shots.js?v=refactor31','src/presentation/replay.js?v=refactor32','src/ui/battle-controls.js?v=refactor33','src/gameplay/collisions.js?v=refactor34','src/presentation/win-cinematic.js?v=refactor35','src/core/input.js?v=refactor36','src/core/game-loop.js?v=refactor37','src/core/scene-init.js?v=refactor38'])
+  if(!nextHtml.includes(token))fail("next entry missing runtime-core module "+token);
+for(const token of ["function startCharge(","function updBalls(","function startReplay(","function buildSpotDots(","function ballCollide(","function startWinCine(","function onDown(","function animate(","buildCourt();"])
+  if(nextHtml.includes(token))fail("next entry still contains inline runtime core "+token);
+if(!(nextHtml.indexOf('src/core/input.js?v=refactor36')<nextHtml.indexOf('src/core/legacy-adapter.js?v=refactor15')))fail("input must load before legacy adapter");
+if(!(nextHtml.indexOf('src/core/scene-init.js?v=refactor38')<nextHtml.indexOf('src/core/legacy-adapter.js?v=refactor15')))fail("scene init must load before legacy adapter");
 
 const sandbox={window:{}};
 vm.createContext(sandbox);

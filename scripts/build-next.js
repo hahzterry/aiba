@@ -38,7 +38,7 @@ function generate(source){
   html=replaceOnce(html,'<script src="src/navigation.js?v=1.90"></script>','<script src="src/navigation.js?v=refactor8"></script>');
   html=replaceOnce(html,
     '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script>\n/* ---------------- three.js setup ---------------- */',
-    '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script src="src/rendering/core.js?v=refactor16"></script>\n<script src="src/rendering/materials.js?v=refactor17"></script>\n<script src="src/rendering/court.js?v=refactor18"></script>\n<script src="src/rendering/arena.js?v=refactor19"></script>\n<script src="src/rendering/spectators.js?v=refactor20"></script>\n<script src="src/rendering/hoop.js?v=refactor21"></script>\n<script src="src/rendering/environments.js?v=refactor22a"></script>\n<script src="src/rendering/props.js?v=refactor23"></script>\n<script src="src/rendering/characters.js?v=refactor24"></script>\n<script src="src/rendering/camera.js?v=refactor25"></script>\n<script src="src/rendering/motion.js?v=refactor26"></script>\n<script src="src/rendering/effects.js?v=refactor27"></script>\n<script src="src/presentation/cinematics.js?v=refactor28"></script>\n<script src="src/presentation/pregame.js?v=refactor29"></script>\n<script src="src/presentation/battle.js?v=refactor30"></script>\n<script>\n/* ---------------- three.js setup ---------------- */');
+    '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script src="src/rendering/core.js?v=refactor16"></script>\n<script src="src/rendering/materials.js?v=refactor17"></script>\n<script src="src/rendering/court.js?v=refactor18"></script>\n<script src="src/rendering/arena.js?v=refactor19"></script>\n<script src="src/rendering/spectators.js?v=refactor20"></script>\n<script src="src/rendering/hoop.js?v=refactor21"></script>\n<script src="src/rendering/environments.js?v=refactor22a"></script>\n<script src="src/rendering/props.js?v=refactor23"></script>\n<script src="src/rendering/characters.js?v=refactor24"></script>\n<script src="src/rendering/camera.js?v=refactor25"></script>\n<script src="src/rendering/motion.js?v=refactor26"></script>\n<script src="src/rendering/effects.js?v=refactor27"></script>\n<script src="src/presentation/cinematics.js?v=refactor28"></script>\n<script src="src/presentation/pregame.js?v=refactor29"></script>\n<script src="src/presentation/battle.js?v=refactor30"></script>\n<script src="src/gameplay/shots.js?v=refactor31"></script>\n<script src="src/presentation/replay.js?v=refactor32"></script>\n<script src="src/ui/battle-controls.js?v=refactor33"></script>\n<script src="src/gameplay/collisions.js?v=refactor34"></script>\n<script src="src/presentation/win-cinematic.js?v=refactor35"></script>\n<script>\n/* ---------------- three.js setup ---------------- */');
   html=replaceRange(html,
     '/* ---------------- three.js setup ---------------- */',
     '/* ---------------- pixel texture helpers ---------------- */',
@@ -120,21 +120,37 @@ function generate(source){
     '/* ---------------- replay system ---------------- */',
     '/* Contest round flow is owned by src/modes/contest.js in the experimental entry. */\n/* ---------------- replay system ---------------- */');
   html=replaceRange(html,
-    'function simAI(o){',
-    '/* ---------------- input ---------------- */',
-    '/* Contest bracket and finals are owned by src/modes/contest.js in the experimental entry. */\n/* ---------------- input ---------------- */');
+    '/* ---------------- replay system ---------------- */',
+    'function battleRefreshSpot(i){',
+    '/* Highlight replay and shared AI probability are owned by src/presentation/replay.js. */\n');
   html=replaceRange(html,
     'function battleRefreshSpot(i){',
     '/* ---- 点击点位移动:屏幕投影光圈 + 屏幕外边缘箭头 ---- */',
     '/* Percent Battle spot rules are owned by src/modes/percent-battle/spots.js. */\n/* ---- 点击点位移动:屏幕投影光圈 + 屏幕外边缘箭头 ---- */');
   html=replaceRange(html,
+    '/* ---- 点击点位移动:屏幕投影光圈 + 屏幕外边缘箭头 ---- */',
+    '/* ---------------- 百分大战:真实对手(同场竞投) ---------------- */',
+    '/* Percent Battle on-court controls and power UI are owned by src/ui/battle-controls.js. */\n');
+  html=replaceRange(html,
     '/* ---------------- 百分大战:真实对手(同场竞投) ---------------- */',
     '/* ---- 空中球碰撞:撞击改变结果(原本进的被撞歪→不进) ---- */',
     '/* Percent Battle opponent logic is owned by src/modes/percent-battle/opponent.js. */\n/* ---- 空中球碰撞:撞击改变结果(原本进的被撞歪→不进) ---- */');
   html=replaceRange(html,
+    '/* ---- 空中球碰撞:撞击改变结果(原本进的被撞歪→不进) ---- */',
+    'function finishBattle(win,ball){',
+    '/* Shared airborne-ball collision is owned by src/gameplay/collisions.js. */\n');
+  html=replaceRange(html,
     'function finishBattle(win,ball){',
     '/* ---------------- 英雄时刻:制胜球电影化慢动作 ---------------- */',
     '/* Percent Battle result flow is owned by src/modes/percent-battle/results.js. */\n/* ---------------- 英雄时刻:制胜球电影化慢动作 ---------------- */');
+  html=replaceRange(html,
+    '/* ---------------- 英雄时刻:制胜球电影化慢动作 ---------------- */',
+    'function simAI(o){',
+    '/* Percent Battle winning-shot cinematic is owned by src/presentation/win-cinematic.js. */\n');
+  html=replaceRange(html,
+    'function simAI(o){',
+    '/* ---------------- input ---------------- */',
+    '/* Contest bracket and finals are owned by src/modes/contest.js in the experimental entry. */\n/* ---------------- input ---------------- */');
   html=replaceRange(html,
     'function startPractice(){',
     '/* shadow blob */',
@@ -144,6 +160,10 @@ function generate(source){
     'const balls=[];',
     '/* Shared particles, score celebration effects and camera tweens are owned by src/rendering/effects.js. */\n');
   html=replaceRange(html,
+    'const balls=[];',
+    '/* ---------------- UI helpers ---------------- */',
+    '/* Shot selection, release, scoring and ball simulation are owned by src/gameplay/shots.js. */\n');
+  html=replaceRange(html,
     '/* ---------------- UI helpers ---------------- */',
     'function pauseableState(){',
     '/* Panels and loading are owned by src/ui modules in the experimental entry. */\n');
@@ -152,15 +172,23 @@ function generate(source){
     'function stars(r){',
     '/* Pause and return-home flow are owned by src/ui/pause.js in the experimental entry. */\n');
   html=replaceRange(html,
-    '  // 练习结束检测',
-    '  // states',
-    '  updatePractice(dt);\n  // states');
+    '/* ---------------- input ---------------- */',
+    '/* ---------------- main loop ---------------- */',
+    '/* Pointer, keyboard and device-tilt input are owned by src/core/input.js. */\n');
+  html=replaceRange(html,
+    '/* ---------------- main loop ---------------- */',
+    '/* ---------------- boot ---------------- */',
+    '/* The authoritative frame loop is owned by src/core/game-loop.js. */\n');
   html=replaceOnce(html,
     'bootGame();\nanimate();',
     '/* NEXT boot and loop are started by src/core/bootstrap-next.js. */\n//# sourceURL=aiba-next-inline.js');
+  html=replaceRange(html,
+    '/* ---------------- boot ---------------- */',
+    '/* NEXT boot and loop are started by src/core/bootstrap-next.js. */',
+    '/* Scene construction is owned by src/core/scene-init.js. */\n');
   html=replaceOnce(html,
     '</script>\n<script src="src/game-flow.js?v=1.93"></script>',
-    '</script>\n<script src="src/core/legacy-adapter.js?v=refactor15"></script>\n<script src="src/modes/rack-rush.js"></script>\n<script src="src/modes/contest.js"></script>\n<script src="src/modes/practice.js?v=refactor5"></script>\n<script src="src/modes/percent-battle/state.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/spots.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/opponent.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/results.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/index.js?v=refactor4"></script>\n<script src="src/ui/panels.js?v=refactor7"></script>\n<script src="src/ui/loading.js?v=refactor7"></script>\n<script src="src/ui/menu.js?v=refactor12"></script>\n<script src="src/ui/setup.js?v=refactor13"></script>\n<script src="src/ui/pregame.js?v=refactor15"></script>\n<script src="src/ui/pause.js?v=refactor10"></script>\n<script src="src/core/bootstrap-next.js?v=refactor12"></script>\n<script src="src/game-flow.js?v=1.93"></script>');
+    '</script>\n<script src="src/core/input.js?v=refactor36"></script>\n<script src="src/core/game-loop.js?v=refactor37"></script>\n<script src="src/core/scene-init.js?v=refactor38"></script>\n<script src="src/core/legacy-adapter.js?v=refactor15"></script>\n<script src="src/modes/rack-rush.js"></script>\n<script src="src/modes/contest.js"></script>\n<script src="src/modes/practice.js?v=refactor5"></script>\n<script src="src/modes/percent-battle/state.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/spots.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/opponent.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/results.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/index.js?v=refactor4"></script>\n<script src="src/ui/panels.js?v=refactor7"></script>\n<script src="src/ui/loading.js?v=refactor7"></script>\n<script src="src/ui/menu.js?v=refactor12"></script>\n<script src="src/ui/setup.js?v=refactor13"></script>\n<script src="src/ui/pregame.js?v=refactor15"></script>\n<script src="src/ui/pause.js?v=refactor10"></script>\n<script src="src/core/bootstrap-next.js?v=refactor12"></script>\n<script src="src/game-flow.js?v=1.93"></script>');
   return html;
 }
 
