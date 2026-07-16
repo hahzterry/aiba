@@ -89,6 +89,7 @@ app shell
 - Percent Battle ball collision, final-shot cinematic and camera updates remain in the shared core because other rendering systems call them directly.
 - `src/modes/practice.js` owns the three-shot warmup lifecycle and completion detection; it deliberately calls the shared shot lifecycle instead of duplicating it.
 - `src/ui/panels.js`, `loading.js`, `menu.js`, `setup.js`, `pregame.js` and `pause.js` own shared overlays, the loading gate, the home cover/mode information, difficulty/court selection, pregame roster drawing/matchups, and pause/return-home flow under `/next/`.
+- Route parity is verified for Rack Rush, Percent Battle, Three-Point Contest and NBA DNA, including return-home paths without a refresh.
 - The generated experimental entry is now about 4,300 lines, down from roughly 5,600 in the production entry.
 
 ## Acceptance Matrix
