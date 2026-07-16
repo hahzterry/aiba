@@ -37,6 +37,18 @@ function generate(source){
   html=replaceOnce(html,'<script src="src/vision.js?v=1.94"></script>','<script src="src/vision.js?v=refactor11"></script>');
   html=replaceOnce(html,'<script src="src/navigation.js?v=1.90"></script>','<script src="src/navigation.js?v=refactor8"></script>');
   html=replaceRange(html,
+    'function showMenu(){',
+    'function sceneSelectMarkup(){',
+    '/* Home menu and mode information are owned by src/ui/menu.js in the experimental entry. */\n');
+  html=replaceRange(html,
+    'function sceneSelectMarkup(){',
+    'function pickDiff(k){',
+    '/* Difficulty and court selection are owned by src/ui/setup.js in the experimental entry. */\n');
+  html=replaceRange(html,
+    'function pickDiff(k){',
+    '/* ---------------- RACK RUSH: 投篮机闯关 ---------------- */',
+    '/* Pregame roster drawing and matchup panels are owned by src/ui/pregame.js in the experimental entry. */\n');
+  html=replaceRange(html,
     '/* ---------------- RACK RUSH: 投篮机闯关 ---------------- */',
     'const BATTLE_RUNS_KEY=',
     '/* RACK RUSH is owned by src/modes/rack-rush.js in the experimental entry. */\n');
@@ -77,14 +89,6 @@ function generate(source){
     'function stars(r){',
     '/* Pause and return-home flow are owned by src/ui/pause.js in the experimental entry. */\n');
   html=replaceRange(html,
-    'function showMenu(){',
-    'function sceneSelectMarkup(){',
-    '/* Home menu and mode information are owned by src/ui/menu.js in the experimental entry. */\n');
-  html=replaceRange(html,
-    'function sceneSelectMarkup(){',
-    'function pickDiff(k){',
-    '/* Difficulty and court selection are owned by src/ui/setup.js in the experimental entry. */\n');
-  html=replaceRange(html,
     '  // 练习结束检测',
     '  // states',
     '  updatePractice(dt);\n  // states');
@@ -93,7 +97,7 @@ function generate(source){
     '/* NEXT boot and loop are started by src/core/bootstrap-next.js. */\n//# sourceURL=aiba-next-inline.js');
   html=replaceOnce(html,
     '</script>\n<script src="src/game-flow.js?v=1.93"></script>',
-    '</script>\n<script src="src/core/legacy-adapter.js?v=refactor13"></script>\n<script src="src/modes/rack-rush.js"></script>\n<script src="src/modes/contest.js"></script>\n<script src="src/modes/practice.js?v=refactor5"></script>\n<script src="src/modes/percent-battle/state.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/spots.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/opponent.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/results.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/index.js?v=refactor4"></script>\n<script src="src/ui/panels.js?v=refactor7"></script>\n<script src="src/ui/loading.js?v=refactor7"></script>\n<script src="src/ui/menu.js?v=refactor12"></script>\n<script src="src/ui/setup.js?v=refactor13"></script>\n<script src="src/ui/pause.js?v=refactor10"></script>\n<script src="src/core/bootstrap-next.js?v=refactor12"></script>\n<script src="src/game-flow.js?v=1.93"></script>');
+    '</script>\n<script src="src/core/legacy-adapter.js?v=refactor15"></script>\n<script src="src/modes/rack-rush.js"></script>\n<script src="src/modes/contest.js"></script>\n<script src="src/modes/practice.js?v=refactor5"></script>\n<script src="src/modes/percent-battle/state.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/spots.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/opponent.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/results.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/index.js?v=refactor4"></script>\n<script src="src/ui/panels.js?v=refactor7"></script>\n<script src="src/ui/loading.js?v=refactor7"></script>\n<script src="src/ui/menu.js?v=refactor12"></script>\n<script src="src/ui/setup.js?v=refactor13"></script>\n<script src="src/ui/pregame.js?v=refactor15"></script>\n<script src="src/ui/pause.js?v=refactor10"></script>\n<script src="src/core/bootstrap-next.js?v=refactor12"></script>\n<script src="src/game-flow.js?v=1.93"></script>');
   return html;
 }
 

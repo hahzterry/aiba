@@ -108,8 +108,8 @@ The main loop remains the last large extraction because audio, vision, recording
 
 ## UI Migration Checkpoint
 
-- complete: shared panels, loading gate, home cover, mode information, difficulty and scene selection, pause and return-home
-- next: pregame roster drawing and matchup panels
+- complete: shared panels, loading gate, home cover, mode information, difficulty/scene selection, pregame roster drawing/matchup panels, pause and return-home
+- next: complete route parity checks, then begin rendering ownership with scene/court construction
 - keep player selection and NBA DNA as their existing standalone modules until the shared navigation flow no longer depends on inline globals
 
 ## Phase 5: Cutover

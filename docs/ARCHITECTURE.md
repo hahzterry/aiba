@@ -88,9 +88,8 @@ app shell
 - `src/modes/percent-battle/` owns battle state and clock, spot stocks and cooldowns, opponent decisions and animation, and result construction under `/next/`.
 - Percent Battle ball collision, final-shot cinematic and camera updates remain in the shared core because other rendering systems call them directly.
 - `src/modes/practice.js` owns the three-shot warmup lifecycle and completion detection; it deliberately calls the shared shot lifecycle instead of duplicating it.
-- `src/ui/panels.js`, `loading.js`, `menu.js`, `setup.js` and `pause.js` own shared overlays, the loading gate, the home cover/mode information, difficulty/court selection, and pause/return-home flow under `/next/`.
-- Pregame roster drawing and matchup introduction remain in the legacy core for the next UI migration.
-- The generated experimental entry is now about 4,400 lines, down from roughly 5,600 in the production entry.
+- `src/ui/panels.js`, `loading.js`, `menu.js`, `setup.js`, `pregame.js` and `pause.js` own shared overlays, the loading gate, the home cover/mode information, difficulty/court selection, pregame roster drawing/matchups, and pause/return-home flow under `/next/`.
+- The generated experimental entry is now about 4,300 lines, down from roughly 5,600 in the production entry.
 
 ## Acceptance Matrix
 
