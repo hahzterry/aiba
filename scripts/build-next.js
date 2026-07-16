@@ -38,7 +38,7 @@ function generate(source){
   html=replaceOnce(html,'<script src="src/navigation.js?v=1.90"></script>','<script src="src/navigation.js?v=refactor8"></script>');
   html=replaceOnce(html,
     '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script>\n/* ---------------- three.js setup ---------------- */',
-    '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script src="src/rendering/core.js?v=refactor16"></script>\n<script src="src/rendering/materials.js?v=refactor17"></script>\n<script src="src/rendering/court.js?v=refactor18"></script>\n<script src="src/rendering/arena.js?v=refactor19"></script>\n<script src="src/rendering/spectators.js?v=refactor20"></script>\n<script src="src/rendering/hoop.js?v=refactor21"></script>\n<script src="src/rendering/environments.js?v=refactor22"></script>\n<script>\n/* ---------------- three.js setup ---------------- */');
+    '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script src="src/rendering/core.js?v=refactor16"></script>\n<script src="src/rendering/materials.js?v=refactor17"></script>\n<script src="src/rendering/court.js?v=refactor18"></script>\n<script src="src/rendering/arena.js?v=refactor19"></script>\n<script src="src/rendering/spectators.js?v=refactor20"></script>\n<script src="src/rendering/hoop.js?v=refactor21"></script>\n<script src="src/rendering/environments.js?v=refactor22a"></script>\n<script src="src/rendering/props.js?v=refactor23"></script>\n<script src="src/rendering/characters.js?v=refactor24"></script>\n<script src="src/rendering/camera.js?v=refactor25"></script>\n<script src="src/rendering/motion.js?v=refactor26"></script>\n<script>\n/* ---------------- three.js setup ---------------- */');
   html=replaceRange(html,
     '/* ---------------- three.js setup ---------------- */',
     '/* ---------------- pixel texture helpers ---------------- */',
@@ -67,6 +67,22 @@ function generate(source){
     '/* ---------------- scene presets ---------------- */',
     'function buildRacks(){',
     '/* Outdoor presets, weather and progressive court environments are owned by src/rendering/environments.js. */\n');
+  html=replaceRange(html,
+    'function buildRacks(){',
+    '/* ---------------- voxel characters: player avatar & passer ---------------- */',
+    '/* Ball racks, first-person hands and held-ball props are owned by src/rendering/props.js. */\n');
+  html=replaceRange(html,
+    '/* ---------------- voxel characters: player avatar & passer ---------------- */',
+    'const P={pos:V3(0,0,-0.6),face:0,walking:false,walkT:0,jump:0,eyeDip:0};',
+    '/* Voxel player construction, styling and bench actors are owned by src/rendering/characters.js. */\n');
+  html=replaceRange(html,
+    'const P={pos:V3(0,0,-0.6),face:0,walking:false,walkT:0,jump:0,eyeDip:0};',
+    '/* shooting pose driven by charge phase: 下蹲→举球(屈肘)→起跳伸展→顶点出手=完美 */',
+    '/* Player position and camera direction are owned by src/rendering/camera.js. */\n');
+  html=replaceRange(html,
+    '/* shooting pose driven by charge phase: 下蹲→举球(屈肘)→起跳伸展→顶点出手=完美 */',
+    '/* ---------------- hero ball camera (最后一球英雄时刻) ---------------- */',
+    '/* Base shot pose, pass and walk motion are owned by src/rendering/motion.js. */\n');
   html=replaceRange(html,
     'function showMenu(){',
     'function sceneSelectMarkup(){',

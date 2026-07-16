@@ -449,12 +449,8 @@ function updateEnvironment(dt){
   updateBeachSunset(progress,dt);
 }
 
-/* racks & rack balls */
-const rackBalls=[]; const deepBalls=[]; let halfCourtBall=null;
-
 window.AIBA.runtime.register("rendering:environments",Object.freeze({
   disposeEnvironmentRoot,buildOutdoorPark,buildRainWeather,buildFlowerCourt,buildBeachSunset,
   updateBeachSunset,updateRain,updateFlowerCourt,bloomOnScore,applyScenePreset,
   resetProgressiveSceneForRun,getEnvironmentProgress,updateEnvironment
 }));
-

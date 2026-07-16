@@ -404,10 +404,13 @@ catch(e){fail("game flow script syntax error: "+e.message);}
 for(const token of ["rookieMeterProgress","G.diff===\"easy\"","updatePregameWarmupShot","updatePregameChalk","updatePlayerLockCamera"])
   if(!gameFlow.includes(token))fail("game flow token missing "+token);
 
-for(const rel of ["src/core/runtime.js","src/core/player-id-sandbox.js","src/core/leaderboard-sandbox.js","src/core/legacy-adapter.js","src/core/bootstrap-next.js","src/rendering/core.js","src/rendering/materials.js","src/rendering/court.js","src/rendering/arena.js","src/rendering/spectators.js","src/rendering/hoop.js","src/rendering/environments.js","src/modes/rack-rush.js","src/modes/contest.js","src/modes/practice.js","src/modes/percent-battle/state.js","src/modes/percent-battle/spots.js","src/modes/percent-battle/opponent.js","src/modes/percent-battle/results.js","src/modes/percent-battle/index.js","src/ui/panels.js","src/ui/loading.js","src/ui/menu.js","src/ui/setup.js","src/ui/pregame.js","src/ui/pause.js"]){
+for(const rel of ["src/core/runtime.js","src/core/player-id-sandbox.js","src/core/leaderboard-sandbox.js","src/core/legacy-adapter.js","src/core/bootstrap-next.js","src/rendering/core.js","src/rendering/materials.js","src/rendering/court.js","src/rendering/arena.js","src/rendering/spectators.js","src/rendering/hoop.js","src/rendering/environments.js","src/rendering/props.js","src/rendering/characters.js","src/rendering/camera.js","src/rendering/motion.js","src/modes/rack-rush.js","src/modes/contest.js","src/modes/practice.js","src/modes/percent-battle/state.js","src/modes/percent-battle/spots.js","src/modes/percent-battle/opponent.js","src/modes/percent-battle/results.js","src/modes/percent-battle/index.js","src/ui/panels.js","src/ui/loading.js","src/ui/menu.js","src/ui/setup.js","src/ui/pregame.js","src/ui/pause.js"]){
   try{new Function(read(rel));}
   catch(e){fail(rel+" syntax error: "+e.message);}
 }
+const renderingModuleFiles=["core","materials","court","arena","spectators","hoop","environments","props","characters","camera","motion"].map(name=>"src/rendering/"+name+".js");
+try{new Function(renderingModuleFiles.map(read).join("\n;\n"));}
+catch(e){fail("rendering modules have conflicting top-level declarations: "+e.message);}
 const runtimeScript=read("src/core/runtime.js");
 for(const token of ["aiba_next_v1:","scopeLocalStorage","attachLegacy","service:registered"])
   if(!runtimeScript.includes(token))fail("runtime bridge token missing "+token);
@@ -450,10 +453,27 @@ for(const token of ['runtime.register("rendering:hoop"',"function buildHoop","fu
 const renderingEnvironments=read("src/rendering/environments.js");
 for(const token of ['runtime.register("rendering:environments"',"function buildOutdoorPark","function buildFlowerCourt","function buildBeachSunset","function applyScenePreset","function updateEnvironment"])
   if(!renderingEnvironments.includes(token))fail("rendering environments token missing "+token);
-for(const token of ['src/rendering/arena.js?v=refactor19','src/rendering/spectators.js?v=refactor20','src/rendering/hoop.js?v=refactor21','src/rendering/environments.js?v=refactor22'])
+if(renderingEnvironments.includes("const rackBalls="))fail("rendering environments must not own gameplay props");
+for(const token of ['src/rendering/arena.js?v=refactor19','src/rendering/spectators.js?v=refactor20','src/rendering/hoop.js?v=refactor21','src/rendering/environments.js?v=refactor22a'])
   if(!nextHtml.includes(token))fail("next entry missing court element module "+token);
 for(const token of ["function buildStands(","function buildNearCourtCrowd(","function buildHoop(","function applyScenePreset("])
   if(nextHtml.includes(token))fail("next entry still contains inline court element "+token);
+const renderingProps=read("src/rendering/props.js");
+for(const token of ['runtime.register("rendering:props"',"function buildRacks","function resetRackBalls","function buildHands"])
+  if(!renderingProps.includes(token))fail("rendering props token missing "+token);
+const renderingCharacters=read("src/rendering/characters.js");
+for(const token of ['runtime.register("rendering:characters"',"function voxelGuy","function applyStarStyle","function buildCharacters","function benchSetup"])
+  if(!renderingCharacters.includes(token))fail("rendering characters token missing "+token);
+const renderingCamera=read("src/rendering/camera.js");
+for(const token of ['runtime.register("rendering:camera"',"const P=","const CAM=","function autoFrameCam","function updPlayCam"])
+  if(!renderingCamera.includes(token))fail("rendering camera token missing "+token);
+const renderingMotion=read("src/rendering/motion.js");
+for(const token of ['runtime.register("rendering:motion"',"function shotCurves","function poseGuy","function updPose","function startPass","function updWalk"])
+  if(!renderingMotion.includes(token))fail("rendering motion token missing "+token);
+for(const token of ['src/rendering/props.js?v=refactor23','src/rendering/characters.js?v=refactor24','src/rendering/camera.js?v=refactor25','src/rendering/motion.js?v=refactor26'])
+  if(!nextHtml.includes(token))fail("next entry missing gameplay rendering module "+token);
+for(const token of ["function buildRacks(","function voxelGuy(","function autoFrameCam(","function shotCurves(","function updWalk("])
+  if(nextHtml.includes(token))fail("next entry still contains inline gameplay rendering "+token);
 
 const sandbox={window:{}};
 vm.createContext(sandbox);

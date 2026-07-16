@@ -97,8 +97,12 @@ app shell
 - `src/rendering/spectators.js` owns active-basket spectators and outdoor street crowds, including their reactions.
 - `src/rendering/hoop.js` owns both hoops, backboards, nets, arena light cones and the jumbotron.
 - `src/rendering/environments.js` owns outdoor parks, rain, progressive flowers, beach sunset and court-preset transitions.
+- `src/rendering/props.js` owns ball racks, rack-ball visibility, first-person hands and held-ball props.
+- `src/rendering/characters.js` owns the voxel player factory, visual styling, roster actors and bench placement.
+- `src/rendering/camera.js` owns player world position, camera modes, automatic framing and play-camera updates.
+- `src/rendering/motion.js` owns the legacy base pose curves, pass animation and movement between shooting spots; `shot-motion.js` still applies the production V2 pose patch later in boot.
 - Desktop and portrait captures cover indoor and outdoor scene construction after the court-element migration.
-- The generated experimental entry is now about 3,000 lines, down from roughly 5,600 in the production entry.
+- The generated experimental entry is now about 2,400 lines, down from roughly 5,600 in the production entry.
 
 ## Acceptance Matrix
 
