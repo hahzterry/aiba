@@ -3626,44 +3626,7 @@ function scoreQuoteMarkup(){
 
 /* ---------------- screens / flow ---------------- */
 /* Home menu and mode information are owned by src/ui/menu.js in the experimental entry. */
-function sceneSelectMarkup(){
-  const p=SCENE_PRESETS[currentScenePreset]||SCENE_PRESETS.indoor;
-  return `<button class="sceneSelect" onclick="showScenePicker()" aria-label="选择赛场,当前${p.name}">
-    <span class="sceneSwatch ${currentScenePreset}"></span><span><small>赛场 COURT</small><strong>${p.name}</strong></span><span class="sceneSelectMark">›</span></button>`;
-}
-function showScenePicker(){
-  const rows=Object.keys(SCENE_PRESETS).map(k=>{
-    const p=SCENE_PRESETS[k],sel=k===currentScenePreset;
-    return `<button class="sceneOption ${sel?"selected":""}" onclick="chooseScenePreset('${k}')" aria-pressed="${sel}">
-      <span class="sceneSwatch ${k}"></span><span><b>${p.name}</b><small>${p.desc}</small></span><em>${sel?"当前":"选择"}</em></button>`;
-  }).join("");
-  showPanel(`<h1 class="title" style="font-size:24px">选择赛场</h1><div class="note">场景只改变环境与灯光，不改变投篮和计分。</div>
-    <div class="sceneList">${rows}</div><button class="btn sm" onclick="returnToDifficulty()">返回难度</button>`);
-}
-function returnToDifficulty(){goDiff(G.mode,true);}
-function chooseScenePreset(name){
-  applyScenePreset(name,{announce:true});
-  goDiff(G.mode,true);
-}
-function goDiff(mode,quiet){
-  G.mode=mode||"contest";G.state="diff";ensureAudio(true);if(!quiet&&typeof playSFX==="function")playSFX("ui_mode_whoosh_01",.52);
-  if(!quiet){
-    airhorn();
-    paSay("欢迎来到 aiBA "+SCENE_PRESETS[currentScenePreset].name+"。灯光就位,比赛开始倒计时。",true);
-  }
-  let h=(window.AIBAModeLeaderboardMarkup?AIBAModeLeaderboardMarkup(G.mode):"")+'<h1 class="title" style="font-size:24px">选择难度</h1>'+(window.AIBAPlayerSelectMarkup?AIBAPlayerSelectMarkup(LEGENDS,G.mode):"");
-  h+=sceneSelectMarkup();
-  h+=visionModeMarkup();
-  if(G.mode==="battle")h+='<div class="note">百分大战中,难度会影响你的甜区宽度和对手命中节奏。</div>';
-  if(G.mode==="rackrush")h+='<div class="note">难度决定每关晋级目标与投篮甜区，供球速度按关卡逐步加快。</div>';
-  for(const k in DIFFS){
-    const d=DIFFS[k];
-    h+=`<button class="btn ${k==="easy"?"green":k==="hard"?"red":""}" style="display:block;width:88%;margin:10px auto"
-      onclick="pickDiff('${k}')">${d.n}<div style="font-size:10px;font-weight:normal;margin-top:4px">${d.d}</div></button>`;
-  }
-  showPanel(h);
-  if(VISION.desired&&typeof prewarmVisionControl==="function")prewarmVisionControl("diff");
-}
+/* Difficulty and court selection are owned by src/ui/setup.js in the experimental entry. */
 function pickDiff(k){
   G.diff=k;resetVisionGesture(VISION.machine);cancelVisionOwnedCharge();askTiltPerm();
   dressGuy(passer,0x6a727c,0x333a42,"");
@@ -4364,7 +4327,7 @@ handBall.visible=false;
 /* NEXT boot and loop are started by src/core/bootstrap-next.js. */
 //# sourceURL=aiba-next-inline.js
 </script>
-<script src="src/core/legacy-adapter.js?v=refactor12"></script>
+<script src="src/core/legacy-adapter.js?v=refactor13"></script>
 <script src="src/modes/rack-rush.js"></script>
 <script src="src/modes/contest.js"></script>
 <script src="src/modes/practice.js?v=refactor5"></script>
@@ -4376,6 +4339,7 @@ handBall.visible=false;
 <script src="src/ui/panels.js?v=refactor7"></script>
 <script src="src/ui/loading.js?v=refactor7"></script>
 <script src="src/ui/menu.js?v=refactor12"></script>
+<script src="src/ui/setup.js?v=refactor13"></script>
 <script src="src/ui/pause.js?v=refactor10"></script>
 <script src="src/core/bootstrap-next.js?v=refactor12"></script>
 <script src="src/game-flow.js?v=1.93"></script>
