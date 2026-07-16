@@ -34,7 +34,7 @@ function generate(source){
   html=replaceOnce(html,'<script src="src/player-id.js"></script>','<script src="src/core/player-id-sandbox.js"></script>');
   html=replaceOnce(html,'<script src="src/leaderboard-api.js"></script>','<script src="src/core/leaderboard-sandbox.js"></script>');
   html=replaceOnce(html,'<script src="src/recorder.js?v=1.94"></script>','<script src="src/recorder.js?v=refactor9"></script>');
-  html=replaceOnce(html,'<script src="src/vision.js?v=1.94"></script>','<script src="src/vision.js?v=refactor9"></script>');
+  html=replaceOnce(html,'<script src="src/vision.js?v=1.94"></script>','<script src="src/vision.js?v=refactor11"></script>');
   html=replaceOnce(html,'<script src="src/navigation.js?v=1.90"></script>','<script src="src/navigation.js?v=refactor8"></script>');
   html=replaceRange(html,
     '/* ---------------- RACK RUSH: 投篮机闯关 ---------------- */',

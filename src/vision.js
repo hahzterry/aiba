@@ -4,11 +4,23 @@ const VISION_INFERENCE_MAX_PIXELS=288*512;
 function visionPointerCoarse(){
   try{return matchMedia("(pointer:coarse)").matches;}catch(e){return false;}
 }
-function visionMobileDevice(){return visionPointerCoarse()||Math.min(innerWidth,innerHeight)<700;}
+function visionMobileDevice(){
+  let mobileUA=false;
+  try{mobileUA=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent||"");}catch(e){}
+  return visionPointerCoarse()||mobileUA;
+}
 function visionWantsPortrait(){return visionMobileDevice()&&innerHeight>=innerWidth;}
 function visionCaptureConstraints(){
-  const portrait=visionWantsPortrait();
-  return {facingMode:{ideal:"user"},width:{ideal:portrait?288:360},height:{ideal:portrait?512:270},aspectRatio:{ideal:portrait?9/16:4/3},frameRate:{ideal:18,max:24}};
+  return {facingMode:{ideal:"user"},width:{ideal:480,max:640},height:{ideal:360,max:480},resizeMode:{ideal:"none"},frameRate:{ideal:18,max:24}};
+}
+function visionRecordCaptureSettings(stream){
+  const track=stream&&stream.getVideoTracks&&stream.getVideoTracks()[0];
+  if(!track)return;
+  try{if("contentHint" in track)track.contentHint="motion";}catch(e){}
+  try{
+    const s=track.getSettings?track.getSettings():{};
+    document.documentElement.dataset.visionCapture=(s.width||0)+"x"+(s.height||0)+":"+(s.resizeMode||"native");
+  }catch(e){}
 }
 function loadVisionControlPreference(){
   try{return localStorage.getItem(VISION_CONTROL_STORAGE)==="vision"?"vision":"touch";}catch(e){return "touch";}
@@ -454,7 +466,7 @@ async function enableVisionControl(event){
     const modelPromise=loadVisionModel();
     VISION.frame.requestedPortrait=visionWantsPortrait();document.documentElement.dataset.visionRequested=VISION.frame.requestedPortrait?"portrait":"landscape";
     const streamPromise=navigator.mediaDevices.getUserMedia({audio:false,video:visionCaptureConstraints()});
-    const results=await Promise.all([modelPromise,streamPromise]);VISION.stream=results[1];
+    const results=await Promise.all([modelPromise,streamPromise]);VISION.stream=results[1];visionRecordCaptureSettings(VISION.stream);
     const video=$("visionVideo");video.srcObject=VISION.stream;await video.play();visionSyncFrameGeometry(video);
     VISION.enabled=true;VISION.lastSample=null;VISION.lastPose=null;VISION.lastHands=[];VISION.lastPoseAt=0;VISION.lastHandAt=0;VISION.lastDraw=0;VISION.lastVideoTime=-1;VISION.inferAvg=0;visionResetTracking(true);resetVisionGesture(VISION.machine);visionSetUI("idle","双手放入下方蓄力框",0);
     cancelAnimationFrame(VISION.raf);VISION.raf=requestAnimationFrame(visionFrame);
