@@ -187,15 +187,15 @@
     if(!v||v.readyState<2||!v.videoWidth)return;
     const frame=global.AIBAVisionFrame&&global.AIBAVisionFrame.descriptor?global.AIBAVisionFrame.descriptor():null;
     const vw=(frame&&frame.width)||v.videoWidth,vh=(frame&&frame.height)||v.videoHeight,portrait=frame?!!frame.portrait:vh>vw;
-    const displayAspect=(frame&&frame.displayAspect)||(vw/vh),cropPortrait=!!(frame&&frame.cropPortrait);
+    const displayAspect=(frame&&frame.displayAspect)||(vw/vh);
     let w=portrait?(MOBILE?142:170):196,h=Math.round(w/displayAspect),maxH=portrait?(MOBILE?254:304):160;
     if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}
     const resultVisible=!!state.resultCard,x=resultVisible?W-w-30:30,y=resultVisible?68:H-154-h;
     ctx.save();ctx.fillStyle="rgba(0,0,0,.62)";roundRect(ctx,x-7,y-28,w+14,h+35,8);ctx.fill();
     ctx.strokeStyle="#70e8ff";ctx.lineWidth=3;roundRect(ctx,x-7,y-28,w+14,h+35,8);ctx.stroke();
     ctx.fillStyle="#70e8ff";ctx.font="700 13px Orbitron, monospace";ctx.fillText("LOCAL POSE",x,y-9);
-    ctx.beginPath();roundRect(ctx,x,y,w,h,6);ctx.clip();ctx.fillStyle="#050912";ctx.fillRect(x,y,w,h);if(cropPortrait)drawCover(ctx,v,x,y,w,h,true);else drawContain(ctx,v,x,y,w,h,true);
-    const overlay=document.getElementById("visionCanvas");if(overlay&&overlay.width){ctx.globalAlpha=.78;if(cropPortrait)drawCover(ctx,overlay,x,y,w,h,true);else drawContain(ctx,overlay,x,y,w,h,true);ctx.globalAlpha=1;}
+    ctx.beginPath();roundRect(ctx,x,y,w,h,6);ctx.clip();ctx.fillStyle="#050912";ctx.fillRect(x,y,w,h);drawContain(ctx,v,x,y,w,h,true);
+    const overlay=document.getElementById("visionCanvas");if(overlay&&overlay.width){ctx.globalAlpha=.78;drawContain(ctx,overlay,x,y,w,h,true);ctx.globalAlpha=1;}
     ctx.restore();
   }
   function draw(ctxObj){

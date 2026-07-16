@@ -85,6 +85,8 @@ if(!nextHtml.includes("data-aiba-early-errors"))fail("next early error diagnosti
 if(!nextHtml.includes('<script src="src/core/runtime.js?v=refactor7"></script>'))fail("next runtime bridge missing");
 if(!nextHtml.includes('<script src="src/core/player-id-sandbox.js"></script>'))fail("next identity sandbox missing");
 if(!nextHtml.includes('<script src="src/core/leaderboard-sandbox.js"></script>'))fail("next leaderboard sandbox missing");
+if(!nextHtml.includes('<script src="src/recorder.js?v=refactor9"></script>'))fail("next recorder cache version missing");
+if(!nextHtml.includes('<script src="src/vision.js?v=refactor9"></script>'))fail("next vision cache version missing");
 if(nextHtml.includes('<script src="src/player-id.js"></script>'))fail("next entry must not load production identity");
 if(nextHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("next entry must not load production leaderboard API");
 if(nextHtml.indexOf('src/core/runtime.js')>nextHtml.indexOf('src/config.js'))fail("next runtime must load before config");
@@ -361,6 +363,8 @@ for(const token of ["aiba_shot_control_v1","触屏控制","体感控制","contro
   if(!vision.includes(token))fail("motion control preference token missing "+token);
 for(const token of ["VISION_INFERENCE_MAX_PIXELS=288*512","visionCaptureConstraints","aspectRatio:{ideal:portrait?9/16:4/3}","visionInferenceSource","AIBAVisionFrame","displayAspect","cropPortrait","请保持手机竖屏"])
   if(!vision.includes(token))fail("portrait vision token missing "+token);
+if(!vision.includes("frame.cropPortrait=false"))fail("vision preview must preserve the full camera frame");
+if(/if\(cropPortrait\).*drawCover/.test(recorderScript))fail("recorded vision preview must not crop the camera frame");
 for(const token of ['aspect-ratio:var(--vision-aspect,9/16)','data-orientation="portrait"'])
   if(!styles.includes(token))fail("portrait vision style missing "+token);
 if(vision.includes("视觉实验"))fail("legacy vision experiment label remains");

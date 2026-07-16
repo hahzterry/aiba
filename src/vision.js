@@ -46,11 +46,11 @@ function visionSyncFrameGeometry(video){
   const frame=VISION.frame,pixels=w*h,scale=Math.min(1,Math.sqrt(VISION_INFERENCE_MAX_PIXELS/pixels));
   const sourceAspect=w/h,sourcePortrait=h>w,displayPortrait=frame.requestedPortrait||sourcePortrait;
   frame.width=w;frame.height=h;frame.aspect=sourceAspect;frame.sourcePortrait=sourcePortrait;frame.portrait=displayPortrait;
-  frame.displayAspect=displayPortrait?9/16:sourceAspect;frame.cropPortrait=displayPortrait&&sourceAspect>.68;
+  frame.displayAspect=displayPortrait?9/16:sourceAspect;frame.cropPortrait=false;
   frame.inferWidth=Math.max(2,Math.round(w*scale/2)*2);frame.inferHeight=Math.max(2,Math.round(h*scale/2)*2);
   const stage=video.closest&&video.closest(".visionStage"),preview=$("visionPreview");
   if(stage)stage.style.setProperty("--vision-aspect",displayPortrait?"9 / 16":w+" / "+h);
-  if(preview){preview.dataset.orientation=displayPortrait?"portrait":"landscape";preview.dataset.crop=frame.cropPortrait?"portrait":"none";preview.dataset.sourceOrientation=sourcePortrait?"portrait":"landscape";}
+  if(preview){preview.dataset.orientation=displayPortrait?"portrait":"landscape";preview.dataset.crop="none";preview.dataset.sourceOrientation=sourcePortrait?"portrait":"landscape";}
   document.documentElement.dataset.visionFrame=w+"x"+h;
   return frame;
 }

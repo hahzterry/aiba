@@ -148,7 +148,6 @@ html[data-scan-overlay="menu"] #scan{opacity:.018}
 .visionBody{display:grid;grid-template-columns:minmax(0,1fr);gap:0;background:#080d16;border-bottom:1px solid rgba(255,255,255,.12)}
 .visionStage{position:relative;width:100%;aspect-ratio:var(--vision-aspect,9/16);overflow:hidden;background:#090d12}
 #visionVideo,#visionCanvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform:scaleX(-1)}
-#visionPreview[data-crop="portrait"] #visionVideo,#visionPreview[data-crop="portrait"] #visionCanvas{object-fit:cover}
 #visionVideo{filter:saturate(.72) contrast(1.08) brightness(.78)}#visionCanvas{pointer-events:none}
 .visionScan{display:none}
 .visionFoot{height:24px;position:relative;padding:5px 7px;background:#080d16}
