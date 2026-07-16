@@ -85,7 +85,9 @@ app shell
 - `src/modes/rack-rush.js` owns Rack Rush setup, timers, rules, records and results under `/next/`.
 - `src/modes/contest.js` owns contest drawing order, rounds, bracket, finals, tiebreak and championship results under `/next/`.
 - Contest replay remains in the legacy core because its camera, ball ghost and render-loop integration are shared rendering concerns.
-- Percent Battle remains inline and is the next mode boundary to evaluate.
+- `src/modes/percent-battle/` owns battle state and clock, spot stocks and cooldowns, opponent decisions and animation, and result construction under `/next/`.
+- Percent Battle ball collision, final-shot cinematic and camera updates remain in the shared core because other rendering systems call them directly.
+- The experimental entry now contains about 4,700 inline lines, down from roughly 5,500 in the production entry.
 
 ## Acceptance Matrix
 

@@ -38,6 +38,10 @@ function generate(source){
     'const BATTLE_RUNS_KEY=',
     '/* RACK RUSH is owned by src/modes/rack-rush.js in the experimental entry. */\n');
   html=replaceRange(html,
+    'const BATTLE_RUNS_KEY=',
+    'function beginStage(){',
+    '/* Percent Battle state and startup are owned by src/modes/percent-battle/state.js. */\n');
+  html=replaceRange(html,
     'function beginStage(){',
     '/* ---------------- replay system ---------------- */',
     '/* Contest round flow is owned by src/modes/contest.js in the experimental entry. */\n/* ---------------- replay system ---------------- */');
@@ -45,9 +49,21 @@ function generate(source){
     'function simAI(o){',
     '/* ---------------- input ---------------- */',
     '/* Contest bracket and finals are owned by src/modes/contest.js in the experimental entry. */\n/* ---------------- input ---------------- */');
+  html=replaceRange(html,
+    'function battleRefreshSpot(i){',
+    '/* ---- 点击点位移动:屏幕投影光圈 + 屏幕外边缘箭头 ---- */',
+    '/* Percent Battle spot rules are owned by src/modes/percent-battle/spots.js. */\n/* ---- 点击点位移动:屏幕投影光圈 + 屏幕外边缘箭头 ---- */');
+  html=replaceRange(html,
+    '/* ---------------- 百分大战:真实对手(同场竞投) ---------------- */',
+    '/* ---- 空中球碰撞:撞击改变结果(原本进的被撞歪→不进) ---- */',
+    '/* Percent Battle opponent logic is owned by src/modes/percent-battle/opponent.js. */\n/* ---- 空中球碰撞:撞击改变结果(原本进的被撞歪→不进) ---- */');
+  html=replaceRange(html,
+    'function finishBattle(win,ball){',
+    '/* ---------------- 英雄时刻:制胜球电影化慢动作 ---------------- */',
+    '/* Percent Battle result flow is owned by src/modes/percent-battle/results.js. */\n/* ---------------- 英雄时刻:制胜球电影化慢动作 ---------------- */');
   html=replaceOnce(html,
     '</script>\n<script src="src/game-flow.js?v=1.93"></script>',
-    '</script>\n<script src="src/core/legacy-adapter.js"></script>\n<script src="src/modes/rack-rush.js"></script>\n<script src="src/modes/contest.js"></script>\n<script src="src/game-flow.js?v=1.93"></script>');
+    '</script>\n<script src="src/core/legacy-adapter.js?v=refactor4"></script>\n<script src="src/modes/rack-rush.js"></script>\n<script src="src/modes/contest.js"></script>\n<script src="src/modes/percent-battle/state.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/spots.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/opponent.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/results.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/index.js?v=refactor4"></script>\n<script src="src/game-flow.js?v=1.93"></script>');
   return html;
 }
 

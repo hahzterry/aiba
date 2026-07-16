@@ -1,0 +1,176 @@
+(function(global){
+  "use strict";
+
+  const runtime=global.AIBA&&global.AIBA.runtime,ctx=runtime&&runtime.service("legacy"),battle=global.AIBABattle;
+  if(!ctx||!battle)throw new Error("Percent Battle opponent requires battle state");
+  const {
+    G,BATTLE_TARGET,BATTLE_SPOTS,OPP_SPOT_EMPTY_WAIT,COURT,HOOP,P,V3,clamp,faceTo,rivals,
+    matGold,matDeep,matBall,shotProfileFor,DIFFS,aiProb,rnd,shotFlightTime,ballGeo,scene,blobGeo,blobMat,
+    balls,triggerStreetCrowdReaction,bloomOnScore,beginFinalAudioWindow,broadcastSting,toast,boo,gameDjSay,
+    sSwish,battleScoreCallout,updJumbo,checkBattleOvertake,shotCurves,poseGuy,poseBallPos,checkBallCollisions
+  }=ctx;
+  const OPP=battle.OPP;
+  const OPP_MIN_SEP=1.58;
+
+  function mirrorSpot(p){
+    if(Math.abs(p.x)<0.6)return V3(p.x+1.9,p.y,p.z);
+    return V3(-p.x,p.y,p.z);
+  }
+  function battlePlayerPos(){
+    if(G.mode==="battle"&&P&&P.pos)return P.pos;
+    const spot=BATTLE_SPOTS[G.battleSpot||0];
+    return spot?spot.p:null;
+  }
+  function avoidPlayerOverlap(pos){
+    const playerPos=battlePlayerPos();if(!playerPos)return pos;
+    const dx=pos.x-playerPos.x,dz=pos.z-playerPos.z,d=Math.hypot(dx,dz);
+    if(d>=OPP_MIN_SEP){
+      pos.x=clamp(pos.x,-COURT.halfWidth+.55,COURT.halfWidth-.55);
+      pos.z=clamp(pos.z,COURT.nearBaseline+.55,COURT.playMaxZ);
+      return pos;
+    }
+    const toHoop=HOOP.clone().sub(pos);toHoop.y=0;
+    if(toHoop.lengthSq()<0.0001)toHoop.set(0,0,-1);
+    toHoop.normalize();
+    const side=V3(toHoop.z,0,-toHoop.x);
+    if(side.lengthSq()<0.0001)side.set(1,0,0);
+    side.normalize();
+    const away=V3(dx,0,dz);
+    if(away.lengthSq()<0.0001)away.copy(side).multiplyScalar(pos.x>=0?1:-1);
+    else away.normalize();
+    const push=Math.max(OPP_MIN_SEP-d,0.78);
+    pos.addScaledVector(away,push);
+    pos.addScaledVector(side,(pos.x>=0?1:-1)*0.44);
+    pos.x=clamp(pos.x,-COURT.halfWidth+.55,COURT.halfWidth-.55);
+    pos.z=clamp(pos.z,COURT.nearBaseline+.55,COURT.playMaxZ);
+    return pos;
+  }
+  function oppSpotPos(index){
+    const spot=BATTLE_SPOTS[index];
+    return spot?avoidPlayerOverlap(mirrorSpot(spot.p)):V3(0,0,0);
+  }
+  function oppSpotQuota(index){
+    const spot=BATTLE_SPOTS[index];
+    if(spot.super)return 1;
+    if(spot.deep!=null)return 2;
+    return 5;
+  }
+  function oppSpotCooldown(index){
+    const spot=BATTLE_SPOTS[index];
+    if(spot.super)return 7.2;
+    if(spot.deep!=null)return 3.4;
+    return 2.1;
+  }
+  function oppSpotReady(index){return !OPP.coolUntil||G.tNow>=(OPP.coolUntil[index]||0);}
+  function oppMarkSpotUse(){
+    OPP.spotShots=(OPP.spotShots||0)+1;OPP.forceMove=false;
+    if(OPP.spotIdx===7)G.superStock=Math.max(0,(G.superStock||0)-1);
+    if(OPP.spotShots>=oppSpotQuota(OPP.spotIdx)){
+      if(!OPP.coolUntil)OPP.coolUntil=Array(BATTLE_SPOTS.length).fill(0);
+      OPP.coolUntil[OPP.spotIdx]=G.tNow+oppSpotCooldown(OPP.spotIdx);OPP.forceMove=true;
+    }
+  }
+  function oppBeginLoad(){
+    const spot=BATTLE_SPOTS[OPP.spotIdx],guy=OPP.guy;
+    guy.ball.visible=true;guy.ball.material=spot.super?matGold:(spot.deep!=null?matDeep:matBall);
+    OPP.phase="load";OPP.t=0;OPP.fired=false;
+    OPP.shootDur=clamp((0.9-(OPP.o.r-85)*0.012-DIFFS[G.diff].ai*0.5)/shotProfileFor(OPP.o).speed,0.5,1.08);
+  }
+  function startOppShooter(){
+    OPP.on=true;OPP.o=G.battleOpp;OPP.guy=rivals[0];OPP.guy.active=true;
+    OPP.spotIdx=4;OPP.phase="walk";OPP.t=0;OPP.spotShots=0;
+    OPP.coolUntil=Array(BATTLE_SPOTS.length).fill(0);OPP.forceMove=false;
+    const start=oppSpotPos(OPP.spotIdx);
+    OPP.guy.g.position.copy(start);OPP.guy.g.rotation.y=faceTo(start,HOOP);
+    OPP.pos=start.clone();OPP.from=start.clone();OPP.to=start.clone();
+    OPP.guy.ball.visible=true;OPP.guy.ball.material=matBall;ctx.refreshBench();
+  }
+  function oppPickSpot(){
+    const current=OPP.spotIdx,needsBig=G.battleOppScore+10>=BATTLE_TARGET||G.battleOppScore+15<G.score;
+    const base=oppSpotPos(current);
+    const candidates=BATTLE_SPOTS.map((spot,index)=>({
+      i:index,sp:spot,dist:base.distanceTo(oppSpotPos(index))-(spot.deep!=null?0.1:0)-(spot.super?0.18:0)+Math.random()*0.18
+    })).filter(candidate=>candidate.i!==current&&oppSpotReady(candidate.i)&&(candidate.i!==7||(G.superStock||0)>0));
+    if(!candidates.length){
+      OPP.phase="cool";OPP.t=0;OPP.coolDur=OPP_SPOT_EMPTY_WAIT;OPP.forceMove=true;return;
+    }
+    candidates.sort((a,b)=>a.dist-b.dist);
+    const superOpen=candidates.find(candidate=>candidate.i===7);
+    let index=(needsBig&&superOpen&&Math.random()<0.36)?7:candidates[0].i;
+    if(index!==7&&candidates[1]&&Math.random()<0.16)index=candidates[1].i;
+    OPP.spotIdx=index;OPP.spotShots=0;OPP.forceMove=false;
+    OPP.from=OPP.pos.clone();OPP.to=oppSpotPos(index);OPP.phase="walk";OPP.t=0;
+  }
+  function oppFireBall(){
+    const spot=BATTLE_SPOTS[OPP.spotIdx],base=(OPP.pos||oppSpotPos(OPP.spotIdx)).clone(),opponent=OPP.o;
+    const probability=aiProb(opponent.r);
+    const chance=spot.super?clamp(probability*0.22+0.03,0.08,0.22):clamp(probability*0.58+0.1,0.28,0.6);
+    const made=Math.random()<chance;
+    const direction=HOOP.clone().sub(base);direction.y=0;const distance=direction.length();direction.normalize();
+    const start=base.clone().addScaledVector(direction,-0.1);start.y=2.05;
+    const perpendicular=V3(direction.z,0,-direction.x);
+    let depth,lateral;
+    if(made){depth=rnd(-0.03,0.03);lateral=rnd(-0.04,0.04);}
+    else{depth=0.27*(Math.random()<0.5?1:-1);lateral=rnd(-0.14,0.14);}
+    const target=HOOP.clone().addScaledVector(direction,depth).addScaledVector(perpendicular,lateral);
+    const flightTime=shotFlightTime(0.82+distance*0.06,opponent,spot);
+    const velocity=V3((target.x-start.x)/flightTime,(target.y-start.y)/flightTime+4.9*flightTime,(target.z-start.z)/flightTime);
+    const mesh=new global.THREE.Mesh(ballGeo,spot.super?matGold:(spot.deep!=null?matDeep:matBall));
+    mesh.position.copy(start);scene.add(mesh);
+    const blob=new global.THREE.Mesh(blobGeo,blobMat.clone());blob.rotation.x=-Math.PI/2;blob.position.set(start.x,0.02,start.z);scene.add(blob);
+    balls.push({mesh,blob,p0:start.clone(),v0:velocity,tf:flightTime,t:0,phase:"fly",outcome:made?"swish":"rimout",
+      vel:new global.THREE.Vector3(),val:spot.val,money:false,deep:spot.deep!=null,super:!!spot.super,made:false,life:1.6,bounces:0,
+      rec:[],timeLeft:0,hot:false,startPos:start.clone(),silent:true,opp:true,sp:spot,collided:false});
+    OPP.guy.ball.visible=false;
+  }
+  function oppScore(ball){
+    const previousMe=G.score,previousOpponent=G.battleOppScore;
+    G.battleOppScore+=ball.val;triggerStreetCrowdReaction("oppMake",ball.val);bloomOnScore(ball.val);
+    const ending=G.battleOppScore>=BATTLE_TARGET;if(ending)beginFinalAudioWindow();
+    if(!ending&&ball.super){broadcastSting("danger");toast(OPP.o.n+" 命中中场10分!","#ff8d7a");boo(1.1);gameDjSay("对手中场超远命中!","special",2.2);}
+    else if(!ending&&ball.deep){broadcastSting("danger");toast(OPP.o.n+" 命中彩球5分!","#72dfff");}
+    else if(!ending&&Math.random()<0.3)toast(OPP.o.n+" +"+ball.val,"#9fd1ff");
+    ctx.setNetPulse(1);sSwish();
+    if(!ending){battle.battleCheckSuperMilestones();battleScoreCallout(previousMe,previousOpponent);}
+    battle.updBattleUI();updJumbo();
+    if(ending){battle.finishBattle(false,ball);return;}
+    checkBattleOvertake(previousMe,previousOpponent);
+  }
+  function updOppShooter(dt){
+    if(!OPP.on||G.battleOver)return;
+    const guy=OPP.guy;OPP.t+=dt;
+    if(OPP.phase==="walk"){
+      const duration=clamp(OPP.from.distanceTo(OPP.to)/3.4,0.35,1.6),progress=Math.min(1,OPP.t/duration);
+      OPP.pos.lerpVectors(OPP.from,OPP.to,progress);guy.g.position.copy(OPP.pos);guy.g.rotation.y=faceTo(OPP.pos,HOOP);
+      const swing=Math.sin(OPP.t*15);
+      guy.legs[0].rotation.x=swing*0.55;guy.legs[1].rotation.x=-swing*0.55;
+      guy.knees[0].rotation.x=Math.max(0,-swing*0.4+0.2);guy.knees[1].rotation.x=Math.max(0,swing*0.4+0.2);
+      guy.ankles[0].rotation.x=-swing*0.2;guy.ankles[1].rotation.x=swing*0.2;
+      if(progress>=1){
+        guy.legs.forEach(leg=>leg.rotation.x=0);guy.knees.forEach(knee=>knee.rotation.x=0);guy.ankles.forEach(ankle=>ankle.rotation.x=0);oppBeginLoad();
+      }
+    }else if(OPP.phase==="load"){
+      const phase=Math.min(1.05,OPP.t/OPP.shootDur*1.05),curve=shotCurves(phase);
+      poseGuy(guy,curve,0);guy.g.position.set(OPP.pos.x,-0.24*curve.dip+Math.max(0,curve.jmp*0.55-curve.over*0.55),OPP.pos.z);poseBallPos(guy.ball.position,curve);
+      if(phase>=1.02&&!OPP.fired){OPP.fired=true;oppFireBall();}
+      if(OPP.t>=OPP.shootDur*1.15){
+        OPP.fired=false;poseGuy(guy,shotCurves(0),0);guy.g.position.set(OPP.pos.x,0,OPP.pos.z);guy.g.rotation.x=0;
+        oppMarkSpotUse();OPP.phase="cool";OPP.t=0;
+        const baseCool=clamp(0.5-(OPP.o.r-85)*0.01,0.25,0.55)+rnd(0,0.2);OPP.coolDur=OPP.forceMove?Math.max(0.2,baseCool*0.55):baseCool;
+      }
+    }else if(OPP.phase==="cool"&&OPP.t>=OPP.coolDur){
+      if(!OPP.forceMove&&oppSpotReady(OPP.spotIdx)&&OPP.spotShots<oppSpotQuota(OPP.spotIdx))oppBeginLoad();
+      else oppPickSpot();
+    }
+  }
+  function updBattle(dt){
+    if(G.mode!=="battle"||G.state!=="battle"||G.battleOver)return;
+    G._battleUiAcc=(G._battleUiAcc||0)+dt;
+    if(G._battleUiAcc>0.25){G._battleUiAcc=0;battle.updBattleUI();ctx.updDotsUI();}
+    if(Math.max(G.score||0,G.battleOppScore||0)>=85&&global.AIBARecorder&&global.AIBARecorder.arm)global.AIBARecorder.arm("百分大战最后三球");
+    updOppShooter(dt);checkBallCollisions();
+    let jumboAcc=ctx.getJumboAcc()+dt;if(jumboAcc>0.5){jumboAcc=0;updJumbo();}ctx.setJumboAcc(jumboAcc);
+  }
+
+  Object.assign(battle,{mirrorSpot,battlePlayerPos,avoidPlayerOverlap,oppSpotPos,oppSpotQuota,oppSpotCooldown,oppSpotReady,oppMarkSpotUse,oppBeginLoad,startOppShooter,oppPickSpot,oppFireBall,oppScore,updOppShooter,updBattle});
+})(window);
