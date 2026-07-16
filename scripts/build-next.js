@@ -38,11 +38,15 @@ function generate(source){
   html=replaceOnce(html,'<script src="src/navigation.js?v=1.90"></script>','<script src="src/navigation.js?v=refactor8"></script>');
   html=replaceOnce(html,
     '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script>\n/* ---------------- three.js setup ---------------- */',
-    '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script src="src/rendering/core.js?v=refactor16"></script>\n<script>\n/* ---------------- three.js setup ---------------- */');
+    '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script src="src/rendering/core.js?v=refactor16"></script>\n<script src="src/rendering/materials.js?v=refactor17"></script>\n<script>\n/* ---------------- three.js setup ---------------- */');
   html=replaceRange(html,
     '/* ---------------- three.js setup ---------------- */',
     '/* ---------------- pixel texture helpers ---------------- */',
     '/* Renderer, camera, adaptive quality and base lights are owned by src/rendering/core.js in the experimental entry. */\n');
+  html=replaceRange(html,
+    '/* ---------------- pixel texture helpers ---------------- */',
+    '/* ---------------- arena ---------------- */',
+    '/* Pixel textures and ball materials are owned by src/rendering/materials.js in the experimental entry. */\n');
   html=replaceRange(html,
     'function showMenu(){',
     'function sceneSelectMarkup(){',
