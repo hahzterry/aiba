@@ -106,6 +106,12 @@ Move ownership only after modes use explicit contexts.
 
 The main loop remains the last large extraction because audio, vision, recording, camera and every mode meet there.
 
+## UI Migration Checkpoint
+
+- complete: shared panels, loading gate, home cover, mode information, pause and return-home
+- next: difficulty and scene selection, then pregame matchup panels
+- keep player selection and NBA DNA as their existing standalone modules until the shared navigation flow no longer depends on inline globals
+
 ## Phase 5: Cutover
 
 - run the full acceptance matrix on desktop and iPhone
