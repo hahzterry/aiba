@@ -38,7 +38,7 @@ function generate(source){
   html=replaceOnce(html,'<script src="src/navigation.js?v=1.90"></script>','<script src="src/navigation.js?v=refactor8"></script>');
   html=replaceOnce(html,
     '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script>\n/* ---------------- three.js setup ---------------- */',
-    '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script src="src/rendering/core.js?v=refactor16"></script>\n<script src="src/rendering/materials.js?v=refactor17"></script>\n<script src="src/rendering/court.js?v=refactor18"></script>\n<script>\n/* ---------------- three.js setup ---------------- */');
+    '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script src="src/rendering/core.js?v=refactor16"></script>\n<script src="src/rendering/materials.js?v=refactor17"></script>\n<script src="src/rendering/court.js?v=refactor18"></script>\n<script src="src/rendering/arena.js?v=refactor19"></script>\n<script src="src/rendering/spectators.js?v=refactor20"></script>\n<script src="src/rendering/hoop.js?v=refactor21"></script>\n<script src="src/rendering/environments.js?v=refactor22"></script>\n<script>\n/* ---------------- three.js setup ---------------- */');
   html=replaceRange(html,
     '/* ---------------- three.js setup ---------------- */',
     '/* ---------------- pixel texture helpers ---------------- */',
@@ -51,6 +51,22 @@ function generate(source){
     '/* ---------------- arena ---------------- */',
     'function bannerTex(txt,bg,fg){',
     '/* Court textures, floor mesh and active spot ring are owned by src/rendering/court.js in the experimental entry. */\n');
+  html=replaceRange(html,
+    'function bannerTex(txt,bg,fg){',
+    '/* near-court crowd: active basket side only, varied shapes and behavior */',
+    '/* Indoor stands, banners, backcourt show and base crowd are owned by src/rendering/arena.js. */\n');
+  html=replaceRange(html,
+    '/* near-court crowd: active basket side only, varied shapes and behavior */',
+    '/* hoop & net */',
+    '/* Near-court and outdoor spectators are owned by src/rendering/spectators.js. */\n');
+  html=replaceRange(html,
+    '/* hoop & net */',
+    '/* ---------------- scene presets ---------------- */',
+    '/* Hoop, net, arena lights and jumbotron are owned by src/rendering/hoop.js. */\n');
+  html=replaceRange(html,
+    '/* ---------------- scene presets ---------------- */',
+    'function buildRacks(){',
+    '/* Outdoor presets, weather and progressive court environments are owned by src/rendering/environments.js. */\n');
   html=replaceRange(html,
     'function showMenu(){',
     'function sceneSelectMarkup(){',

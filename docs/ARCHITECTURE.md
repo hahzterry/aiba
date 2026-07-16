@@ -93,8 +93,12 @@ app shell
 - `src/rendering/core.js` owns the WebGL renderer, root scene/camera, environment roots, adaptive render scale, resize handling and base lights under `/next/`.
 - `src/rendering/materials.js` owns pixel-canvas textures, basketball skins, shared basketball materials and the ball geometry under `/next/`.
 - `src/rendering/court.js` owns indoor/outdoor court textures, the full-court floor mesh and the active shooting-spot ring under `/next/`.
-- Desktop and portrait scene captures are verified nonblank after the rendering-core, materials and court-floor migrations.
-- The generated experimental entry is now about 4,000 lines, down from roughly 5,600 in the production entry.
+- `src/rendering/arena.js` owns indoor stands, wall banners, the backcourt show and the instanced arena crowd under `/next/`.
+- `src/rendering/spectators.js` owns active-basket spectators and outdoor street crowds, including their reactions.
+- `src/rendering/hoop.js` owns both hoops, backboards, nets, arena light cones and the jumbotron.
+- `src/rendering/environments.js` owns outdoor parks, rain, progressive flowers, beach sunset and court-preset transitions.
+- Desktop and portrait captures cover indoor and outdoor scene construction after the court-element migration.
+- The generated experimental entry is now about 3,000 lines, down from roughly 5,600 in the production entry.
 
 ## Acceptance Matrix
 

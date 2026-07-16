@@ -112,8 +112,9 @@ The main loop remains the last large extraction because audio, vision, recording
 - complete: route parity checks for all four modes and their return-home paths
 - complete: renderer/camera foundations, adaptive quality, resize handling and base lights
 - complete: pixel textures, basketball materials, full-court floor construction and active spot marker
-- next pair: arena atmosphere (stands, spectators and banners), then hoop/backboard and jumbotron construction
-- remaining after that: scene presets, player factories, shooting/effects, and the main loop/input boundary
+- complete: indoor arena, spectators, advertising, hoops, nets, arena lights and jumbotron
+- complete: outdoor presets, street crowds, rain, progressive flowers and beach sunset
+- next: racks and gameplay props, player factories, shooting/camera/effects, then the main loop/input boundary
 - keep player selection and NBA DNA as their existing standalone modules until the shared navigation flow no longer depends on inline globals
 
 ## Phase 5: Cutover
