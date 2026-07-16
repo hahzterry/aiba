@@ -103,8 +103,8 @@
 <div id="ov"><div id="ovBox"></div></div>
 
 <!-- 优先用随包附带的本地 three.js(离线可用、不受 CDN 拦截影响),失败再按顺序回退到各 CDN -->
-<script>window.__AIBA_NEXT__=true;window.__AIBA_DISABLE_PRODUCTION_WRITES__=true;</script>
-<script src="src/core/runtime.js"></script>
+<script>window.__AIBA_NEXT__=true;window.__AIBA_DISABLE_PRODUCTION_WRITES__=true;window.addEventListener("error",function(e){var root=document.documentElement,items=[];try{items=JSON.parse(root.getAttribute("data-aiba-early-errors")||"[]");}catch(_){items=[];}items.push({message:e.message||"",source:e.filename||"",line:e.lineno||0,column:e.colno||0,stack:e.error&&e.error.stack||""});root.setAttribute("data-aiba-early-errors",JSON.stringify(items.slice(-30)));},true);</script>
+<script src="src/core/runtime.js?v=refactor7"></script>
 <script src="vendor/three.min.r128.js"></script>
 <script>typeof THREE==="undefined"&&document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>')</script>
 <script>typeof THREE==="undefined"&&document.write('<script src="https://unpkg.com/three@0.128.0/build/three.min.js"><\/script>')</script>
@@ -3583,127 +3583,7 @@ function updBalls(dt){
   }
 }
 
-/* ---------------- UI helpers ---------------- */
-let toastT=null;
-function toast(txt,col){
-  const el=$("toast");el.textContent=txt;el.style.color=col||"#fff";el.style.opacity=1;
-  clearTimeout(toastT);toastT=setTimeout(()=>el.style.opacity=0,900);
-}
-const _popPool=[];
-function popScore(txt,col){
-  let d=_popPool.pop();
-  if(!d){d=document.createElement("div");d.className="pop";$("pops").appendChild(d);}
-  d.textContent=txt;d.style.color=col;d.style.left=(45+rnd(0,10))+"%";d.style.top="32%";
-  d.style.display="block";d.style.animation="none";d.offsetHeight;d.style.animation="";
-  setTimeout(()=>{d.style.display="none";_popPool.push(d);},1200);
-}
-function showPanel(html){stopCoverVideo();$("ov").classList.remove("cover-menu");$("ovBox").className="";$("ovBox").innerHTML=html;$("ov").style.display="flex";}
-function showCoverPanel(html){stopCoverVideo();$("ov").classList.add("cover-menu");$("ovBox").className="";$("ovBox").innerHTML=html;$("ov").style.display="flex";}
-let coverVideoTimer=null;
-let BOOT_GATE_ACTIVE=true,BOOT_READY=false,BOOT_COVER=null,BOOT_FAILED=0;
-function setBootProgress(done,total,finished,count){
-  const pct=Math.round(clamp(done/Math.max(1,total),0,1)*100);
-  $("bootBar").style.width=pct+"%";$("bootPercent").textContent=pct+"%";
-  $("bootFile").textContent=finished+"/"+count+" 核心资源";
-}
-async function preloadBootAsset(asset,total,state){
-  let ok=true;
-  try{
-    const ctrl=typeof AbortController!=="undefined"?new AbortController():null;
-    const timer=ctrl?setTimeout(()=>ctrl.abort(),12000):null;
-    const res=await fetch(asset.url,{cache:"force-cache",signal:ctrl?ctrl.signal:undefined});
-    if(timer)clearTimeout(timer);
-    if(!res.ok)throw new Error("HTTP "+res.status);
-    await res.arrayBuffer();
-  }catch(e){ok=false;BOOT_FAILED++;}
-  state.done+=asset.weight;state.finished++;
-  setBootProgress(state.done,total,state.finished,state.count);
-  return ok;
-}
-async function ensureUIFontReady(){
-  if(!document.fonts||!document.fonts.load)return;
-  try{
-    await Promise.race([
-      document.fonts.load("700 16px Orbitron"),
-      new Promise(resolve=>setTimeout(resolve,1000))
-    ]);
-  }catch(e){}
-}
-async function bootGame(){
-  BOOT_COVER=COVER_STARS[(Math.random()*COVER_STARS.length)|0];
-  $("bootLoad").addEventListener("pointerdown",unlockBoot,{passive:false});
-  showMenu();
-  const assets=[
-    {url:BOOT_COVER.cover,weight:100000},
-    {url:"assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf",weight:38576},
-    {url:EXT_AUDIO.bgm,weight:807227},
-    {url:EXT_AUDIO.crowd,weight:1119164},
-    {url:EXT_AUDIO.crowdCheer,weight:300975},
-    {url:EXT_AUDIO.rain,weight:731204},
-    {url:EXT_AUDIO.ocean,weight:32684},
-    {url:EXT_AUDIO.gull,weight:32108}
-  ];
-  const usable=assets.filter(a=>a.url),total=usable.reduce((n,a)=>n+a.weight,0);
-  const state={done:0,finished:0,count:usable.length};
-  $("bootStatus").textContent="正在同步画面与球馆声音";
-  const minimum=new Promise(resolve=>setTimeout(resolve,1100));
-  await Promise.all([Promise.all(usable.map(a=>preloadBootAsset(a,total,state))),minimum]);
-  await ensureUIFontReady();
-  setBootProgress(total,total,usable.length,usable.length);
-  BOOT_READY=true;
-  const gate=$("bootLoad");gate.classList.add("ready");gate.setAttribute("aria-busy","false");
-  $("bootStatus").textContent=BOOT_FAILED?"基础资源就绪":"赛场资源就绪";
-  document.documentElement.dataset.bootReady="1";
-}
-function unlockBoot(e){
-  if(!BOOT_GATE_ACTIVE)return false;
-  if(e&&e.preventDefault)e.preventDefault();
-  if(!BOOT_READY)return true;
-  BOOT_GATE_ACTIVE=false;
-  ensureAudio(true,true);
-  startCoverVideo();
-  const gate=$("bootLoad");gate.classList.add("leaving");gate.setAttribute("aria-hidden","true");
-  document.documentElement.dataset.bootStarted="1";
-  setTimeout(()=>{
-    gate.style.display="none";
-    if(SHARED_RACK_RUSH&&!SHARED_RACK_RUSH.opened){SHARED_RACK_RUSH.opened=true;G.mode="rackrush";pickDiff(SHARED_RACK_RUSH.diff);}
-  },460);
-  return true;
-}
-function stopCoverVideo(){
-  clearTimeout(coverVideoTimer);coverVideoTimer=null;
-  const v=document.querySelector(".coverVideo");
-  if(v){try{v.classList.remove("ready");v.pause();v.removeAttribute("src");v.load();}catch(e){}}
-}
-function startCoverVideo(){
-  const v=document.querySelector(".coverVideo");
-  if(!v||!v.dataset.src)return;
-  const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
-  if(matchMedia("(prefers-reduced-motion: reduce)").matches||(conn&&(conn.saveData||/^(slow-)?2g$/.test(conn.effectiveType||""))))return;
-  let failed=false;
-  const fallback=()=>{
-    failed=true;clearTimeout(coverVideoTimer);coverVideoTimer=null;
-    try{v.classList.remove("ready");v.pause();v.removeAttribute("src");v.load();}catch(e){}
-  };
-  const reveal=()=>{
-    if(failed)return;clearTimeout(coverVideoTimer);coverVideoTimer=null;
-    v.classList.add("ready");
-  };
-  v.addEventListener("playing",reveal,{once:true});
-  v.addEventListener("error",fallback,{once:true});
-  v.src=v.dataset.src;v.load();
-  try{const p=v.play();if(p&&p.catch)p.catch(fallback);}catch(e){fallback();return;}
-  coverVideoTimer=setTimeout(()=>{if(v.readyState<2)fallback();},3500);
-}
-function scheduleCoverVideo(){
-  if(BOOT_GATE_ACTIVE)return;
-  coverVideoTimer=setTimeout(()=>{
-    coverVideoTimer=null;
-    if("requestIdleCallback" in window)requestIdleCallback(startCoverVideo,{timeout:1600});
-    else startCoverVideo();
-  },900);
-}
-function hidePanel(){stopCoverVideo();$("ov").style.display="none";}
+/* Panels and loading are owned by src/ui modules in the experimental entry. */
 function pauseableState(){
   return G.state==="round"||G.state==="tiebreak"||G.state==="battle"||G.state==="rackrush"||G.state==="replay";
 }
@@ -4627,10 +4507,10 @@ buildSpotDots();
 applyScenePreset(currentScenePreset,{persist:false});
 applyCamMode();
 handBall.visible=false;
-bootGame();
-animate();
+/* NEXT boot and loop are started by src/core/bootstrap-next.js. */
+//# sourceURL=aiba-next-inline.js
 </script>
-<script src="src/core/legacy-adapter.js?v=refactor4"></script>
+<script src="src/core/legacy-adapter.js?v=refactor7"></script>
 <script src="src/modes/rack-rush.js"></script>
 <script src="src/modes/contest.js"></script>
 <script src="src/modes/practice.js?v=refactor5"></script>
@@ -4639,8 +4519,11 @@ animate();
 <script src="src/modes/percent-battle/opponent.js?v=refactor4"></script>
 <script src="src/modes/percent-battle/results.js?v=refactor4"></script>
 <script src="src/modes/percent-battle/index.js?v=refactor4"></script>
+<script src="src/ui/panels.js?v=refactor7"></script>
+<script src="src/ui/loading.js?v=refactor7"></script>
+<script src="src/core/bootstrap-next.js?v=refactor7"></script>
 <script src="src/game-flow.js?v=1.93"></script>
-<script src="src/navigation.js?v=1.90"></script>
+<script src="src/navigation.js?v=refactor8"></script>
 <script src="src/scene-lifecycle.js?v=1.88"></script>
 <script src="src/result-stats.js?v=1.78"></script>
 <script src="src/gear.js?v=1.81"></script>

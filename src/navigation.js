@@ -6,7 +6,7 @@
   function sync(){
     const button=$("homeBtn");
     if(!button)return;
-    const visible=!BOOT_GATE_ACTIVE&&G.state!=="boot"&&G.state!=="menu";
+    const visible=!global.BOOT_GATE_ACTIVE&&G.state!=="boot"&&G.state!=="menu";
     button.classList.toggle("ready",visible);
     button.setAttribute("aria-hidden",visible?"false":"true");
   }
@@ -31,7 +31,7 @@
 
   function returnHome(){
     PAUSE.on=false;
-    hidePanel();
+    global.hidePanel();
     clearLiveObjectsForMenu();
     showMenu();
     updatePauseButton();
@@ -40,7 +40,7 @@
 
   function requestHome(event){
     if(event){event.preventDefault();event.stopPropagation();}
-    if(BOOT_GATE_ACTIVE||G.state==="menu")return;
+    if(global.BOOT_GATE_ACTIVE||G.state==="menu")return;
     if(PAUSE.on){returnHomeFromPause();sync();return;}
     if(pauseableState()){openPauseMenu(event);sync();return;}
     returnHome();
@@ -54,19 +54,20 @@
   function wireBootGate(){
     const gate=$("bootLoad");
     if(!gate)return;
-    gate.removeEventListener("pointerdown",unlockBoot);
+    gate.removeEventListener("pointerdown",global.unlockBoot);
     gate.addEventListener("pointerup",event=>{
       consumeBootEvent(event);
-      unlockBoot(event);
+      global.unlockBoot(event);
       sync();
     },{passive:false});
     gate.addEventListener("click",consumeBootEvent,{passive:false});
   }
 
   function wirePanelSync(){
-    const panel=showPanel,cover=showCoverPanel;
-    showPanel=function(html){const result=panel(html);sync();return result;};
-    showCoverPanel=function(html){const result=cover(html);sync();return result;};
+    const panel=global.showPanel,cover=global.showCoverPanel;
+    if(typeof panel!=="function"||typeof cover!=="function")return;
+    global.showPanel=function(html){const result=panel(html);sync();return result;};
+    global.showCoverPanel=function(html){const result=cover(html);sync();return result;};
   }
 
   function boot(){

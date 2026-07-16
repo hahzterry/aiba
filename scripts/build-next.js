@@ -27,12 +27,13 @@ function generate(source){
   html=replaceOnce(html,"<head>","<head>\n<base href=\"../\">\n<meta name=\"aiba-entry\" content=\"next\">");
   html=replaceOnce(html,"<title>aiBA·百分大战 v1.94 PORTRAIT LOCK</title>","<title>aiBA·百分大战 v1.94 NEXT</title>");
   html=replaceOnce(html,'<script src="vendor/three.min.r128.js"></script>',[
-    '<script>window.__AIBA_NEXT__=true;window.__AIBA_DISABLE_PRODUCTION_WRITES__=true;</script>',
-    '<script src="src/core/runtime.js"></script>',
+    '<script>window.__AIBA_NEXT__=true;window.__AIBA_DISABLE_PRODUCTION_WRITES__=true;window.addEventListener("error",function(e){var root=document.documentElement,items=[];try{items=JSON.parse(root.getAttribute("data-aiba-early-errors")||"[]");}catch(_){items=[];}items.push({message:e.message||"",source:e.filename||"",line:e.lineno||0,column:e.colno||0,stack:e.error&&e.error.stack||""});root.setAttribute("data-aiba-early-errors",JSON.stringify(items.slice(-30)));},true);</script>',
+    '<script src="src/core/runtime.js?v=refactor7"></script>',
     '<script src="vendor/three.min.r128.js"></script>'
   ].join("\n"));
   html=replaceOnce(html,'<script src="src/player-id.js"></script>','<script src="src/core/player-id-sandbox.js"></script>');
   html=replaceOnce(html,'<script src="src/leaderboard-api.js"></script>','<script src="src/core/leaderboard-sandbox.js"></script>');
+  html=replaceOnce(html,'<script src="src/navigation.js?v=1.90"></script>','<script src="src/navigation.js?v=refactor8"></script>');
   html=replaceRange(html,
     '/* ---------------- RACK RUSH: 投篮机闯关 ---------------- */',
     'const BATTLE_RUNS_KEY=',
@@ -66,12 +67,19 @@ function generate(source){
     '/* shadow blob */',
     '/* Practice flow is owned by src/modes/practice.js in the experimental entry. */\n\n/* shadow blob */');
   html=replaceRange(html,
+    '/* ---------------- UI helpers ---------------- */',
+    'function pauseableState(){',
+    '/* Panels and loading are owned by src/ui modules in the experimental entry. */\n');
+  html=replaceRange(html,
     '  // 练习结束检测',
     '  // states',
     '  updatePractice(dt);\n  // states');
   html=replaceOnce(html,
+    'bootGame();\nanimate();',
+    '/* NEXT boot and loop are started by src/core/bootstrap-next.js. */\n//# sourceURL=aiba-next-inline.js');
+  html=replaceOnce(html,
     '</script>\n<script src="src/game-flow.js?v=1.93"></script>',
-    '</script>\n<script src="src/core/legacy-adapter.js?v=refactor4"></script>\n<script src="src/modes/rack-rush.js"></script>\n<script src="src/modes/contest.js"></script>\n<script src="src/modes/practice.js?v=refactor5"></script>\n<script src="src/modes/percent-battle/state.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/spots.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/opponent.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/results.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/index.js?v=refactor4"></script>\n<script src="src/game-flow.js?v=1.93"></script>');
+    '</script>\n<script src="src/core/legacy-adapter.js?v=refactor7"></script>\n<script src="src/modes/rack-rush.js"></script>\n<script src="src/modes/contest.js"></script>\n<script src="src/modes/practice.js?v=refactor5"></script>\n<script src="src/modes/percent-battle/state.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/spots.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/opponent.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/results.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/index.js?v=refactor4"></script>\n<script src="src/ui/panels.js?v=refactor7"></script>\n<script src="src/ui/loading.js?v=refactor7"></script>\n<script src="src/core/bootstrap-next.js?v=refactor7"></script>\n<script src="src/game-flow.js?v=1.93"></script>');
   return html;
 }
 
