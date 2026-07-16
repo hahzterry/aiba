@@ -7,6 +7,7 @@
   runtime.attachLegacy({
     $,
     G,
+    PAUSE,
     DIFFS,
     TALK_PRE,
     COVER_STARS,
@@ -36,6 +37,7 @@
     deepBalls,
     player,
     passer,
+    passerBall,
     handBall,
     pBall,
     hands,
@@ -136,6 +138,7 @@
     pickDiff,
     getCurSpotRing:()=>curSpotRing,
     getWinCine:()=>winCine,
+    rep,
     refreshBench:()=>benchVis(),
     getJumboAcc:()=>jumboAcc,
     setJumboAcc:value=>{jumboAcc=value;},

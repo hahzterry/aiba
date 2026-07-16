@@ -3584,83 +3584,7 @@ function updBalls(dt){
 }
 
 /* Panels and loading are owned by src/ui modules in the experimental entry. */
-function pauseableState(){
-  return G.state==="round"||G.state==="tiebreak"||G.state==="battle"||G.state==="rackrush"||G.state==="replay";
-}
-function updatePauseButton(){
-  const btn=$("pauseBtn");if(!btn)return;
-  btn.classList.toggle("ready",!BOOT_GATE_ACTIVE&&(PAUSE.on||pauseableState()));
-}
-function pauseModeLabel(){
-  if(G.mode==="battle")return "百分大战";
-  if(G.mode==="rackrush")return G.rush&&isRackRushSpeed(G.rush)?"百分竞速":"投篮机挑战";
-  if(G.practice)return "练习模式";
-  return "三分大赛";
-}
-function pauseScoreLine(){
-  if(G.mode==="battle")return `你 ${Math.min(G.score||0,BATTLE_TARGET)} : ${Math.min(G.battleOppScore||0,BATTLE_TARGET)} ${G.battleOpp?G.battleOpp.n:"对手"}`;
-  if(G.mode==="rackrush"&&G.rush)return `${G.rush.total||0} 分 · ${isRackRushSpeed(G.rush)?formatRackRushClock(G.rush.elapsed||0):("L"+((G.rush.level||0)+1))}`;
-  if(G.practice)return "热身中";
-  return `${G.score||0} 分 · ${Math.max(0,G.timer||0).toFixed(1)} 秒`;
-}
-function cancelLiveChargeForPause(){
-  if(typeof cancelVisionOwnedCharge==="function")cancelVisionOwnedCharge();
-  if(!G.charging)return;
-  G.charging=false;G.power=0;G.apexed=false;$("pFill").style.height="0%";
-  if(typeof hidePlayerPowerUI==="function")hidePlayerPowerUI();
-}
-function openPauseMenu(e){
-  if(e){e.preventDefault();e.stopPropagation();}
-  if(PAUSE.on||!pauseableState())return;
-  PAUSE.on=true;PAUSE.state=G.state;PAUSE.mode=G.mode;PAUSE.wasRunning=G.running;PAUSE.canShoot=G.canShoot;
-  PAUSE.rushVariant=G.rush&&G.rush.variant?G.rush.variant:null;PAUSE.practice=!!G.practice;
-  cancelLiveChargeForPause();
-  G.running=false;G.canShoot=false;
-  if(G.mode==="battle")pauseBattleClock();
-  updatePauseButton();
-  showPanel(`<div class="pausePanel">
-    <div class="pauseMeta">GAME PAUSED</div>
-    <h1>${pauseModeLabel()}</h1>
-    <div class="card">当前进度：<b style="color:#ffd23f">${pauseScoreLine()}</b><br><span style="color:#9ab">可以继续、重开当前模式，或直接返回首页。</span></div>
-    <div class="pauseActions">
-      <button class="btn green" onclick="resumePauseMenu()">继续比赛</button>
-      <button class="btn gold" onclick="restartPausedMode()">重开当前模式</button>
-      <button class="btn red" onclick="returnHomeFromPause()">返回首页</button>
-    </div>
-  </div>`);
-}
-function resumePauseMenu(){
-  if(!PAUSE.on)return;
-  const wasRunning=PAUSE.wasRunning,canShoot=PAUSE.canShoot||G.canShoot;
-  PAUSE.on=false;G.running=wasRunning;G.canShoot=canShoot;
-  if(G.mode==="battle"&&G.state==="battle"&&!G.battleCut&&!G.battleOver)resumeBattleClock();
-  hidePanel();updatePauseButton();
-}
-function clearLiveObjectsForMenu(){if(window.AIBANavigation)AIBANavigation.cleanup();
-  if(passing){scene.remove(passing.mesh);passing=null;}
-  balls.slice().forEach(b=>{scene.remove(b.mesh);scene.remove(b.blob);});balls.length=0;
-  G.charging=false;G.canShoot=false;G.running=false;G.moving=false;G.glideCam=false;G.cutAway=null;G.battleCut=null;
-  handBall.visible=false;pBall.visible=false;if(passerBall)passerBall.visible=true;
-  if(typeof endHero==="function")endHero();
-  if(typeof rep!=="undefined"){rep.on=false;if(rep.ghost)rep.ghost.visible=false;if(rep.gBlob)rep.gBlob.visible=false;}
-  if(typeof winCine!=="undefined")winCine.on=false;
-  $("lbT").style.height="0";$("lbB").style.height="0";$("repUI").style.display="none";$("vsBanner").style.display="none";
-  $("battleControls").style.display="none";$("battleScore").style.display="none";$("midBtn").style.display="none";
-  $("hud").style.display="none";leaveArenaAudio();applyCamMode();
-}
-function restartPausedMode(){
-  if(!PAUSE.on)return;
-  const mode=PAUSE.mode,variant=PAUSE.rushVariant||"classic",practice=PAUSE.practice;
-  PAUSE.on=false;hidePanel();clearLiveObjectsForMenu();updatePauseButton();
-  if(mode==="battle"){startBattle();return;}
-  if(mode==="rackrush"){startRackRush(variant);return;}
-  if(practice){startPractice();return;}
-  startRound();
-}
-function returnHomeFromPause(){
-  if(!PAUSE.on)return;
-  PAUSE.on=false;hidePanel();clearLiveObjectsForMenu();showMenu();updatePauseButton();
-}
+/* Pause and return-home flow are owned by src/ui/pause.js in the experimental entry. */
 function stars(r){const n=Math.round((r-82)/3);return "★".repeat(clamp(n,2,5));}
 const COVER_QUOTES=[
   {by:"Michael Jordan",line:"我可以接受失败,但不能接受从未尝试。"},
@@ -4510,7 +4434,7 @@ handBall.visible=false;
 /* NEXT boot and loop are started by src/core/bootstrap-next.js. */
 //# sourceURL=aiba-next-inline.js
 </script>
-<script src="src/core/legacy-adapter.js?v=refactor7"></script>
+<script src="src/core/legacy-adapter.js?v=refactor10"></script>
 <script src="src/modes/rack-rush.js"></script>
 <script src="src/modes/contest.js"></script>
 <script src="src/modes/practice.js?v=refactor5"></script>
@@ -4521,7 +4445,8 @@ handBall.visible=false;
 <script src="src/modes/percent-battle/index.js?v=refactor4"></script>
 <script src="src/ui/panels.js?v=refactor7"></script>
 <script src="src/ui/loading.js?v=refactor7"></script>
-<script src="src/core/bootstrap-next.js?v=refactor7"></script>
+<script src="src/ui/pause.js?v=refactor10"></script>
+<script src="src/core/bootstrap-next.js?v=refactor10"></script>
 <script src="src/game-flow.js?v=1.93"></script>
 <script src="src/navigation.js?v=refactor8"></script>
 <script src="src/scene-lifecycle.js?v=1.88"></script>
