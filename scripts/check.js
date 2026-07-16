@@ -404,7 +404,7 @@ catch(e){fail("game flow script syntax error: "+e.message);}
 for(const token of ["rookieMeterProgress","G.diff===\"easy\"","updatePregameWarmupShot","updatePregameChalk","updatePlayerLockCamera"])
   if(!gameFlow.includes(token))fail("game flow token missing "+token);
 
-for(const rel of ["src/core/runtime.js","src/core/player-id-sandbox.js","src/core/leaderboard-sandbox.js","src/core/legacy-adapter.js","src/core/bootstrap-next.js","src/rendering/core.js","src/rendering/materials.js","src/modes/rack-rush.js","src/modes/contest.js","src/modes/practice.js","src/modes/percent-battle/state.js","src/modes/percent-battle/spots.js","src/modes/percent-battle/opponent.js","src/modes/percent-battle/results.js","src/modes/percent-battle/index.js","src/ui/panels.js","src/ui/loading.js","src/ui/menu.js","src/ui/setup.js","src/ui/pregame.js","src/ui/pause.js"]){
+for(const rel of ["src/core/runtime.js","src/core/player-id-sandbox.js","src/core/leaderboard-sandbox.js","src/core/legacy-adapter.js","src/core/bootstrap-next.js","src/rendering/core.js","src/rendering/materials.js","src/rendering/court.js","src/modes/rack-rush.js","src/modes/contest.js","src/modes/practice.js","src/modes/percent-battle/state.js","src/modes/percent-battle/spots.js","src/modes/percent-battle/opponent.js","src/modes/percent-battle/results.js","src/modes/percent-battle/index.js","src/ui/panels.js","src/ui/loading.js","src/ui/menu.js","src/ui/setup.js","src/ui/pregame.js","src/ui/pause.js"]){
   try{new Function(read(rel));}
   catch(e){fail(rel+" syntax error: "+e.message);}
 }
@@ -433,6 +433,11 @@ for(const token of ['runtime.register("rendering:materials"',"function pixTex","
   if(!renderingMaterials.includes(token))fail("rendering materials token missing "+token);
 if(!nextHtml.includes('src/rendering/materials.js?v=refactor17'))fail("next entry must load rendering materials");
 if(nextHtml.includes("function realBallTex("))fail("next entry still contains inline ball materials");
+const renderingCourt=read("src/rendering/court.js");
+for(const token of ['runtime.register("rendering:court"',"function makeCourtTexture","function buildCourt","courtIndoorTexture","curSpotRing=new THREE.Mesh"])
+  if(!renderingCourt.includes(token))fail("rendering court token missing "+token);
+if(!nextHtml.includes('src/rendering/court.js?v=refactor18'))fail("next entry must load rendering court");
+if(nextHtml.includes("function makeCourtTexture("))fail("next entry still contains inline court texture builder");
 
 const sandbox={window:{}};
 vm.createContext(sandbox);

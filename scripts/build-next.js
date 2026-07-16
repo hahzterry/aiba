@@ -38,7 +38,7 @@ function generate(source){
   html=replaceOnce(html,'<script src="src/navigation.js?v=1.90"></script>','<script src="src/navigation.js?v=refactor8"></script>');
   html=replaceOnce(html,
     '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script>\n/* ---------------- three.js setup ---------------- */',
-    '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script src="src/rendering/core.js?v=refactor16"></script>\n<script src="src/rendering/materials.js?v=refactor17"></script>\n<script>\n/* ---------------- three.js setup ---------------- */');
+    '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script src="src/rendering/core.js?v=refactor16"></script>\n<script src="src/rendering/materials.js?v=refactor17"></script>\n<script src="src/rendering/court.js?v=refactor18"></script>\n<script>\n/* ---------------- three.js setup ---------------- */');
   html=replaceRange(html,
     '/* ---------------- three.js setup ---------------- */',
     '/* ---------------- pixel texture helpers ---------------- */',
@@ -47,6 +47,10 @@ function generate(source){
     '/* ---------------- pixel texture helpers ---------------- */',
     '/* ---------------- arena ---------------- */',
     '/* Pixel textures and ball materials are owned by src/rendering/materials.js in the experimental entry. */\n');
+  html=replaceRange(html,
+    '/* ---------------- arena ---------------- */',
+    'function bannerTex(txt,bg,fg){',
+    '/* Court textures, floor mesh and active spot ring are owned by src/rendering/court.js in the experimental entry. */\n');
   html=replaceRange(html,
     'function showMenu(){',
     'function sceneSelectMarkup(){',

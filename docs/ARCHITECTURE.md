@@ -91,8 +91,10 @@ app shell
 - `src/ui/panels.js`, `loading.js`, `menu.js`, `setup.js`, `pregame.js` and `pause.js` own shared overlays, the loading gate, the home cover/mode information, difficulty/court selection, pregame roster drawing/matchups, and pause/return-home flow under `/next/`.
 - Route parity is verified for Rack Rush, Percent Battle, Three-Point Contest and NBA DNA, including return-home paths without a refresh.
 - `src/rendering/core.js` owns the WebGL renderer, root scene/camera, environment roots, adaptive render scale, resize handling and base lights under `/next/`.
-- Desktop and portrait scene captures are verified nonblank after the rendering-core migration.
-- The generated experimental entry is now about 4,200 lines, down from roughly 5,600 in the production entry.
+- `src/rendering/materials.js` owns pixel-canvas textures, basketball skins, shared basketball materials and the ball geometry under `/next/`.
+- `src/rendering/court.js` owns indoor/outdoor court textures, the full-court floor mesh and the active shooting-spot ring under `/next/`.
+- Desktop and portrait scene captures are verified nonblank after the rendering-core, materials and court-floor migrations.
+- The generated experimental entry is now about 4,000 lines, down from roughly 5,600 in the production entry.
 
 ## Acceptance Matrix
 
