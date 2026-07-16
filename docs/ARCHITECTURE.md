@@ -87,7 +87,8 @@ app shell
 - Contest replay remains in the legacy core because its camera, ball ghost and render-loop integration are shared rendering concerns.
 - `src/modes/percent-battle/` owns battle state and clock, spot stocks and cooldowns, opponent decisions and animation, and result construction under `/next/`.
 - Percent Battle ball collision, final-shot cinematic and camera updates remain in the shared core because other rendering systems call them directly.
-- The experimental entry now contains about 4,700 inline lines, down from roughly 5,500 in the production entry.
+- `src/modes/practice.js` owns the three-shot warmup lifecycle and completion detection; it deliberately calls the shared shot lifecycle instead of duplicating it.
+- The experimental entry now contains about 4,600 inline lines, down from roughly 5,500 in the production entry.
 
 ## Acceptance Matrix
 

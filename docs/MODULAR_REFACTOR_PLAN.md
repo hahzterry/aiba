@@ -89,7 +89,7 @@ Migrate one mode per commit:
 
 1. contest: experimental flow migration complete and manually accepted; replay intentionally remains shared
 2. percent battle: state, spots, opponent and results migrated; shot collision and hero camera intentionally remain shared
-3. practice/shared shot session
+3. practice: start, finish and three-shot completion detection migrated; shared shot lifecycle remains core-owned
 4. NBA DNA flow only if it still depends on the core shell
 
 Do not create a universal mode abstraction until two real mode migrations prove the shared contract.

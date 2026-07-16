@@ -61,9 +61,17 @@ function generate(source){
     'function finishBattle(win,ball){',
     '/* ---------------- 英雄时刻:制胜球电影化慢动作 ---------------- */',
     '/* Percent Battle result flow is owned by src/modes/percent-battle/results.js. */\n/* ---------------- 英雄时刻:制胜球电影化慢动作 ---------------- */');
+  html=replaceRange(html,
+    'function startPractice(){',
+    '/* shadow blob */',
+    '/* Practice flow is owned by src/modes/practice.js in the experimental entry. */\n\n/* shadow blob */');
+  html=replaceRange(html,
+    '  // 练习结束检测',
+    '  // states',
+    '  updatePractice(dt);\n  // states');
   html=replaceOnce(html,
     '</script>\n<script src="src/game-flow.js?v=1.93"></script>',
-    '</script>\n<script src="src/core/legacy-adapter.js?v=refactor4"></script>\n<script src="src/modes/rack-rush.js"></script>\n<script src="src/modes/contest.js"></script>\n<script src="src/modes/percent-battle/state.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/spots.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/opponent.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/results.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/index.js?v=refactor4"></script>\n<script src="src/game-flow.js?v=1.93"></script>');
+    '</script>\n<script src="src/core/legacy-adapter.js?v=refactor4"></script>\n<script src="src/modes/rack-rush.js"></script>\n<script src="src/modes/contest.js"></script>\n<script src="src/modes/practice.js?v=refactor5"></script>\n<script src="src/modes/percent-battle/state.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/spots.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/opponent.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/results.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/index.js?v=refactor4"></script>\n<script src="src/game-flow.js?v=1.93"></script>');
   return html;
 }
 

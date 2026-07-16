@@ -3075,40 +3075,9 @@ function battleScoreCallout(prevMe,prevOpp){
     toast("最后5分! "+me+" : "+op,"#ffd23f");
   }
 }
-function startPractice(){
-  ensureAudio(false);
-  hidePanel();music(false);resetProgressiveSceneForRun();
-  G.practice=true;G.moneyRack=(Math.random()*5)|0;
-  G.seq=[0,1,2].map(b=>({rack:2,ball:b,val:1,money:false,deep:null}));
-  G.shotIdx=0;G.shots=[];G.score=0;G.streak=0;G.timer=0;G.running=false;G.buzzed=false;
-  G.canShoot=false;G.blindToasted=false;G.cutQ=[];
-  balls.slice().forEach(b=>{scene.remove(b.mesh);scene.remove(b.blob);});balls.length=0;
-  resetRackBalls();
-  $("scoreNum").textContent="-";$("hudStreak").style.display="none";
-  $("hudTimer").style.display="block";$("hudTimer").textContent="热身";$("hudTimer").className="";
-  $("hudRound").innerHTML="练习模式<br><span style='color:#778'>无计时 · 无计分</span>";
-  $("hudTarget").textContent="";
-  $("hud").style.display="block";
-  const b0=RACKS[2].p;
-  P.pos.copy(b0);P.face=faceTo(b0,HOOP);P.walking=false;P.jump=0;P.eyeDip=0;
-  G.state="cinematic";
-  rig.pos.set(0,9,6);rig.look.copy(HOOP);
-  glideTo(shotEye(G.seq[0]),HOOP.clone().add(V3(0,0.15,0)),1.4,()=>{
-    G.state="round";applyCamMode();readyBall();
-    toast("热身 · 按住蓄力,顶点出手!","#ffd23f");
-  });
-}
-function endPractice(){
-  G.practice=false;
-  $("hud").style.display="none";applyCamMode();
-  const made=G.shots.filter(s=>s.made).length;
-  showPanel(`<h1 class="title" style="font-size:20px">热身结束 · ${made}/3</h1>
-    <div class="note">${made>=2?"手感不错,上场吧!":"找到节奏了吗?顶点出手是关键"}</div>
-    <button class="btn gold" onclick="hidePanel();beginStage()">开始比赛 →</button>
-    <button class="btn sm" onclick="startPractice()">再来 3 球</button>`);
-}
+/* Practice flow is owned by src/modes/practice.js in the experimental entry. */
 
-/* shadow blob */
+/* shadow blob *//* shadow blob */
 const blobGeo=new THREE.CircleGeometry(0.18,8);
 const blobMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.35});
 
@@ -4590,11 +4559,8 @@ function animate(){
   if(G.state==="round"&&!frozen)tryCutAway();
   if(G.cutAway)updCutAway(dt);
   if(G.battleCut)updBattleCut(dt);
-  // 练习结束检测
-  if(G.practice&&G.state==="round"&&G.shotIdx>=G.seq.length&&balls.length===0&&!G.charging&&!passing){
-    endPractice();
-  }
-  // states
+  updatePractice(dt);
+  // states  // states
   if(G.state==="round"&&G.running&&!G.practice){
     G.timer-=dt;
     if(G.timer<35&&!G.organed){G.organed=true;organCharge();}if(G.timer<=12&&window.AIBARecorder&&AIBARecorder.arm)AIBARecorder.arm(G.stage==="final"?"决赛最后三球":"半决赛最后三球");if(!G.finalTenTriggered&&G.timer<=10&&G.seq&&G.shotIdx<G.seq.length){G.finalTenTriggered=true;playAudioEvent("contest_final10");}
@@ -4667,6 +4633,7 @@ animate();
 <script src="src/core/legacy-adapter.js?v=refactor4"></script>
 <script src="src/modes/rack-rush.js"></script>
 <script src="src/modes/contest.js"></script>
+<script src="src/modes/practice.js?v=refactor5"></script>
 <script src="src/modes/percent-battle/state.js?v=refactor4"></script>
 <script src="src/modes/percent-battle/spots.js?v=refactor4"></script>
 <script src="src/modes/percent-battle/opponent.js?v=refactor4"></script>

@@ -49,6 +49,7 @@ const requiredFiles=[
   "src/core/legacy-adapter.js",
   "src/modes/rack-rush.js",
   "src/modes/contest.js",
+  "src/modes/practice.js",
   "src/modes/percent-battle/state.js",
   "src/modes/percent-battle/spots.js",
   "src/modes/percent-battle/opponent.js",
@@ -86,15 +87,19 @@ if(nextHtml.indexOf('src/core/runtime.js')>nextHtml.indexOf('src/config.js'))fai
 if(!nextHtml.includes('<script src="src/core/legacy-adapter.js?v=refactor4"></script>'))fail("next legacy adapter missing");
 if(!nextHtml.includes('<script src="src/modes/rack-rush.js"></script>'))fail("next Rack Rush module missing");
 if(!nextHtml.includes('<script src="src/modes/contest.js"></script>'))fail("next contest module missing");
+if(!nextHtml.includes('<script src="src/modes/practice.js?v=refactor5"></script>'))fail("next practice module missing");
 for(const file of ["state","spots","opponent","results","index"]){
   if(!nextHtml.includes(`<script src="src/modes/percent-battle/${file}.js?v=refactor4"></script>`))fail(`next Percent Battle ${file} module missing`);
 }
 if(nextHtml.includes("function startRackRush("))fail("next entry still contains inline Rack Rush implementation");
 if(nextHtml.includes("function beginStage(")||nextHtml.includes("function champion("))fail("next entry still contains inline contest implementation");
+if(nextHtml.includes("function startPractice(")||nextHtml.includes("function endPractice("))fail("next entry still contains inline practice implementation");
+if(!nextHtml.includes("updatePractice(dt);"))fail("next main loop does not dispatch practice updates");
 if(nextHtml.includes("function startBattle(")||nextHtml.includes("function battleRefreshSpot(")||nextHtml.includes("function startOppShooter(")||nextHtml.includes("function finishBattle("))fail("next entry still contains inline Percent Battle implementation");
 if(nextHtml.indexOf('<script src="src/core/legacy-adapter.js?v=refactor4"></script>')>nextHtml.indexOf('<script src="src/modes/rack-rush.js"></script>'))fail("legacy adapter must load before Rack Rush module");
 if(nextHtml.indexOf('<script src="src/modes/rack-rush.js"></script>')>nextHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Rack Rush module must load before late hooks");
 if(nextHtml.indexOf('<script src="src/modes/contest.js"></script>')>nextHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("contest module must load before late hooks");
+if(nextHtml.indexOf('<script src="src/modes/contest.js"></script>')>nextHtml.indexOf('<script src="src/modes/practice.js?v=refactor5"></script>'))fail("contest module must load before practice module");
 if(nextHtml.indexOf('<script src="src/modes/contest.js"></script>')>nextHtml.indexOf('<script src="src/modes/percent-battle/state.js?v=refactor4"></script>'))fail("contest module must load before Percent Battle modules");
 for(const pair of [["state","spots"],["spots","opponent"],["opponent","results"],["results","index"]]){
   if(nextHtml.indexOf(`src/modes/percent-battle/${pair[0]}.js`)>nextHtml.indexOf(`src/modes/percent-battle/${pair[1]}.js`))fail(`Percent Battle ${pair[0]} must load before ${pair[1]}`);
@@ -357,7 +362,7 @@ catch(e){fail("game flow script syntax error: "+e.message);}
 for(const token of ["rookieMeterProgress","G.diff===\"easy\"","updatePregameWarmupShot","updatePregameChalk","updatePlayerLockCamera"])
   if(!gameFlow.includes(token))fail("game flow token missing "+token);
 
-for(const rel of ["src/core/runtime.js","src/core/player-id-sandbox.js","src/core/leaderboard-sandbox.js","src/core/legacy-adapter.js","src/modes/rack-rush.js","src/modes/contest.js","src/modes/percent-battle/state.js","src/modes/percent-battle/spots.js","src/modes/percent-battle/opponent.js","src/modes/percent-battle/results.js","src/modes/percent-battle/index.js"]){
+for(const rel of ["src/core/runtime.js","src/core/player-id-sandbox.js","src/core/leaderboard-sandbox.js","src/core/legacy-adapter.js","src/modes/rack-rush.js","src/modes/contest.js","src/modes/practice.js","src/modes/percent-battle/state.js","src/modes/percent-battle/spots.js","src/modes/percent-battle/opponent.js","src/modes/percent-battle/results.js","src/modes/percent-battle/index.js"]){
   try{new Function(read(rel));}
   catch(e){fail(rel+" syntax error: "+e.message);}
 }
