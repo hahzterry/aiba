@@ -110,7 +110,8 @@ The main loop remains the last large extraction because audio, vision, recording
 
 - complete: shared panels, loading gate, home cover, mode information, difficulty/scene selection, pregame roster drawing/matchup panels, pause and return-home
 - complete: route parity checks for all four modes and their return-home paths
-- next: begin rendering ownership with renderer/camera foundations, then scene/court construction
+- complete: renderer/camera foundations, adaptive quality, resize handling and base lights
+- next: scene/court construction, then hoop and arena atmosphere
 - keep player selection and NBA DNA as their existing standalone modules until the shared navigation flow no longer depends on inline globals
 
 ## Phase 5: Cutover

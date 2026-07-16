@@ -48,6 +48,7 @@ const requiredFiles=[
   "src/core/leaderboard-sandbox.js",
   "src/core/legacy-adapter.js",
   "src/core/bootstrap-next.js",
+  "src/rendering/core.js",
   "src/modes/rack-rush.js",
   "src/modes/contest.js",
   "src/modes/practice.js",
@@ -91,9 +92,11 @@ if(!nextHtml.includes('<script src="src/core/player-id-sandbox.js"></script>'))f
 if(!nextHtml.includes('<script src="src/core/leaderboard-sandbox.js"></script>'))fail("next leaderboard sandbox missing");
 if(!nextHtml.includes('<script src="src/recorder.js?v=refactor9"></script>'))fail("next recorder cache version missing");
 if(!nextHtml.includes('<script src="src/vision.js?v=refactor11"></script>'))fail("next vision cache version missing");
+if(!nextHtml.includes('<script src="src/rendering/core.js?v=refactor16"></script>'))fail("next rendering core missing");
 if(nextHtml.includes('<script src="src/player-id.js"></script>'))fail("next entry must not load production identity");
 if(nextHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("next entry must not load production leaderboard API");
 if(nextHtml.indexOf('src/core/runtime.js')>nextHtml.indexOf('src/config.js'))fail("next runtime must load before config");
+if(nextHtml.indexOf('<script src="src/rendering/core.js?v=refactor16"></script>')>nextHtml.indexOf('/* Renderer, camera, adaptive quality and base lights'))fail("rendering core must load before arena construction");
 if(!nextHtml.includes('<script src="src/core/legacy-adapter.js?v=refactor15"></script>'))fail("next legacy adapter missing");
 if(!nextHtml.includes('<script src="src/modes/rack-rush.js"></script>'))fail("next Rack Rush module missing");
 if(!nextHtml.includes('<script src="src/modes/contest.js"></script>'))fail("next contest module missing");
@@ -116,6 +119,7 @@ if(nextHtml.includes("function pauseableState(")||nextHtml.includes("function re
 if(nextHtml.includes("function showMenu(")||nextHtml.includes("function showModeInfo("))fail("next entry still contains inline home menu implementation");
 if(nextHtml.includes("function sceneSelectMarkup(")||nextHtml.includes("function showScenePicker(")||nextHtml.includes("function goDiff("))fail("next entry still contains inline difficulty setup implementation");
 if(nextHtml.includes("function pickDiff(")||nextHtml.includes("function showBattleIntro("))fail("next entry still contains inline pregame implementation");
+if(nextHtml.includes("const renderer=new THREE.WebGLRenderer")||nextHtml.includes("function updateRenderQuality(")||nextHtml.includes("const ambient=new THREE.AmbientLight"))fail("next entry still contains inline rendering core implementation");
 if(nextHtml.includes("bootGame();\nanimate();"))fail("next entry still starts boot and loop inline");
 if(!nextHtml.includes("updatePractice(dt);"))fail("next main loop does not dispatch practice updates");
 if(nextHtml.includes("function startBattle(")||nextHtml.includes("function battleRefreshSpot(")||nextHtml.includes("function startOppShooter(")||nextHtml.includes("function finishBattle("))fail("next entry still contains inline Percent Battle implementation");
@@ -400,7 +404,7 @@ catch(e){fail("game flow script syntax error: "+e.message);}
 for(const token of ["rookieMeterProgress","G.diff===\"easy\"","updatePregameWarmupShot","updatePregameChalk","updatePlayerLockCamera"])
   if(!gameFlow.includes(token))fail("game flow token missing "+token);
 
-for(const rel of ["src/core/runtime.js","src/core/player-id-sandbox.js","src/core/leaderboard-sandbox.js","src/core/legacy-adapter.js","src/core/bootstrap-next.js","src/modes/rack-rush.js","src/modes/contest.js","src/modes/practice.js","src/modes/percent-battle/state.js","src/modes/percent-battle/spots.js","src/modes/percent-battle/opponent.js","src/modes/percent-battle/results.js","src/modes/percent-battle/index.js","src/ui/panels.js","src/ui/loading.js","src/ui/menu.js","src/ui/setup.js","src/ui/pregame.js","src/ui/pause.js"]){
+for(const rel of ["src/core/runtime.js","src/core/player-id-sandbox.js","src/core/leaderboard-sandbox.js","src/core/legacy-adapter.js","src/core/bootstrap-next.js","src/rendering/core.js","src/modes/rack-rush.js","src/modes/contest.js","src/modes/practice.js","src/modes/percent-battle/state.js","src/modes/percent-battle/spots.js","src/modes/percent-battle/opponent.js","src/modes/percent-battle/results.js","src/modes/percent-battle/index.js","src/ui/panels.js","src/ui/loading.js","src/ui/menu.js","src/ui/setup.js","src/ui/pregame.js","src/ui/pause.js"]){
   try{new Function(read(rel));}
   catch(e){fail(rel+" syntax error: "+e.message);}
 }
@@ -421,6 +425,9 @@ const pregameModule=read("src/ui/pregame.js");
 for(const token of ['runtime.register("ui:pregame"',"dressGuy","AIBASelectedStar","showRackRushIntro","showBattleIntro"])
   if(!pregameModule.includes(token))fail("pregame module token missing "+token);
 if(!read("src/core/legacy-adapter.js").includes("dressGuy"))fail("legacy adapter must expose dressGuy to pregame");
+const renderingCore=read("src/rendering/core.js");
+for(const token of ['runtime.register("rendering:core"',"WebGLRenderer","RENDER_QUALITY","updateRenderQuality","dampRig","visualViewport","AmbientLight"])
+  if(!renderingCore.includes(token))fail("rendering core token missing "+token);
 
 const sandbox={window:{}};
 vm.createContext(sandbox);

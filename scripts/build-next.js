@@ -36,6 +36,13 @@ function generate(source){
   html=replaceOnce(html,'<script src="src/recorder.js?v=1.94"></script>','<script src="src/recorder.js?v=refactor9"></script>');
   html=replaceOnce(html,'<script src="src/vision.js?v=1.94"></script>','<script src="src/vision.js?v=refactor11"></script>');
   html=replaceOnce(html,'<script src="src/navigation.js?v=1.90"></script>','<script src="src/navigation.js?v=refactor8"></script>');
+  html=replaceOnce(html,
+    '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script>\n/* ---------------- three.js setup ---------------- */',
+    '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script src="src/rendering/core.js?v=refactor16"></script>\n<script>\n/* ---------------- three.js setup ---------------- */');
+  html=replaceRange(html,
+    '/* ---------------- three.js setup ---------------- */',
+    '/* ---------------- pixel texture helpers ---------------- */',
+    '/* Renderer, camera, adaptive quality and base lights are owned by src/rendering/core.js in the experimental entry. */\n');
   html=replaceRange(html,
     'function showMenu(){',
     'function sceneSelectMarkup(){',
