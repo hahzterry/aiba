@@ -38,7 +38,7 @@ function generate(source){
   html=replaceOnce(html,'<script src="src/navigation.js?v=1.90"></script>','<script src="src/navigation.js?v=refactor8"></script>');
   html=replaceOnce(html,
     '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script>\n/* ---------------- three.js setup ---------------- */',
-    '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script src="src/rendering/core.js?v=refactor16"></script>\n<script src="src/rendering/materials.js?v=refactor17"></script>\n<script src="src/rendering/court.js?v=refactor18"></script>\n<script src="src/rendering/arena.js?v=refactor19"></script>\n<script src="src/rendering/spectators.js?v=refactor20"></script>\n<script src="src/rendering/hoop.js?v=refactor21"></script>\n<script src="src/rendering/environments.js?v=refactor22a"></script>\n<script src="src/rendering/props.js?v=refactor23"></script>\n<script src="src/rendering/characters.js?v=refactor24"></script>\n<script src="src/rendering/camera.js?v=refactor25"></script>\n<script src="src/rendering/motion.js?v=refactor26"></script>\n<script>\n/* ---------------- three.js setup ---------------- */');
+    '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script src="src/rendering/core.js?v=refactor16"></script>\n<script src="src/rendering/materials.js?v=refactor17"></script>\n<script src="src/rendering/court.js?v=refactor18"></script>\n<script src="src/rendering/arena.js?v=refactor19"></script>\n<script src="src/rendering/spectators.js?v=refactor20"></script>\n<script src="src/rendering/hoop.js?v=refactor21"></script>\n<script src="src/rendering/environments.js?v=refactor22a"></script>\n<script src="src/rendering/props.js?v=refactor23"></script>\n<script src="src/rendering/characters.js?v=refactor24"></script>\n<script src="src/rendering/camera.js?v=refactor25"></script>\n<script src="src/rendering/motion.js?v=refactor26"></script>\n<script src="src/rendering/effects.js?v=refactor27"></script>\n<script src="src/presentation/cinematics.js?v=refactor28"></script>\n<script src="src/presentation/pregame.js?v=refactor29"></script>\n<script src="src/presentation/battle.js?v=refactor30"></script>\n<script>\n/* ---------------- three.js setup ---------------- */');
   html=replaceRange(html,
     '/* ---------------- three.js setup ---------------- */',
     '/* ---------------- pixel texture helpers ---------------- */',
@@ -84,6 +84,18 @@ function generate(source){
     '/* ---------------- hero ball camera (最后一球英雄时刻) ---------------- */',
     '/* Base shot pose, pass and walk motion are owned by src/rendering/motion.js. */\n');
   html=replaceRange(html,
+    '/* ---------------- hero ball camera (最后一球英雄时刻) ---------------- */',
+    'const PREGAME={',
+    '/* Hero shots, opponent shows, cutaways and victory cinematics are owned by src/presentation/cinematics.js. */\n');
+  html=replaceRange(html,
+    'const PREGAME={',
+    'function updBattleCut(dt){',
+    '/* Pregame actors, actions and camera direction are owned by src/presentation/pregame.js. */\n');
+  html=replaceRange(html,
+    'function updBattleCut(dt){',
+    'function startPractice(){',
+    '/* Percent Battle presentation events are owned by src/presentation/battle.js. */\n');
+  html=replaceRange(html,
     'function showMenu(){',
     'function sceneSelectMarkup(){',
     '/* Home menu and mode information are owned by src/ui/menu.js in the experimental entry. */\n');
@@ -127,6 +139,10 @@ function generate(source){
     'function startPractice(){',
     '/* shadow blob */',
     '/* Practice flow is owned by src/modes/practice.js in the experimental entry. */\n\n/* shadow blob */');
+  html=replaceRange(html,
+    '/* shadow blob */',
+    'const balls=[];',
+    '/* Shared particles, score celebration effects and camera tweens are owned by src/rendering/effects.js. */\n');
   html=replaceRange(html,
     '/* ---------------- UI helpers ---------------- */',
     'function pauseableState(){',

@@ -404,13 +404,14 @@ catch(e){fail("game flow script syntax error: "+e.message);}
 for(const token of ["rookieMeterProgress","G.diff===\"easy\"","updatePregameWarmupShot","updatePregameChalk","updatePlayerLockCamera"])
   if(!gameFlow.includes(token))fail("game flow token missing "+token);
 
-for(const rel of ["src/core/runtime.js","src/core/player-id-sandbox.js","src/core/leaderboard-sandbox.js","src/core/legacy-adapter.js","src/core/bootstrap-next.js","src/rendering/core.js","src/rendering/materials.js","src/rendering/court.js","src/rendering/arena.js","src/rendering/spectators.js","src/rendering/hoop.js","src/rendering/environments.js","src/rendering/props.js","src/rendering/characters.js","src/rendering/camera.js","src/rendering/motion.js","src/modes/rack-rush.js","src/modes/contest.js","src/modes/practice.js","src/modes/percent-battle/state.js","src/modes/percent-battle/spots.js","src/modes/percent-battle/opponent.js","src/modes/percent-battle/results.js","src/modes/percent-battle/index.js","src/ui/panels.js","src/ui/loading.js","src/ui/menu.js","src/ui/setup.js","src/ui/pregame.js","src/ui/pause.js"]){
+for(const rel of ["src/core/runtime.js","src/core/player-id-sandbox.js","src/core/leaderboard-sandbox.js","src/core/legacy-adapter.js","src/core/bootstrap-next.js","src/rendering/core.js","src/rendering/materials.js","src/rendering/court.js","src/rendering/arena.js","src/rendering/spectators.js","src/rendering/hoop.js","src/rendering/environments.js","src/rendering/props.js","src/rendering/characters.js","src/rendering/camera.js","src/rendering/motion.js","src/rendering/effects.js","src/presentation/cinematics.js","src/presentation/pregame.js","src/presentation/battle.js","src/modes/rack-rush.js","src/modes/contest.js","src/modes/practice.js","src/modes/percent-battle/state.js","src/modes/percent-battle/spots.js","src/modes/percent-battle/opponent.js","src/modes/percent-battle/results.js","src/modes/percent-battle/index.js","src/ui/panels.js","src/ui/loading.js","src/ui/menu.js","src/ui/setup.js","src/ui/pregame.js","src/ui/pause.js"]){
   try{new Function(read(rel));}
   catch(e){fail(rel+" syntax error: "+e.message);}
 }
-const renderingModuleFiles=["core","materials","court","arena","spectators","hoop","environments","props","characters","camera","motion"].map(name=>"src/rendering/"+name+".js");
-try{new Function(renderingModuleFiles.map(read).join("\n;\n"));}
-catch(e){fail("rendering modules have conflicting top-level declarations: "+e.message);}
+const ownershipModuleFiles=["core","materials","court","arena","spectators","hoop","environments","props","characters","camera","motion","effects"].map(name=>"src/rendering/"+name+".js")
+  .concat(["src/presentation/cinematics.js","src/presentation/pregame.js","src/presentation/battle.js"]);
+try{new Function(ownershipModuleFiles.map(read).join("\n;\n"));}
+catch(e){fail("ownership modules have conflicting top-level declarations: "+e.message);}
 const runtimeScript=read("src/core/runtime.js");
 for(const token of ["aiba_next_v1:","scopeLocalStorage","attachLegacy","service:registered"])
   if(!runtimeScript.includes(token))fail("runtime bridge token missing "+token);
@@ -474,6 +475,22 @@ for(const token of ['src/rendering/props.js?v=refactor23','src/rendering/charact
   if(!nextHtml.includes(token))fail("next entry missing gameplay rendering module "+token);
 for(const token of ["function buildRacks(","function voxelGuy(","function autoFrameCam(","function shotCurves(","function updWalk("])
   if(nextHtml.includes(token))fail("next entry still contains inline gameplay rendering "+token);
+const renderingEffects=read("src/rendering/effects.js");
+for(const token of ['runtime.register("rendering:effects"',"function emitFire","function startConfetti","function tween","function glideTo"])
+  if(!renderingEffects.includes(token))fail("rendering effects token missing "+token);
+const presentationCinematics=read("src/presentation/cinematics.js");
+for(const token of ['runtime.register("presentation:cinematics"',"function startHero","function startAIShow","function battleCutaway","function startVictoryCine"])
+  if(!presentationCinematics.includes(token))fail("presentation cinematics token missing "+token);
+const presentationPregame=read("src/presentation/pregame.js");
+for(const token of ['runtime.register("presentation:pregame"',"const PREGAME=","function startPreGameShow","function updPreGameShow"])
+  if(!presentationPregame.includes(token))fail("presentation pregame token missing "+token);
+const presentationBattle=read("src/presentation/battle.js");
+for(const token of ['runtime.register("presentation:battle"',"function updBattleCut","function checkBattleOvertake","function battleScoreCallout"])
+  if(!presentationBattle.includes(token))fail("presentation battle token missing "+token);
+for(const token of ['src/rendering/effects.js?v=refactor27','src/presentation/cinematics.js?v=refactor28','src/presentation/pregame.js?v=refactor29','src/presentation/battle.js?v=refactor30'])
+  if(!nextHtml.includes(token))fail("next entry missing presentation module "+token);
+for(const token of ["function startHero(","function startAIShow(","function startVictoryCine(","function startPreGameShow(","function battleScoreCallout(","function startConfetti("])
+  if(nextHtml.includes(token))fail("next entry still contains inline presentation "+token);
 
 const sandbox={window:{}};
 vm.createContext(sandbox);

@@ -116,7 +116,8 @@ The main loop remains the last large extraction because audio, vision, recording
 - complete: outdoor presets, street crowds, rain, progressive flowers and beach sunset
 - complete: ball racks, first-person hands, voxel player factories, bench actors and automatic play cameras
 - complete: base shot-pose curves, passing and movement between shooting spots
-- next: hero/replay/pregame cinematics and celebration effects, then the shot lifecycle and main loop/input boundary
+- complete: hero/opponent/victory cinematics, randomized pregame actions, Percent Battle presentation and shared particles/tweens
+- next: shot lifecycle and ball simulation, replay, then the authoritative input and main-loop boundary
 - keep player selection and NBA DNA as their existing standalone modules until the shared navigation flow no longer depends on inline globals
 
 ## Phase 5: Cutover

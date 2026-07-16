@@ -101,8 +101,12 @@ app shell
 - `src/rendering/characters.js` owns the voxel player factory, visual styling, roster actors and bench placement.
 - `src/rendering/camera.js` owns player world position, camera modes, automatic framing and play-camera updates.
 - `src/rendering/motion.js` owns the legacy base pose curves, pass animation and movement between shooting spots; `shot-motion.js` still applies the production V2 pose patch later in boot.
+- `src/rendering/effects.js` owns shadow blobs, fire/confetti particles, shared tweens and camera glides.
+- `src/presentation/cinematics.js` owns hero shots, opponent live shows, lead-change cutaways, celebrations and victory cameras.
+- `src/presentation/pregame.js` owns randomized warmup actions, actor restoration and the pregame camera sequence.
+- `src/presentation/battle.js` owns Percent Battle cutaway completion, overtake gating, final-run presentation and score calls.
 - Desktop and portrait captures cover indoor and outdoor scene construction after the court-element migration.
-- The generated experimental entry is now about 2,400 lines, down from roughly 5,600 in the production entry.
+- The generated experimental entry is now about 1,600 lines, down from roughly 5,600 in the production entry.
 
 ## Acceptance Matrix
 
