@@ -119,7 +119,9 @@ The main loop remains the last large extraction because audio, vision, recording
 - complete: hero/opponent/victory cinematics, randomized pregame actions, Percent Battle presentation and shared particles/tweens
 - complete: shot lifecycle, ball simulation/collision, replay, winning-shot cinema and projected battle controls
 - complete: authoritative pointer/keyboard/tilt input, one frame loop and one scene-initialization pass
-- next: move the remaining constants/state/audio orchestration into data and service modules, then run the cutover matrix
+- complete: constants, seeded configuration, shared runtime state, dialogue, audio-cue arbitration and result copy
+- complete: generated `/next/index.html` reduced to a 192-line static application shell with no gameplay implementation inline
+- next: run the full cutover acceptance matrix and publish an isolated Preview Deployment for side-by-side testing
 - keep player selection and NBA DNA as their existing standalone modules until the shared navigation flow no longer depends on inline globals
 
 ## Phase 5: Cutover

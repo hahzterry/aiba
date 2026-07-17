@@ -6,6 +6,7 @@ This document describes the current runtime contract before modularization. It i
 
 - `index.html` is both the application shell and the owner of most game logic.
 - The page contains about 5,500 lines of inline JavaScript.
+- `/next/index.html` is generated as a 192-line application shell; gameplay ownership lives under `src/`.
 - Files under `src/` are classic browser scripts. They publish APIs through `window.AIBA*` and depend on load order rather than imports.
 - There is no bundler or framework. The production build is served as static files.
 - `scripts/check.js` is the regression gate and freezes growth of inline JavaScript.
@@ -113,8 +114,14 @@ app shell
 - `src/core/input.js` owns pointer, keyboard and device-tilt input registration.
 - `src/core/game-loop.js` owns the single animation loop and frame dispatch.
 - `src/core/scene-init.js` owns one-time scene construction before the compatibility adapter is created.
+- `src/core/error-boundary.js` and `foundation.js` own fatal-error display and the small DOM/math helper surface.
+- `src/data/game-config.js` owns court/mode constants, seeded match randomness, player profiles and asset-derived configuration.
+- `src/data/dialogue.js` owns presentation copy used by rivals, announcers, makes and misses.
+- `src/core/state.js` owns the shared legacy-compatible `G` and `PAUSE` state during the migration.
+- `src/services/audio-cues.js` owns cue priority, cooldown and streak/miss voice arbitration; `audio.js` remains the playback engine.
+- `src/ui/result-copy.js` owns result ratings and rotating NBA quotes.
 - Desktop and portrait captures cover indoor and outdoor scene construction after the court-element migration.
-- The generated experimental entry is now about 540 lines, down from roughly 5,600 in the production entry.
+- The generated experimental entry is now 192 lines, down from roughly 5,600 in the production entry. Its only inline scripts are NEXT diagnostics and Three.js fallback bootstrapping.
 
 ## Acceptance Matrix
 

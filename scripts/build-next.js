@@ -36,6 +36,16 @@ function generate(source){
   html=replaceOnce(html,'<script src="src/recorder.js?v=1.94"></script>','<script src="src/recorder.js?v=refactor9"></script>');
   html=replaceOnce(html,'<script src="src/vision.js?v=1.94"></script>','<script src="src/vision.js?v=refactor11"></script>');
   html=replaceOnce(html,'<script src="src/navigation.js?v=1.90"></script>','<script src="src/navigation.js?v=refactor8"></script>');
+  html=replaceOnce(html,'<script src="src/visual-director.js?v=1.85"></script>',[
+    '<script src="src/visual-director.js?v=1.85"></script>',
+    '<script src="src/core/error-boundary.js?v=refactor39"></script>',
+    '<script src="src/core/foundation.js?v=refactor39"></script>',
+    '<script src="src/data/game-config.js?v=refactor39"></script>',
+    '<script src="src/data/dialogue.js?v=refactor39"></script>',
+    '<script src="src/core/state.js?v=refactor39"></script>',
+    '<script src="src/services/audio-cues.js?v=refactor39"></script>',
+    '<script src="src/ui/result-copy.js?v=refactor39"></script>'
+  ].join("\n"));
   html=replaceOnce(html,
     '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script>\n/* ---------------- three.js setup ---------------- */',
     '<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>\n<script src="src/rendering/core.js?v=refactor16"></script>\n<script src="src/rendering/materials.js?v=refactor17"></script>\n<script src="src/rendering/court.js?v=refactor18"></script>\n<script src="src/rendering/arena.js?v=refactor19"></script>\n<script src="src/rendering/spectators.js?v=refactor20"></script>\n<script src="src/rendering/hoop.js?v=refactor21"></script>\n<script src="src/rendering/environments.js?v=refactor22a"></script>\n<script src="src/rendering/props.js?v=refactor23"></script>\n<script src="src/rendering/characters.js?v=refactor24"></script>\n<script src="src/rendering/camera.js?v=refactor25"></script>\n<script src="src/rendering/motion.js?v=refactor26"></script>\n<script src="src/rendering/effects.js?v=refactor27"></script>\n<script src="src/presentation/cinematics.js?v=refactor28"></script>\n<script src="src/presentation/pregame.js?v=refactor29"></script>\n<script src="src/presentation/battle.js?v=refactor30"></script>\n<script src="src/gameplay/shots.js?v=refactor31"></script>\n<script src="src/presentation/replay.js?v=refactor32"></script>\n<script src="src/ui/battle-controls.js?v=refactor33"></script>\n<script src="src/gameplay/collisions.js?v=refactor34"></script>\n<script src="src/presentation/win-cinematic.js?v=refactor35"></script>\n<script>\n/* ---------------- three.js setup ---------------- */');
@@ -189,6 +199,18 @@ function generate(source){
   html=replaceOnce(html,
     '</script>\n<script src="src/game-flow.js?v=1.93"></script>',
     '</script>\n<script src="src/core/input.js?v=refactor36"></script>\n<script src="src/core/game-loop.js?v=refactor37"></script>\n<script src="src/core/scene-init.js?v=refactor38"></script>\n<script src="src/core/legacy-adapter.js?v=refactor15"></script>\n<script src="src/modes/rack-rush.js"></script>\n<script src="src/modes/contest.js"></script>\n<script src="src/modes/practice.js?v=refactor5"></script>\n<script src="src/modes/percent-battle/state.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/spots.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/opponent.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/results.js?v=refactor4"></script>\n<script src="src/modes/percent-battle/index.js?v=refactor4"></script>\n<script src="src/ui/panels.js?v=refactor7"></script>\n<script src="src/ui/loading.js?v=refactor7"></script>\n<script src="src/ui/menu.js?v=refactor12"></script>\n<script src="src/ui/setup.js?v=refactor13"></script>\n<script src="src/ui/pregame.js?v=refactor15"></script>\n<script src="src/ui/pause.js?v=refactor10"></script>\n<script src="src/core/bootstrap-next.js?v=refactor12"></script>\n<script src="src/game-flow.js?v=1.93"></script>');
+  html=replaceRange(html,
+    '<script>\n/* =====================================================',
+    '<script src="src/vision.js?v=refactor11"></script>',
+    '');
+  html=replaceRange(html,
+    '<script>\n/* ====== 外部音频:',
+    '<script src="src/audio.js?v=1.88"></script>',
+    '');
+  html=replaceRange(html,
+    '<script>\n/* Renderer, camera, adaptive quality and base lights are owned by src/rendering/core.js in the experimental entry. */',
+    '<script src="src/core/input.js?v=refactor36"></script>',
+    '');
   return html;
 }
 

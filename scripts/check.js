@@ -44,10 +44,16 @@ const requiredFiles=[
   "src/audio.js",
   "src/vision.js",
   "src/core/runtime.js",
+  "src/core/error-boundary.js",
+  "src/core/foundation.js",
+  "src/core/state.js",
   "src/core/player-id-sandbox.js",
   "src/core/leaderboard-sandbox.js",
   "src/core/legacy-adapter.js",
   "src/core/bootstrap-next.js",
+  "src/data/game-config.js",
+  "src/data/dialogue.js",
+  "src/services/audio-cues.js",
   "src/rendering/core.js",
   "src/modes/rack-rush.js",
   "src/modes/contest.js",
@@ -63,6 +69,7 @@ const requiredFiles=[
   "src/ui/setup.js",
   "src/ui/pregame.js",
   "src/ui/pause.js",
+  "src/ui/result-copy.js",
   "scripts/build-next.js",
   "docs/ARCHITECTURE.md",
   "docs/MODULAR_REFACTOR_PLAN.md",
@@ -93,10 +100,13 @@ if(!nextHtml.includes('<script src="src/core/leaderboard-sandbox.js"></script>')
 if(!nextHtml.includes('<script src="src/recorder.js?v=refactor9"></script>'))fail("next recorder cache version missing");
 if(!nextHtml.includes('<script src="src/vision.js?v=refactor11"></script>'))fail("next vision cache version missing");
 if(!nextHtml.includes('<script src="src/rendering/core.js?v=refactor16"></script>'))fail("next rendering core missing");
+for(const file of ["core/error-boundary","core/foundation","data/game-config","data/dialogue","core/state","services/audio-cues","ui/result-copy"]){
+  if(!nextHtml.includes(`<script src="src/${file}.js?v=refactor39"></script>`))fail(`next shell module missing ${file}`);
+}
 if(nextHtml.includes('<script src="src/player-id.js"></script>'))fail("next entry must not load production identity");
 if(nextHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("next entry must not load production leaderboard API");
 if(nextHtml.indexOf('src/core/runtime.js')>nextHtml.indexOf('src/config.js'))fail("next runtime must load before config");
-if(nextHtml.indexOf('<script src="src/rendering/core.js?v=refactor16"></script>')>nextHtml.indexOf('/* Renderer, camera, adaptive quality and base lights'))fail("rendering core must load before arena construction");
+if(nextHtml.indexOf('<script src="src/rendering/core.js?v=refactor16"></script>')>nextHtml.indexOf('<script src="src/core/scene-init.js?v=refactor38"></script>'))fail("rendering core must load before scene construction");
 if(!nextHtml.includes('<script src="src/core/legacy-adapter.js?v=refactor15"></script>'))fail("next legacy adapter missing");
 if(!nextHtml.includes('<script src="src/modes/rack-rush.js"></script>'))fail("next Rack Rush module missing");
 if(!nextHtml.includes('<script src="src/modes/contest.js"></script>'))fail("next contest module missing");
@@ -122,6 +132,14 @@ if(nextHtml.includes("function pickDiff(")||nextHtml.includes("function showBatt
 if(nextHtml.includes("const renderer=new THREE.WebGLRenderer")||nextHtml.includes("function updateRenderQuality(")||nextHtml.includes("const ambient=new THREE.AmbientLight"))fail("next entry still contains inline rendering core implementation");
 if(nextHtml.includes("bootGame();\nanimate();"))fail("next entry still starts boot and loop inline");
 if(nextHtml.includes("function startBattle(")||nextHtml.includes("function battleRefreshSpot(")||nextHtml.includes("function startOppShooter(")||nextHtml.includes("function finishBattle("))fail("next entry still contains inline Percent Battle implementation");
+for(const token of ["const GAME_VERSION=","const G={","function triggerMakeRunVoice(","const COVER_QUOTES="]){
+  if(nextHtml.includes(token))fail("next entry still contains inline shell ownership "+token);
+}
+if(nextHtml.includes("/* Renderer, camera, adaptive quality and base lights are owned"))fail("next entry still contains generated ownership placeholders");
+if(nextHtml.indexOf('src/core/foundation.js?v=refactor39')>nextHtml.indexOf('src/data/game-config.js?v=refactor39'))fail("foundation must load before game config");
+if(nextHtml.indexOf('src/data/game-config.js?v=refactor39')>nextHtml.indexOf('src/core/state.js?v=refactor39'))fail("game config must load before runtime state");
+if(nextHtml.indexOf('src/core/state.js?v=refactor39')>nextHtml.indexOf('src/services/audio-cues.js?v=refactor39'))fail("runtime state must load before audio cues");
+if(nextHtml.indexOf('src/services/audio-cues.js?v=refactor39')>nextHtml.indexOf('src/audio.js?v=1.88'))fail("audio cues must load before audio engine");
 if(nextHtml.indexOf('<script src="src/core/legacy-adapter.js?v=refactor15"></script>')>nextHtml.indexOf('<script src="src/modes/rack-rush.js"></script>'))fail("legacy adapter must load before Rack Rush module");
 if(nextHtml.indexOf('<script src="src/modes/rack-rush.js"></script>')>nextHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Rack Rush module must load before late hooks");
 if(nextHtml.indexOf('<script src="src/modes/contest.js"></script>')>nextHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("contest module must load before late hooks");
@@ -403,12 +421,12 @@ catch(e){fail("game flow script syntax error: "+e.message);}
 for(const token of ["rookieMeterProgress","G.diff===\"easy\"","updatePregameWarmupShot","updatePregameChalk","updatePlayerLockCamera"])
   if(!gameFlow.includes(token))fail("game flow token missing "+token);
 
-for(const rel of ["src/core/runtime.js","src/core/player-id-sandbox.js","src/core/leaderboard-sandbox.js","src/core/input.js","src/core/game-loop.js","src/core/scene-init.js","src/core/legacy-adapter.js","src/core/bootstrap-next.js","src/rendering/core.js","src/rendering/materials.js","src/rendering/court.js","src/rendering/arena.js","src/rendering/spectators.js","src/rendering/hoop.js","src/rendering/environments.js","src/rendering/props.js","src/rendering/characters.js","src/rendering/camera.js","src/rendering/motion.js","src/rendering/effects.js","src/gameplay/shots.js","src/gameplay/collisions.js","src/presentation/cinematics.js","src/presentation/pregame.js","src/presentation/battle.js","src/presentation/replay.js","src/presentation/win-cinematic.js","src/modes/rack-rush.js","src/modes/contest.js","src/modes/practice.js","src/modes/percent-battle/state.js","src/modes/percent-battle/spots.js","src/modes/percent-battle/opponent.js","src/modes/percent-battle/results.js","src/modes/percent-battle/index.js","src/ui/panels.js","src/ui/loading.js","src/ui/menu.js","src/ui/setup.js","src/ui/pregame.js","src/ui/pause.js","src/ui/battle-controls.js"]){
+for(const rel of ["src/core/runtime.js","src/core/error-boundary.js","src/core/foundation.js","src/core/state.js","src/core/player-id-sandbox.js","src/core/leaderboard-sandbox.js","src/core/input.js","src/core/game-loop.js","src/core/scene-init.js","src/core/legacy-adapter.js","src/core/bootstrap-next.js","src/data/game-config.js","src/data/dialogue.js","src/services/audio-cues.js","src/rendering/core.js","src/rendering/materials.js","src/rendering/court.js","src/rendering/arena.js","src/rendering/spectators.js","src/rendering/hoop.js","src/rendering/environments.js","src/rendering/props.js","src/rendering/characters.js","src/rendering/camera.js","src/rendering/motion.js","src/rendering/effects.js","src/gameplay/shots.js","src/gameplay/collisions.js","src/presentation/cinematics.js","src/presentation/pregame.js","src/presentation/battle.js","src/presentation/replay.js","src/presentation/win-cinematic.js","src/modes/rack-rush.js","src/modes/contest.js","src/modes/practice.js","src/modes/percent-battle/state.js","src/modes/percent-battle/spots.js","src/modes/percent-battle/opponent.js","src/modes/percent-battle/results.js","src/modes/percent-battle/index.js","src/ui/panels.js","src/ui/loading.js","src/ui/menu.js","src/ui/setup.js","src/ui/pregame.js","src/ui/pause.js","src/ui/battle-controls.js","src/ui/result-copy.js"]){
   try{new Function(read(rel));}
   catch(e){fail(rel+" syntax error: "+e.message);}
 }
 const ownershipModuleFiles=["core","materials","court","arena","spectators","hoop","environments","props","characters","camera","motion","effects"].map(name=>"src/rendering/"+name+".js")
-  .concat(["src/gameplay/shots.js","src/gameplay/collisions.js","src/presentation/cinematics.js","src/presentation/pregame.js","src/presentation/battle.js","src/presentation/replay.js","src/presentation/win-cinematic.js","src/ui/battle-controls.js","src/core/input.js","src/core/game-loop.js","src/core/scene-init.js"]);
+  .concat(["src/core/error-boundary.js","src/core/foundation.js","src/data/game-config.js","src/data/dialogue.js","src/core/state.js","src/services/audio-cues.js","src/ui/result-copy.js","src/gameplay/shots.js","src/gameplay/collisions.js","src/presentation/cinematics.js","src/presentation/pregame.js","src/presentation/battle.js","src/presentation/replay.js","src/presentation/win-cinematic.js","src/ui/battle-controls.js","src/core/input.js","src/core/game-loop.js","src/core/scene-init.js"]);
 try{new Function(ownershipModuleFiles.map(read).join("\n;\n"));}
 catch(e){fail("ownership modules have conflicting top-level declarations: "+e.message);}
 const runtimeScript=read("src/core/runtime.js");
