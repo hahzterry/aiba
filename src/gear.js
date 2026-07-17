@@ -262,7 +262,7 @@
       const next=SLOTS.find(s=>load[s.id]);
       load.active=next?next.id:"";
     }
-    save();refreshSection();
+    save();refreshSection();refreshGearPreview();
   }
   function setActive(slot){
     if(!load[slot])return;
@@ -273,6 +273,71 @@
     lastStar=star||null;
     const el=document.querySelector("#lockerGear .gearStats");
     if(el)el.outerHTML=statsMarkup(lastStar);
+  }
+
+  /* ---------------- 装备外观:更衣室预览与正式上场共用 ---------------- */
+  function colorOf(item,fallback){
+    const value=item&&item.color;
+    return parseInt(String(value||fallback||"#ffffff").replace("#",""),16)||0xffffff;
+  }
+  function clearGearHead(guy){
+    if(!guy||!guy.gearHeadGroup)return;
+    guy.g.remove(guy.gearHeadGroup);
+    guy.gearHeadGroup.traverse(obj=>{
+      if(obj.geometry&&obj.geometry.dispose)obj.geometry.dispose();
+      const materials=Array.isArray(obj.material)?obj.material:[obj.material];
+      materials.filter(Boolean).forEach(material=>material.dispose&&material.dispose());
+    });
+    guy.gearHeadGroup=null;
+  }
+  function gearBox(group,w,h,d,x,y,z,material){
+    const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);
+    mesh.position.set(x,y,z);group.add(mesh);return mesh;
+  }
+  function applyGearHead(guy,item){
+    clearGearHead(guy);
+    if(guy.customHeadGroup)guy.customHeadGroup.visible=true;
+    if(guy.hairGrp)guy.hairGrp.visible=true;
+    if(!item)return;
+    const color=colorOf(item),id=item.id;
+    if(guy.customHeadGroup)guy.customHeadGroup.visible=false;
+    if(id.indexOf("band-")===0){
+      guy.headband.visible=true;guy.headband.material.color.setHex(color);return;
+    }
+    guy.headband.visible=false;
+    const group=new THREE.Group(),main=new THREE.MeshLambertMaterial({color}),dark=new THREE.MeshLambertMaterial({color:0x050508});
+    if(id==="head-mask"){
+      gearBox(group,.31,.17,.035,0,1.62,.195,dark);
+      gearBox(group,.075,.045,.045,-.07,1.645,.22,main);gearBox(group,.075,.045,.045,.07,1.645,.22,main);
+    }else if(id==="head-cap"){
+      if(guy.hairGrp)guy.hairGrp.visible=false;
+      gearBox(group,.39,.09,.35,0,1.82,0,main);gearBox(group,.34,.045,.24,0,1.755,.2,main);gearBox(group,.24,.035,.24,0,1.74,.32,main);
+    }else if(id==="head-shades"){
+      gearBox(group,.11,.06,.04,-.078,1.65,.21,dark);gearBox(group,.11,.06,.04,.078,1.65,.21,dark);gearBox(group,.065,.022,.04,0,1.65,.215,dark);
+    }else if(id==="head-hoodie"){
+      if(guy.hairGrp)guy.hairGrp.visible=false;
+      gearBox(group,.46,.14,.43,0,1.84,-.02,main);gearBox(group,.1,.34,.4,-.22,1.63,-.03,main);gearBox(group,.1,.34,.4,.22,1.63,-.03,main);gearBox(group,.45,.35,.1,0,1.64,-.23,main);
+    }else{
+      if(guy.hairGrp)guy.hairGrp.visible=false;
+      gearBox(group,.48,.48,.48,0,1.64,0,main);gearBox(group,.09,.09,.09,-.13,1.7,.25,dark);gearBox(group,.09,.09,.09,.13,1.7,.25,dark);gearBox(group,.25,.05,.045,0,1.55,.26,dark);gearBox(group,.15,.2,.13,-.29,1.77,0,main);gearBox(group,.15,.2,.13,.29,1.77,0,main);
+    }
+    guy.gearHeadGroup=group;guy.g.add(group);
+  }
+  function applyVisual(guy){
+    if(!guy||!global.THREE)return;
+    const shoes=itemOf("shoes"),sleeve=itemOf("sleeve"),head=itemOf("band");
+    if(shoes)guy.shoes.forEach(shoe=>shoe.material.color.setHex(colorOf(shoes)));
+    if(sleeve){
+      const color=colorOf(sleeve);
+      guy.sleeves.forEach((part,index)=>{part.visible=index===1;part.material.color.setHex(color);});
+      guy.wrists.forEach((part,index)=>{part.visible=index===0;part.material.color.setHex(color);});
+    }
+    applyGearHead(guy,head);
+  }
+  function appearanceKey(){return [load.shoes||"-",load.sleeve||"-",load.band||"-"].join("|");}
+  function refreshGearPreview(){
+    const root=document.getElementById("lockerStage")||document.querySelector(".playerLocker");
+    if(root&&global.AIBALockerPreview)global.AIBALockerPreview.render(root);
   }
 
   /* ---------------- 挂钩游戏全局(在主脚本之后加载) ---------------- */
@@ -303,6 +368,9 @@
       if(playing(gameRef())){STA.v=Math.max(0,STA.v-SHOT_COST*mods().cost);STA.lastUseAt=performance.now();}
       return orig.apply(this,arguments);
     });
+    wrap("applyStarStyle",orig=>function(guy,star){
+      const result=orig.apply(this,arguments);applyVisual(guy);return result;
+    });
   }
 
   global.AIBAGearEquip=equip;
@@ -311,7 +379,7 @@
     SLOTS,CATALOG,STAT_NAMES,
     get:()=>({...load}),
     mods,activeItem,activeSummary,clutchActive,
-    baseStats,sectionMarkup,onStarPreview,
+    baseStats,sectionMarkup,onStarPreview,applyVisual,appearanceKey,refreshPreview:refreshGearPreview,
     stamina:()=>({v:STA.v,max:STA.max,out:STA.out}),
     staminaMetrics:()=>({lowMs:MET.lowMs,outCount:MET.outCount,ratio:staminaRatio()}),
     _setStamina:v=>{STA.v=clamp(Number(v)||0,0,STA.max);}

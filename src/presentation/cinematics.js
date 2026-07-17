@@ -35,7 +35,7 @@ function genAIRun(o){
   for(let rk=0;rk<5;rk++){
     for(let b=0;b<5;b++){
       const m=(rk===money)||b===4,v=m?2:1,make=seededRandom()<p;
-      shots.push({rack:rk,deep:null,money:m,val:v,make});
+      shots.push({rack:rk,ball:b,deep:null,money:m,val:v,make});
       if(make)total+=v;
     }
     if(rk===1||rk===2){
@@ -52,18 +52,12 @@ function startAIShow(o,cb){
   const run=genAIRun(o);
   show.on=true;show.o=o;show.cb=cb;show.total=run.total;show.score=0;show.idx=0;show.t=0;
   show.guy=rivalFor(o);show.guy.active=true;benchVis();
-  // 蒙太奇队列:每架可视化2球(含花球)+本架快进chip,深远球全部可视化
+  // 完整比赛队列:五架各投五球,两记深远球也真实走位并出手。
   const q=[];
   for(let rk=0;rk<5;rk++){
     const rackShots=run.shots.filter(s=>s.rack===rk);
-    const moneyShot=rackShots[4];
-    const otherIdx=(Math.random()*4)|0,other=rackShots[otherIdx];
-    const vis=[other,moneyShot];
-    const visPts=vis.reduce((a,s)=>a+(s.make?s.val:0),0);
-    const rackPts=rackShots.reduce((a,s)=>a+(s.make?s.val:0),0);
     q.push({type:"move",rack:rk});
-    vis.forEach(s=>q.push({type:"shot",s}));
-    if(rackPts-visPts>0)q.push({type:"chip",pts:rackPts-visPts});
+    rackShots.forEach(s=>q.push({type:"shot",s}));
     run.shots.filter(s=>s.deep!=null&&((rk===1&&s.deep===0)||(rk===2&&s.deep===1))).forEach(s=>{
       q.push({type:"move",deep:s.deep});q.push({type:"shot",s});
     });
@@ -98,9 +92,14 @@ function nextShowItem(){
   if(it.type==="move"){
     const to=it.deep!=null?DEEPS[it.deep].p:RACKS[it.rack].p;
     it.from=show.guy.pos.clone();it.to=to.clone();
+    it.dur=clamp(it.from.distanceTo(it.to)/4.6,0.48,1.18);
   }else if(it.type==="shot"){
     show.guy.ball.visible=true;
     show.guy.ball.material=it.s.deep!=null?matDeep:(it.s.money?matGold:matBall);
+    const profile=shotProfileFor(show.o),speed=Math.max(.78,Number(profile&&profile.speed)||1);
+    it.loadDur=clamp(.74/speed,.6,.9);
+    it.totalDur=it.loadDur+(.3+(it.s.ball===0?.08:0));
+    $("showTgt").textContent=it.s.deep!=null?"深远加分球":("第 "+(it.s.rack+1)+" 架 · "+(it.s.ball+1)+"/5");
   }else if(it.type==="chip"){
     show.score+=it.pts;$("showScore").textContent=show.score;
     popScore("+"+it.pts+" ≫","#9ab");blip(500,0.05,"square",0.05);
@@ -113,7 +112,7 @@ function updShow(dt){
   if(!show.on||!show.cur)return;
   show.t+=dt;const it=show.cur,g=show.guy;
   if(it.type==="move"){
-    const k=Math.min(1,show.t/0.42);
+    const k=Math.min(1,show.t/(it.dur||0.48));
     g.pos.lerpVectors(it.from,it.to,k);
     g.g.position.copy(g.pos);
     g.g.rotation.y=faceTo(g.pos,HOOP);
@@ -123,7 +122,7 @@ function updShow(dt){
     g.ankles[0].rotation.x=-sw*0.22;g.ankles[1].rotation.x=sw*0.22;g.g.rotation.x=0;
     if(k>=1){g.legs[0].rotation.x=0;g.legs[1].rotation.x=0;g.knees[0].rotation.x=0;g.knees[1].rotation.x=0;g.ankles[0].rotation.x=0;g.ankles[1].rotation.x=0;nextShowItem();}
   }else if(it.type==="shot"){
-    const ph=Math.min(1.03,show.t/0.5*1.03);
+    const ph=Math.min(1.03,show.t/(it.loadDur||0.72)*1.03);
     const c=shotCurves(ph);show.c=c;
     const y=poseGuy(g,c,0)+Math.max(0,c.jmp*0.55-c.over*0.55);
     g.g.position.set(g.pos.x,y,g.pos.z);
@@ -132,7 +131,7 @@ function updShow(dt){
       it.fired=true;g.ball.visible=false;
       fireSilentBall(g.pos,it.s);
     }
-    if(show.t>=0.95){
+    if(show.t>=(it.totalDur||1.02)){
       const rest=shotCurves(0);
       g.g.position.set(g.pos.x,poseGuy(g,rest,0),g.pos.z);
       nextShowItem();
@@ -140,7 +139,7 @@ function updShow(dt){
   }else if(it.type==="chip"){
     if(show.t>=0.45)nextShowItem();
   }else if(it.type==="end"){
-    if(show.t>=1.1)finishShow();
+    if(show.t>=1.55)finishShow();
   }
 }
 function fireSilentBall(base,s){
@@ -426,4 +425,3 @@ window.AIBA.runtime.register("presentation:cinematics",Object.freeze({
   continueAfterShow,skipShow,tryCutAway,updCutAway,updTargetUI,battleCutaway,
   startCelebrate,updateCelebrate,stopCelebrate,startVictoryCine,updVictoryCine
 }));
-

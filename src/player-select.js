@@ -107,6 +107,13 @@
       ${metrics(star)}
       <div class="lockerCurrentMeta"><span>${esc(p.label||"标准出手")}</span><span>${esc(p.arcLabel||"标准弧线")}</span><span>甜区 ${Math.round((p.window||1)*100)}%</span></div>`;
   }
+  function stageMarkup(id){
+    const star=findStar(allStars(),id);
+    return `<div id="lockerStage" class="lockerStage" style="${cardStyle(star)}">
+      <div class="lockerStageVisual">${avatarSlot(id||"")}<span>LIVE FIT PREVIEW</span></div>
+      <div id="lockerCurrent" class="lockerStageCurrent">${currentMarkup(id||"")}</div>
+    </div>`;
+  }
   function setCardState(id){
     const cards=[...document.querySelectorAll(".lockerCard[data-aiba-player]")];
     cards.forEach(card=>{
@@ -114,8 +121,12 @@
       card.classList.toggle("selected",on);
       card.setAttribute("aria-pressed",on?"true":"false");
     });
-    const current=document.getElementById("lockerCurrent");
-    if(current)current.innerHTML=currentMarkup(id||"");
+    const stage=document.getElementById("lockerStage");
+    if(stage)stage.outerHTML=stageMarkup(id||"");
+    else{
+      const current=document.getElementById("lockerCurrent");
+      if(current)current.innerHTML=currentMarkup(id||"");
+    }
     hydrateAvatars();
   }
   function scrollCardIntoView(id){
@@ -149,10 +160,12 @@
     const motionSection=global.AIBAMotion?global.AIBAMotion.toggleMarkup():"";
     global.showPanel(`<div class="playerLocker">
       <div class="lockerHead"><small>PLAYER LOCKER</small><h1>赛前更衣室</h1><p>横划查看球员。点卡片只是预览，确认后才会锁定上场。</p></div>
-      <div class="lockerDeck" aria-label="横向选择球员">${global.AIBACustomizer?global.AIBACustomizer.cardMarkup(current):""}${randomCard(current)}${stars.filter(star=>starKey(star)!=="custom-player").map(star=>choiceButton(star,current)).join("")}</div>
-      <div id="lockerCurrent" class="lockerCurrent">${currentMarkup(current)}</div>
-      ${gearSection}
-      ${motionSection}
+      ${stageMarkup(current)}
+      <div class="lockerWorkbench">
+        <div class="lockerDeck" aria-label="横向选择球员">${global.AIBACustomizer?global.AIBACustomizer.cardMarkup(current):""}${randomCard(current)}${stars.filter(star=>starKey(star)!=="custom-player").map(star=>choiceButton(star,current)).join("")}</div>
+        ${gearSection}
+        ${motionSection}
+      </div>
       <div class="lockerActions">
         <button class="btn" type="button" onclick="confirmAIBAPlayer()">确认上场</button>
         <button class="btn sm" type="button" onclick="goDiff(${modeArg()},true)">返回设置</button>

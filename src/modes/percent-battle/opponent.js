@@ -17,33 +17,47 @@
     return V3(-p.x,p.y,p.z);
   }
   function battlePlayerPos(){
-    if(G.mode==="battle"&&P&&P.pos)return P.pos;
     const spot=BATTLE_SPOTS[G.battleSpot||0];
-    return spot?spot.p:null;
+    if(G.mode==="battle"&&spot)return spot.p;
+    return P&&P.pos?P.pos:null;
   }
   function avoidPlayerOverlap(pos){
     const playerPos=battlePlayerPos();if(!playerPos)return pos;
+    const clampCourt=candidate=>{
+      candidate.x=clamp(candidate.x,-COURT.halfWidth+.55,COURT.halfWidth-.55);
+      candidate.z=clamp(candidate.z,COURT.nearBaseline+.55,COURT.playMaxZ);
+      return candidate;
+    };
+    clampCourt(pos);
     const dx=pos.x-playerPos.x,dz=pos.z-playerPos.z,d=Math.hypot(dx,dz);
-    if(d>=OPP_MIN_SEP){
-      pos.x=clamp(pos.x,-COURT.halfWidth+.55,COURT.halfWidth-.55);
-      pos.z=clamp(pos.z,COURT.nearBaseline+.55,COURT.playMaxZ);
-      return pos;
-    }
-    const toHoop=HOOP.clone().sub(pos);toHoop.y=0;
+    if(d>=OPP_MIN_SEP)return pos;
+    const original=pos.clone(),toHoop=HOOP.clone().sub(original);toHoop.y=0;
     if(toHoop.lengthSq()<0.0001)toHoop.set(0,0,-1);
     toHoop.normalize();
-    const side=V3(toHoop.z,0,-toHoop.x);
-    if(side.lengthSq()<0.0001)side.set(1,0,0);
-    side.normalize();
+    const side=V3(toHoop.z,0,-toHoop.x).normalize();
     const away=V3(dx,0,dz);
-    if(away.lengthSq()<0.0001)away.copy(side).multiplyScalar(pos.x>=0?1:-1);
+    if(away.lengthSq()<0.0001)away.copy(side).multiplyScalar(original.x>=0?1:-1);
     else away.normalize();
-    const push=Math.max(OPP_MIN_SEP-d,0.78);
-    pos.addScaledVector(away,push);
-    pos.addScaledVector(side,(pos.x>=0?1:-1)*0.44);
-    pos.x=clamp(pos.x,-COURT.halfWidth+.55,COURT.halfWidth-.55);
-    pos.z=clamp(pos.z,COURT.nearBaseline+.55,COURT.playMaxZ);
+    const candidates=[away,side,side.clone().negate(),toHoop,toHoop.clone().negate()].map(direction=>
+      clampCourt(original.clone().addScaledVector(direction,OPP_MIN_SEP+.34))
+    );
+    candidates.sort((a,b)=>{
+      const ad=a.distanceTo(playerPos),bd=b.distanceTo(playerPos);
+      const aSafe=ad>=OPP_MIN_SEP,bSafe=bd>=OPP_MIN_SEP;
+      if(aSafe!==bSafe)return aSafe?-1:1;
+      if(aSafe)return a.distanceTo(original)-b.distanceTo(original);
+      return bd-ad;
+    });
+    if(candidates[0])pos.copy(candidates[0]);
     return pos;
+  }
+  function oppRepositionForPlayer(){
+    if(!OPP.on||!OPP.pos||G.mode!=="battle"||G.battleOver)return false;
+    OPP.playerSpotSeen=G.battleSpot||0;
+    const safe=oppSpotPos(OPP.spotIdx);
+    if(OPP.pos.distanceTo(safe)<0.08)return false;
+    OPP.fired=false;OPP.from=OPP.pos.clone();OPP.to=safe;OPP.phase="walk";OPP.t=0;
+    return true;
   }
   function oppSpotPos(index){
     const spot=BATTLE_SPOTS[index];
@@ -80,6 +94,7 @@
     OPP.on=true;OPP.o=G.battleOpp;OPP.guy=rivals[0];OPP.guy.active=true;
     OPP.spotIdx=4;OPP.phase="walk";OPP.t=0;OPP.spotShots=0;
     OPP.coolUntil=Array(BATTLE_SPOTS.length).fill(0);OPP.forceMove=false;
+    OPP.playerSpotSeen=G.battleSpot||0;
     const start=oppSpotPos(OPP.spotIdx);
     OPP.guy.g.position.copy(start);OPP.guy.g.rotation.y=faceTo(start,HOOP);
     OPP.pos=start.clone();OPP.from=start.clone();OPP.to=start.clone();
@@ -165,6 +180,7 @@
   }
   function updBattle(dt){
     if(G.mode!=="battle"||G.state!=="battle"||G.battleOver)return;
+    if(OPP.on&&OPP.playerSpotSeen!==(G.battleSpot||0))oppRepositionForPlayer();
     G._battleUiAcc=(G._battleUiAcc||0)+dt;
     if(G._battleUiAcc>0.25){G._battleUiAcc=0;battle.updBattleUI();ctx.updDotsUI();}
     if(Math.max(G.score||0,G.battleOppScore||0)>=85&&global.AIBARecorder&&global.AIBARecorder.arm)global.AIBARecorder.arm("百分大战最后三球");
@@ -172,5 +188,5 @@
     let jumboAcc=ctx.getJumboAcc()+dt;if(jumboAcc>0.5){jumboAcc=0;updJumbo();}ctx.setJumboAcc(jumboAcc);
   }
 
-  Object.assign(battle,{mirrorSpot,battlePlayerPos,avoidPlayerOverlap,oppSpotPos,oppSpotQuota,oppSpotCooldown,oppSpotReady,oppMarkSpotUse,oppBeginLoad,startOppShooter,oppPickSpot,oppFireBall,oppScore,updOppShooter,updBattle});
+  Object.assign(battle,{mirrorSpot,battlePlayerPos,avoidPlayerOverlap,oppSpotPos,oppRepositionForPlayer,oppSpotQuota,oppSpotCooldown,oppSpotReady,oppMarkSpotUse,oppBeginLoad,startOppShooter,oppPickSpot,oppFireBall,oppScore,updOppShooter,updBattle});
 })(window);

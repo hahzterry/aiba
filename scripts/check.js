@@ -265,10 +265,14 @@ try{new Function(playerSelectScript);}
 catch(e){fail("player select script syntax error: "+e.message);}
 try{new Function(playerLockerPreviewScript);}
 catch(e){fail("player locker preview script syntax error: "+e.message);}
+for(const token of ["appearanceKey","lockerStage","lockerWorkbench"])
+  if(!(playerLockerPreviewScript+playerSelectScript+styles).includes(token))fail("fixed gear preview token missing "+token);
 try{new Function(avatarCustomizerScript);}
 catch(e){fail("avatar customizer script syntax error: "+e.message);}
 for(const key of ["AIBACustomizer","customStar","saveUse","applyCustomHead","customHead"])
   if(!avatarCustomizerScript.includes(key))fail("avatar customizer script missing "+key);
+for(const token of ["function applyVisual","function applyGearHead","appearanceKey","refreshGearPreview"])
+  if(!gearScript.includes(token))fail("gear visual preview token missing "+token);
 try{new Function(playerIdScript);}
 catch(e){fail("player id script syntax error: "+e.message);}
 try{new Function(leaderboardApiScript);}
@@ -442,6 +446,13 @@ for(const token of ['runtime.service("legacy")','runtime.register("mode:rackrush
 const contestModule=read("src/modes/contest.js");
 for(const token of ['runtime.service("legacy")','runtime.register("mode:contest"',"beginStage","startRound","showBracket","champion"])
   if(!contestModule.includes(token))fail("contest module token missing "+token);
+const contestCinematics=read("src/presentation/cinematics.js");
+for(const token of ["rackShots.forEach(s=>q.push({type:\"shot\",s}))","it.from.distanceTo(it.to)/4.6","it.s.ball+1"])
+  if(!contestCinematics.includes(token))fail("contest AI full-run behavior missing "+token);
+if(contestCinematics.includes("每架可视化2球"))fail("contest AI must not use the two-shot montage");
+const battleOpponent=read("src/modes/percent-battle/opponent.js");
+for(const token of ["function oppRepositionForPlayer","OPP.playerSpotSeen","candidates.sort"])
+  if(!battleOpponent.includes(token))fail("Percent Battle overlap guard missing "+token);
 const pregameModule=read("src/ui/pregame.js");
 for(const token of ['runtime.register("ui:pregame"',"dressGuy","AIBASelectedStar","showRackRushIntro","showBattleIntro"])
   if(!pregameModule.includes(token))fail("pregame module token missing "+token);

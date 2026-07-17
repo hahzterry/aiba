@@ -93,7 +93,8 @@
     if(!global.THREE||typeof global.voxelGuy!=="function")return "";
     clearGroup(ctx.rig);
     const star=findStar(id);
-    const key=(id||"__random")+":"+(star&&star.updatedAt||0)+(featured?":pose":":stand");
+    const gearKey=global.AIBAGear&&typeof global.AIBAGear.appearanceKey==="function"?global.AIBAGear.appearanceKey():"no-gear";
+    const key=(id||"__random")+":"+(star&&star.updatedAt||0)+":"+gearKey+(featured?":pose":":stand");
     if(cache.has(key))return cache.get(key);
     const guy=global.voxelGuy();
     dressPreview(guy,star);

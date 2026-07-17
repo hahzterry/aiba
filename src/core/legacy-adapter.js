@@ -71,7 +71,7 @@
     poseGuy,
     poseBallPos,
     dressGuy,
-    applyStarStyle,
+    applyStarStyle:(...args)=>global.applyStarStyle(...args),
     shotProfileText,
     playerShotProfile,
     resetFinalRun,

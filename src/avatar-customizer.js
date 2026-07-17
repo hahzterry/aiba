@@ -294,6 +294,7 @@
     applyCustomTop(guy,star);
     // 装备类外观交给 gear 模块,这里保持确定的默认:护腕隐藏
     if(guy.wrists)guy.wrists.forEach(w=>{w.visible=false;});
+    if(global.AIBAGear&&typeof global.AIBAGear.applyVisual==="function")global.AIBAGear.applyVisual(guy);
   }
   function patchApplyStarStyle(){
     const orig=global.applyStarStyle;
