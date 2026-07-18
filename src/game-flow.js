@@ -71,7 +71,7 @@ function mixNumber(a,b,t){return a+(b-a)*t;}
 // Low over-the-shoulder player-lock view. Battle mode gradually widens it for deep spots.
 function updatePlayerLockCamera(dt){
   const distance=P.pos.distanceTo(HOOP);
-  const farMix=G.mode==="battle"?clamp((distance-7)/8,0,1):0;
+  const farMix=(G.mode==="battle"||G.mode==="contest")?clamp((distance-7)/8,0,1):0;
   autoFrameCam(camTarget,P.pos,P.jump,COURT_ATTACK_DIR,{
     marginX:mixNumber(1.12,1.34,farMix),
     marginY:mixNumber(1.12,1.28,farMix),

@@ -60,8 +60,23 @@
     return true;
   }
   function oppSpotPos(index){
-    const spot=BATTLE_SPOTS[index];
-    return spot?avoidPlayerOverlap(mirrorSpot(spot.p)):V3(0,0,0);
+    const i=index;
+    const sp=BATTLE_SPOTS[i];if(!sp)return V3(0,0,0);
+    // 确定性双槽位:玩家永远站点位圈上,对手站固定副槽位;与玩家位置无关,任何点位都不重叠。
+    // 底角/中场等贴边点位依次尝试 外侧→左右侧向→内侧,取钳制后仍保持 0.9m 间距的第一个槽位。
+    const out=V3(sp.p.x-HOOP.x,0,sp.p.z-HOOP.z);if(out.lengthSq()<0.01)out.set(0,0,1);out.normalize();
+    const side=V3(out.z,0,-out.x),ss=sp.p.x>=-0.01?1:-1;
+    const cands=[[out,0.95,side,ss*0.5],[out,0.95,side,-ss*0.5],[side,ss*1.1,out,0],[side,-ss*1.1,out,0],[out,-0.95,side,ss*0.5]];
+    let best=null,bestD=-1;
+    for(const c of cands){
+      const pos=sp.p.clone().addScaledVector(c[0],c[1]).addScaledVector(c[2],c[3]);
+      pos.x=clamp(pos.x,-COURT.halfWidth+.55,COURT.halfWidth-.55);
+      pos.z=clamp(pos.z,COURT.nearBaseline+.55,COURT.playMaxZ);
+      const d=pos.distanceTo(sp.p);
+      if(d>=0.9)return pos;
+      if(d>bestD){bestD=d;best=pos;}
+    }
+    return best;
   }
   function oppSpotQuota(index){
     const spot=BATTLE_SPOTS[index];

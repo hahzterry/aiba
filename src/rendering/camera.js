@@ -74,6 +74,7 @@ function autoFrameCam(rig,pPos,pJump,faceDir,opts){
   rig.pos.copy(_afCenter).addScaledVector(_afBack,dist);
   rig.look.copy(_afCenter);
 }
+let fpLookY=null;
 function updPlayCam(dt){
   dt=dt||0.016;
   const d=V3(Math.sin(P.face),0,Math.cos(P.face));
@@ -82,9 +83,17 @@ function updPlayCam(dt){
   const isRush=G.mode==="rackrush";
   const isContest=G.mode==="contest";
   if(CAM.mode===0){
-    // 第一人称跟头,刚性贴合;离开第一人称时下一帧再做硬切
-    rig.pos.copy(eyePos());
-    rig.look.set(HOOP.x,HOOP.y+0.15,HOOP.z);
+    // 第一人称:略微后拉抬高(身体网格在本视角隐藏,不会入画);
+    // 球出手后镜头随球高度平滑抬升,保证高弧线在空中全程可见
+    const e=eyePos();
+    rig.pos.set(e.x-d.x*0.85,e.y+0.28,e.z-d.z*0.85);
+    let fpTarget=HOOP.y+0.15;
+    if(typeof balls!=="undefined"&&balls.length){
+      const fb=balls[balls.length-1];
+      if(fb&&fb.phase==="fly"&&fb.mesh)fpTarget=Math.max(fpTarget,HOOP.y+0.15+(fb.mesh.position.y-HOOP.y)*0.5);
+    }
+    fpLookY=fpLookY==null?fpTarget:fpLookY+(fpTarget-fpLookY)*Math.min(1,dt*7);
+    rig.look.set(HOOP.x,fpLookY,HOOP.z);
     camSnap=true;
   }else if(CAM.mode===1){
     if(isBattle||isRush||isContest){
@@ -103,10 +112,9 @@ function updPlayCam(dt){
       autoFrameCam(camTarget,P.pos,P.jump,COURT_ATTACK_DIR,{broadcast:true,marginX:1.24,marginY:1.2,minDist:5.4,maxDist:20,lookLift:-.12,pad:.3});
       dampRig(dt,5.2);
     }else{
-      camTarget.pos.set(10.8,4.35,-1.4);
-      const m=P.pos.clone().lerp(HOOP,0.45);
-      camTarget.look.set(m.x,2.1,m.z);
-      dampRig(dt,6);
+      // 三分大赛/练习转播视角:自适应取景,深远彩球点也能框住球员+篮筐全程
+      autoFrameCam(camTarget,P.pos,P.jump,COURT_ATTACK_DIR,{broadcast:true,marginX:1.4,marginY:1.3,minDist:7.5,maxDist:30,lookLift:0.2,pad:.8,heightK:.52});
+      dampRig(dt,5);
     }
   }
 }

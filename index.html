@@ -2087,6 +2087,7 @@ function autoFrameCam(rig,pPos,pJump,faceDir,opts){
   rig.pos.copy(_afCenter).addScaledVector(_afBack,dist);
   rig.look.copy(_afCenter);
 }
+let fpLookY=null;
 function updPlayCam(dt){
   dt=dt||0.016;
   const d=V3(Math.sin(P.face),0,Math.cos(P.face));
@@ -2095,9 +2096,17 @@ function updPlayCam(dt){
   const isRush=G.mode==="rackrush";
   const isContest=G.mode==="contest";
   if(CAM.mode===0){
-    // 第一人称跟头,刚性贴合;离开第一人称时下一帧再做硬切
-    rig.pos.copy(eyePos());
-    rig.look.set(HOOP.x,HOOP.y+0.15,HOOP.z);
+    // 第一人称:略微后拉抬高(身体网格在本视角隐藏,不会入画);
+    // 球出手后镜头随球高度平滑抬升,保证高弧线在空中全程可见
+    const e=eyePos();
+    rig.pos.set(e.x-d.x*0.85,e.y+0.28,e.z-d.z*0.85);
+    let fpTarget=HOOP.y+0.15;
+    if(typeof balls!=="undefined"&&balls.length){
+      const fb=balls[balls.length-1];
+      if(fb&&fb.phase==="fly"&&fb.mesh)fpTarget=Math.max(fpTarget,HOOP.y+0.15+(fb.mesh.position.y-HOOP.y)*0.5);
+    }
+    fpLookY=fpLookY==null?fpTarget:fpLookY+(fpTarget-fpLookY)*Math.min(1,dt*7);
+    rig.look.set(HOOP.x,fpLookY,HOOP.z);
     camSnap=true;
   }else if(CAM.mode===1){
     if(isBattle||isRush||isContest){
@@ -2116,10 +2125,9 @@ function updPlayCam(dt){
       autoFrameCam(camTarget,P.pos,P.jump,COURT_ATTACK_DIR,{broadcast:true,marginX:1.24,marginY:1.2,minDist:5.4,maxDist:20,lookLift:-.12,pad:.3});
       dampRig(dt,5.2);
     }else{
-      camTarget.pos.set(10.8,4.35,-1.4);
-      const m=P.pos.clone().lerp(HOOP,0.45);
-      camTarget.look.set(m.x,2.1,m.z);
-      dampRig(dt,6);
+      // 三分大赛/练习转播视角:自适应取景,深远彩球点也能框住球员+篮筐全程
+      autoFrameCam(camTarget,P.pos,P.jump,COURT_ATTACK_DIR,{broadcast:true,marginX:1.4,marginY:1.3,minDist:7.5,maxDist:30,lookLift:0.2,pad:.8,heightK:.52});
+      dampRig(dt,5);
     }
   }
 }
@@ -4836,45 +4844,23 @@ function battleNextSpot(){const n=BATTLE_SPOTS.length;battleSetSpot(((G.battleSp
 /* ---------------- 百分大战:真实对手(同场竞投) ---------------- */
 const OPP={on:false,o:null,guy:null,spotIdx:2,phase:"idle",t:0,pos:null,nextPos:null,curve:null,ballOut:null,
   spotShots:0,coolUntil:null,forceMove:false};
-function mirrorSpot(p){
-  // X 镜像:你在左,他在右。中线点位(x≈0,如弧顶/中场)给对手一个固定右偏,避免重叠
-  if(Math.abs(p.x)<0.6)return V3(p.x+1.9,p.y,p.z);
-  return V3(-p.x,p.y,p.z);
-}
-const OPP_MIN_SEP=1.58;
-function battlePlayerPos(){
-  if(G.mode==="battle"&&P&&P.pos)return P.pos;
-  const sp=BATTLE_SPOTS[G.battleSpot||0];
-  return sp?sp.p:null;
-}
-function avoidPlayerOverlap(pos,i){
-  const pp=battlePlayerPos();if(!pp)return pos;
-  const dx=pos.x-pp.x,dz=pos.z-pp.z,d=Math.hypot(dx,dz);
-  if(d>=OPP_MIN_SEP){
+function oppSpotPos(i){
+  const sp=BATTLE_SPOTS[i];if(!sp)return V3(0,0,0);
+  // 确定性双槽位:玩家永远站点位圈上,对手站固定副槽位;与玩家位置无关,任何点位都不重叠。
+  // 底角/中场等贴边点位依次尝试 外侧→左右侧向→内侧,取钳制后仍保持 0.9m 间距的第一个槽位。
+  const out=V3(sp.p.x-HOOP.x,0,sp.p.z-HOOP.z);if(out.lengthSq()<0.01)out.set(0,0,1);out.normalize();
+  const side=V3(out.z,0,-out.x),ss=sp.p.x>=-0.01?1:-1;
+  const cands=[[out,0.95,side,ss*0.5],[out,0.95,side,-ss*0.5],[side,ss*1.1,out,0],[side,-ss*1.1,out,0],[out,-0.95,side,ss*0.5]];
+  let best=null,bestD=-1;
+  for(const c of cands){
+    const pos=sp.p.clone().addScaledVector(c[0],c[1]).addScaledVector(c[2],c[3]);
     pos.x=clamp(pos.x,-COURT.halfWidth+.55,COURT.halfWidth-.55);
     pos.z=clamp(pos.z,COURT.nearBaseline+.55,COURT.playMaxZ);
-    return pos;
+    const d=pos.distanceTo(sp.p);
+    if(d>=0.9)return pos;
+    if(d>bestD){bestD=d;best=pos;}
   }
-  const toHoop=HOOP.clone().sub(pos);toHoop.y=0;
-  if(toHoop.lengthSq()<0.0001)toHoop.set(0,0,-1);
-  toHoop.normalize();
-  const side=V3(toHoop.z,0,-toHoop.x);
-  if(side.lengthSq()<0.0001)side.set(1,0,0);
-  side.normalize();
-  const away=V3(dx,0,dz);
-  if(away.lengthSq()<0.0001)away.copy(side).multiplyScalar(pos.x>=0?1:-1);
-  else away.normalize();
-  const sideSign=pos.x>=0?1:-1;
-  const push=Math.max(OPP_MIN_SEP-d,0.78);
-  pos.addScaledVector(away,push);
-  pos.addScaledVector(side,sideSign*0.44);
-  // 对手的防重叠偏移也必须留在同一半场，不允许被推到中线外。
-  pos.x=clamp(pos.x,-COURT.halfWidth+.55,COURT.halfWidth-.55);
-  pos.z=clamp(pos.z,COURT.nearBaseline+.55,COURT.playMaxZ);
-  return pos;
-}
-function oppSpotPos(i){
-  const sp=BATTLE_SPOTS[i];return sp?avoidPlayerOverlap(mirrorSpot(sp.p),i):V3(0,0,0);
+  return best;
 }
 function oppSpotQuota(i){
   const sp=BATTLE_SPOTS[i];
@@ -5638,5 +5624,8 @@ animate();
 <script src="src/hot-hand.js?v=1.81"></script>
 <script src="src/perf.js?v=1.72"></script>
 <script src="src/perf-settings.js?v=1.92"></script>
+<script src="src/ui/contest-progress.js?v=1.95"></script>
+<script src="src/ui/onboarding.js?v=1.95"></script>
+<script src="src/ui/vision-tutorial.js?v=1.95"></script>
 </body>
 </html>
