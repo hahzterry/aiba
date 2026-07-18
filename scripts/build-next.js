@@ -215,6 +215,7 @@ function generate(source){
     '<script src="src/core/input.js?v=refactor36"></script>',
     '');
   html=html.replaceAll('src/nba-dna/NBADNA.js?v=20260701-analysis4','src/nba-dna/NBADNA.js?v=20260718-coming-soon');
+  html=html.replaceAll('src/rendering/materials.js?v=refactor17','src/rendering/materials.js?v=refactor17b');
   html=html.replaceAll('src/ui/menu.js?v=refactor12','src/ui/menu.js?v=refactor12a');
   return html;
 }
