@@ -102,7 +102,10 @@ function shotProfileFor(star){
   return CONFIG.shotProfileFor?CONFIG.shotProfileFor(star):(SHOT_PROFILES[star&&(star.id||star.n)]||DEFAULT_SHOT_PROFILE);
 }
 function playerShotProfile(){return shotProfileFor(G.myStar);}
-function playerSweetZone(){return DIFFS[G.diff].zone*playerShotProfile().window;}
+function playerSweetZone(){
+  const base=DIFFS[G.diff].zone*playerShotProfile().window;
+  return base*((G.practice||G.tutorial||G.interactiveTutorial)?1.5:1);
+}
 function playerChargeRate(){return DIFFS[G.diff].fill*playerShotProfile().speed;}
 function shotFlightTime(baseTf,star,shot){
   return CONFIG.shotFlightTime?CONFIG.shotFlightTime(baseTf,star,{deep:!!(shot&&(shot.deep!=null||shot.super))}):baseTf;
@@ -118,4 +121,3 @@ const TEAM_COLORS=[
 ];
 const MY_NUMS=[23,24,30,33,3,11,8,0,77,35,13,7];
 const EXT_AUDIO=ASSETS.audio||{};
-

@@ -33,9 +33,9 @@
                 <button class="quickInfo" onclick="ensureAudio(true,true);showModeInfo('battle')" aria-label="百分大战说明">i</button>
                 <button class="quickPlay" onclick="ensureAudio(true,true);goDiff('battle')"><small>02 / PERCENT</small><b>百分大战</b><span>先到 100</span></button>
               </div>
-              <div class="quickMode dna">
+              <div class="quickMode dna comingSoon">
                 <button class="quickInfo" onclick="ensureAudio(true,true);showModeInfo('nbadna')" aria-label="NBA DNA 说明">i</button>
-                <button class="quickPlay" onclick="ensureAudio(true,true);startNBADNA()"><small>03 / DNA</small><b>NBA DNA</b><span>投篮像谁</span></button>
+                <button class="quickPlay" disabled aria-disabled="true"><small>03 / DNA</small><b>NBA DNA</b><span>【即将上线】</span></button>
               </div>
               <div class="quickMode">
                 <button class="quickInfo" onclick="ensureAudio(true,true);showModeInfo('contest')" aria-label="三分挑战说明">i</button>
@@ -69,9 +69,7 @@
     }
     if(mode==="nbadna"){
       global.showPanel(`<h1 class="title" style="font-size:22px">NBA DNA</h1>
-        <div class="card">上传一张投篮姿势照片，生成你的 <b>Kobe DNA</b> 球员卡。V1 只匹配 Kobe，后续可以继续加入 Curry、Jordan、Klay 等模板。</div>
-        <div class="card">照片只在浏览器本地处理；姿势模型不可用时，会退回娱乐化风格评分，保证流程不断。</div>
-        <button class="btn gold" onclick="ensureAudio(true,true);startNBADNA()">开始 NBA DNA</button>
+        <div class="card"><b>【即将上线】</b><br>投篮姿势分析与 NBA 球星风格匹配正在完善中，当前测试版暂不开放。</div>
         <button class="btn sm" onclick="showMenu()">返回封面</button>`);
       return;
     }

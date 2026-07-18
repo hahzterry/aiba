@@ -38,12 +38,18 @@
       "<small>MOTION CONTROL</small><h1>🎥 用身体投篮</h1>"+
       '<div class="obSteps"><span><b>1</b><i>🙌</i>双手入框锁定</span><span><b>2</b><i>💪</i>举高蓄力</span><span><b>3</b><i>🏀</i>越线出手</span></div>'+
       '<p class="vtPriv">🔒 摄像头画面只在本机识别姿态,不上传、不存储。</p>'+
-      '<button class="obBtn gold" id="vtGo">开启摄像头,排练一次</button>'+
+      '<button class="obBtn gold" id="vtGo">开启摄像头,进入真实球场</button>'+
       '<button class="obBtn" id="vtNo">还是用触屏</button></div>';
     document.body.appendChild(el);
     document.getElementById("vtGo").onclick=()=>{
       mark("intro");el.remove();
-      try{typeof origEnable==="function"&&origEnable(ev);}catch(e){}
+      try{
+        const enabled=typeof origEnable==="function"?origEnable(ev):null;
+        Promise.resolve(enabled).then(()=>{
+          const V=VV();
+          if(V&&V.enabled&&global.AIBAInteractiveTutorial)global.AIBAInteractiveTutorial.start({skipVisionIntro:true});
+        });
+      }catch(e){}
     };
     document.getElementById("vtNo").onclick=()=>{el.remove();};
   }
@@ -162,6 +168,7 @@
   let coachShownAt=0;
   setInterval(()=>{
     const V=VV(),G=GG();
+    if(global.AIBAInteractiveTutorial&&global.AIBAInteractiveTutorial.prefersCourtTutorial)return;
     if(!V||!G)return;
     if(V.enabled&&!seen.done&&!overlay&&(G.state==="diff"||G.state==="menu")){
       const p=document.getElementById("visionPreview");
@@ -179,5 +186,10 @@
     }
   },400);
 
-  global.AIBAVisionTutorial={start};
+  global.AIBAVisionTutorial={start:function(force){
+    if(global.AIBAInteractiveTutorial&&global.AIBAInteractiveTutorial.prefersCourtTutorial){
+      return global.AIBAInteractiveTutorial.start({force:!!force});
+    }
+    return start(force);
+  }};
 })(window);

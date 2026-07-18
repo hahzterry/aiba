@@ -122,8 +122,11 @@
     const ideal=s?weatherAdjustedIdeal(s,false):IDEAL;
     poseK=G.charging?G.power/ideal:Math.max(0,poseK-dt*4.5);
     const base=shotCurves(poseK);
+    const tutorialHold=!!(global.AIBAInteractiveTutorial&&
+      typeof global.AIBAInteractiveTutorial.isHoldingRelease==="function"&&
+      global.AIBAInteractiveTutorial.isHoldingRelease());
     // v1.52 物理:顶点前沿用原曲线,顶点后接管自然下落;落地前自动出手
-    const phys=AIBAShotPhysics.update({charging:G.charging,dt,ideal,rate:playerChargeRate(),curve:base});
+    const phys=AIBAShotPhysics.update({charging:G.charging,paused:tutorialHold,dt,ideal,rate:playerChargeRate(),curve:base});
     const c=phys.curve;
     if(phys.apexCue&&G.charging&&!G.apexed){
       G.apexed=true;

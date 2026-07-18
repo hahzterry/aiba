@@ -278,6 +278,13 @@ html[data-scan-overlay="menu"] #scan{opacity:.018}
 .quickMode.primary:before{background:linear-gradient(135deg,rgba(42,7,8,.9),rgba(7,8,15,.62))}
 .quickMode.dna{--accent:#7CFC6B;--accent2:#0b4f58}
 .quickMode.dna:before{background:linear-gradient(135deg,rgba(5,36,31,.9),rgba(7,8,15,.62))}
+.quickMode.comingSoon{--accent:#8ea3b8;filter:drop-shadow(0 10px 14px rgba(0,0,0,.38)) saturate(.55)}
+.quickMode.comingSoon:before{background:linear-gradient(135deg,rgba(23,28,35,.94),rgba(7,8,15,.72))}
+.quickMode.comingSoon:after{border-color:#637181;opacity:.62}
+.quickMode.comingSoon .quickPlay{cursor:not-allowed;opacity:1}
+.quickMode.comingSoon .quickPlay b{color:#d7dee5;text-shadow:2px 2px 0 #000}
+.quickMode.comingSoon .quickPlay span{color:#ffd23f;font-size:11px;letter-spacing:0}
+.quickMode.comingSoon .quickInfo{border-color:#637181;color:#c7d2dc}
 .quickPlay{position:relative;z-index:2;width:100%;min-height:88px;padding:14px 12px 12px 16px;border:0;background:transparent;
   color:#fff;text-align:left;font-family:inherit;font-weight:bold;cursor:pointer;text-shadow:2px 2px 0 #000}
 .quickPlay small{display:block;margin-bottom:5px;color:var(--accent);font-size:8px;letter-spacing:1.5px}
@@ -660,3 +667,49 @@ table.std tr.adv td{box-shadow:inset 0 0 0 2px #ffd23f}
 .vtStatus b{display:block;font-size:20px;margin-bottom:6px}
 .vtStatus span{display:block;font-size:13px;color:#8ea3b8;line-height:1.5}
 #vtOverlay .vtStatus #vtReps{color:#ffd23f;font-family:"Orbitron",monospace;margin-top:8px}
+
+/* ===== v1.96 真实球场分段式互动教学 ===== */
+html[data-interactive-tutorial="1"] #hudTimer,
+html[data-interactive-tutorial="1"] #hudScore,
+html[data-interactive-tutorial="1"] #hudRack,
+html[data-interactive-tutorial="1"] #hudRound,
+html[data-interactive-tutorial="1"] #hudTarget,
+html[data-interactive-tutorial="1"] #hudStreak,
+html[data-interactive-tutorial="1"] #battleControls,
+html[data-interactive-tutorial="1"] #battleScore,
+html[data-interactive-tutorial="1"] #midBtn,
+html[data-interactive-tutorial="1"] #contestProgress,
+html[data-interactive-tutorial="1"] #camBtn,
+html[data-interactive-tutorial="1"] #muteBtn,
+html[data-interactive-tutorial="1"] #pauseBtn,
+html[data-interactive-tutorial="1"] #homeBtn,
+html[data-interactive-tutorial="1"] #perfBtn,
+html[data-interactive-tutorial="1"] #obHelpBtn,
+html[data-interactive-tutorial="1"] #hint{display:none!important}
+html[data-interactive-tutorial="1"] #visionPreview{left:auto!important;right:max(0px,env(safe-area-inset-right))!important;top:auto!important;bottom:max(0px,env(safe-area-inset-bottom))!important;transform:none!important;width:clamp(156px,18vw,190px);max-width:28vw!important;max-height:46vh;transition:none;z-index:72}
+html[data-interactive-tutorial="1"] #visionPreview[data-orientation="portrait"]{width:clamp(150px,17vw,180px)}
+html[data-interactive-tutorial="1"] #visionPreview .visionClose{display:none}
+html[data-interactive-tutorial="1"] #visionState{font-size:13px;line-height:1.45}
+#itCoach{position:fixed;right:max(10px,env(safe-area-inset-right));top:max(10px,env(safe-area-inset-top));z-index:71;width:min(330px,42vw);padding:12px 13px 13px;color:#eef7ff;background:rgba(5,9,16,.92);border:2px solid #26364a;border-top:5px solid #ffd23f;box-shadow:5px 5px 0 rgba(0,0,0,.58);pointer-events:auto}
+.itTop{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#ffd23f;font-weight:900}
+.itTop small{min-width:0;color:#ffd23f;font-size:11px;line-height:1.25;letter-spacing:1px}
+.itTop button{flex:0 0 auto;width:30px;height:30px;border:1px solid #3a4a5e;background:#101722;color:#c9d7e6;font:900 21px/26px Orbitron,monospace;cursor:pointer}
+.itProgress{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0 9px}
+.itProgress i{height:6px;background:#263246}
+.itProgress i.on{background:#70e8ff;box-shadow:0 0 8px rgba(112,232,255,.65)}
+.itProgress i.ok{background:#7CFC6B}
+#itCoach h2{margin:0 0 6px;font-size:22px;line-height:1.18;letter-spacing:0;text-shadow:2px 2px 0 #000}
+#itCoach p{min-height:0;margin:0;color:#d7e4ef;font:700 14px/1.5 "Orbitron","Courier New",monospace;letter-spacing:0}
+.itActions{display:flex;gap:7px;margin-top:11px}
+.itActions button{min-width:0;flex:1;height:35px;padding:0 7px;border:2px solid #000;background:#1d2a3a;color:#dbe9f5;font:900 11px "Orbitron","Courier New",monospace;cursor:pointer}
+.itActions button:first-child{color:#071018;background:#ffd23f}
+@media (max-width:600px){
+  html[data-interactive-tutorial="1"] #visionPreview{width:min(40vw,156px);max-width:40vw!important;max-height:44vh}
+  html[data-interactive-tutorial="1"] #visionPreview[data-orientation="portrait"]{width:min(38vw,150px)}
+  html[data-interactive-tutorial="1"] #visionState{font-size:12px}
+  #itCoach{right:max(0px,env(safe-area-inset-right));top:max(0px,env(safe-area-inset-top));width:min(54vw,230px);padding:10px 10px 11px}
+  .itTop small{font-size:10px}
+  #itCoach h2{font-size:20px;line-height:1.2}#itCoach p{font-size:14px;line-height:1.45}
+  .itActions button{height:32px;font-size:10px}
+}
+@media (max-height:620px){#itCoach{padding-top:8px}.itProgress{margin:6px 0}.itActions{margin-top:7px}.itActions button{height:30px}}

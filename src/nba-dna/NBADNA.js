@@ -1,6 +1,7 @@
 (function(global){
   "use strict";
 
+  const NBA_DNA_ENABLED=false;
   const state={file:null,previewUrl:null,result:null,userImg:null,analysis:null,poster:null,busy:false};
 
   function $(id){return document.getElementById(id);}
@@ -11,10 +12,16 @@
     if(typeof showPanel==="function")showPanel(`<section class="dnaPanel">${body}</section>`);
   }
   function start(){
+    if(!NBA_DNA_ENABLED){
+      if(typeof showModeInfo==="function")showModeInfo("nbadna");
+      else safeToast("NBA DNA【即将上线】","#ffd23f");
+      return false;
+    }
     if(global.G)G.state="nba-dna";
     if(typeof ensureAudio==="function")ensureAudio(true,true);
     if(typeof playAudioEvent==="function")playAudioEvent("dna_intro");
     dnaUpload();
+    return true;
   }
   function dnaUpload(){
     dnaShell(`

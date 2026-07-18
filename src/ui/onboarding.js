@@ -36,7 +36,7 @@
       '<span><b>2</b><i>🖐️</i>松开手出手</span>'+
       '<span><b>3</b><i>🎯</i>力量停在绿色甜区<br>= 空心三分</span>'+
       "</div>"+
-      '<button class="obBtn gold" id="obGoPractice">🏀 先来 3 球热身(15秒)</button>'+
+      '<button class="obBtn gold" id="obGoPractice">🏀 进入真实球场互动教学</button>'+
       '<button class="obBtn" id="obGoFree">直接开逛</button>'+
       '<button class="obLink" id="obGoHelp">查看完整玩法说明 ›</button>'+
       "</div>";
@@ -45,7 +45,10 @@
       mark("welcome");el.remove();
       try{
         global.ensureAudio&&ensureAudio(true,true);
-        global.goDiff("contest",true);global.pickDiff("normal");global.startPractice();
+        if(global.AIBAInteractiveTutorial)global.AIBAInteractiveTutorial.start();
+        else{
+          global.goDiff("contest",true);global.pickDiff("normal");global.startPractice();
+        }
       }catch(e){}
     };
     document.getElementById("obGoFree").onclick=()=>{mark("welcome");el.remove();};
@@ -63,7 +66,7 @@
       '<div class="card"><b>三分大赛</b><br>70 秒投完 5 个球架+2 个深远彩球,顶部进度条实时显示每球命中。</div>'+
       '<div class="card"><b>体感控制</b><br>难度页切"体感控制"用摄像头投篮:双手入框锁定 → 举高蓄力 → 越线出手。画面只在本机处理,不上传。</div>'+
       '<button class="btn green" onclick="AIBAOnboard.replay()">🔄 重看新手引导</button>'+
-      '<button class="btn" onclick="AIBAVisionTutorial&&AIBAVisionTutorial.start(true)">🎥 体感教学排练</button>'+
+      '<button class="btn" onclick="AIBAInteractiveTutorial&&AIBAInteractiveTutorial.start()">🎥 真实球场互动教学</button>'+
       '<button class="btn gold" onclick="hidePanel()">返回</button>'
     );
   }
@@ -83,6 +86,7 @@
     const G=GG();
     if(!G)return;
     mountHelpBtn();
+    if(G.interactiveTutorial)return;
     // 欢迎卡:首次到主菜单
     const bl=document.getElementById("bootLoad");
     if(!seen.welcome&&G.state==="menu"&&(!bl||!bl.offsetParent)){

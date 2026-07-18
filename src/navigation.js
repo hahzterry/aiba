@@ -17,13 +17,13 @@
     PREGAME.on=false;PREGAME.t=0;PREGAME.idx=0;PREGAME.shots=[];PREGAME.actors=[];PREGAME.snaps=[];PREGAME.cb=null;
   }
 
-  function cleanup(){
+  function cleanup(options){
     cancelPregame();
     tweens.length=0;
     if(typeof VICTORY_CINE!=="undefined")VICTORY_CINE.on=false;
     if(typeof winCine!=="undefined")winCine.on=false;
     if(typeof AIBARecorder!=="undefined"&&AIBARecorder.cancel)AIBARecorder.cancel();
-    if(typeof suspendVisionControl==="function")suspendVisionControl();
+    if(!(options&&options.preserveVision)&&typeof suspendVisionControl==="function")suspendVisionControl();
     const count=$("countN"),show=$("showUI");
     if(count)count.style.display="none";
     if(show)show.style.display="none";

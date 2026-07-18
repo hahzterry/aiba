@@ -467,6 +467,13 @@ function handleVisionGesture(step){
     VISION.ownsCharge=!!startCharge();
     if(!VISION.ownsCharge)resetVisionGesture(VISION.machine);
   }else if(step.type==="release"&&VISION.ownsCharge){
+    const tutorial=window.AIBAInteractiveTutorial;
+    if(tutorial&&tutorial.isActive&&tutorial.isActive()&&tutorial.acceptVisionRelease&&!tutorial.acceptVisionRelease(step)){
+      const sm=VISION.machine,now=performance.now();
+      sm.phase="charging";sm.chargeStart=now;sm.lastPowerAt=now;sm.power=G.power;
+      sm.cooldownUntil=0;sm.releaseFlashUntil=0;
+      return;
+    }
     if (typeof playAudioEvent === "function") playAudioEvent("pose_release");
     VISION.ownsCharge=false;doRelease();
   }

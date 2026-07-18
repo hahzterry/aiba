@@ -56,8 +56,8 @@
     if(G.mode==="battle"&&G.state==="battle"&&!G.battleCut&&!G.battleOver)global.resumeBattleClock();
     global.hidePanel();updatePauseButton();
   }
-  function clearLiveObjectsForMenu(){
-    if(global.AIBANavigation)global.AIBANavigation.cleanup();
+  function clearLiveObjectsForMenu(options){
+    if(global.AIBANavigation)global.AIBANavigation.cleanup(options);
     const passing=ctx.getPassing();if(passing){scene.remove(passing.mesh);ctx.setPassing(null);}
     balls.slice().forEach(ball=>{scene.remove(ball.mesh);scene.remove(ball.blob);});balls.length=0;
     G.charging=false;G.canShoot=false;G.running=false;G.moving=false;G.glideCam=false;G.cutAway=null;G.battleCut=null;

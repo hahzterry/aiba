@@ -43,7 +43,9 @@ function updatePlayerPowerUI(){
     else{const y=112-power;fill.setAttribute("y",String(clamp(y,12,112)));fill.setAttribute("height",String(124-clamp(y,12,112)));}
   }
   if(sweet){
-    const zone=clamp(playerSweetZone()*1.05,4.5,10),center=78,start=clamp(center-zone*.5,70,86),end=clamp(center+zone*.5,74,90),span=end-start;
+    const training=G.practice||G.tutorial||G.interactiveTutorial;
+    const zone=clamp(playerSweetZone()*1.05,4.5,training?15:10),center=78;
+    const start=clamp(center-zone*.5,training?68:70,86),end=clamp(center+zone*.5,74,training?92:90),span=end-start;
     sweet.style.strokeDasharray=span+" 100";
     sweet.style.strokeDashoffset=String(-start);
   }
@@ -103,4 +105,3 @@ function battleNextSpot(){const n=BATTLE_SPOTS.length;battleSetSpot(((G.battleSp
 window.AIBA.runtime.register("ui:battle-controls",Object.freeze({
   buildSpotDots,hidePlayerPowerUI,updatePlayerPowerUI,updSpotDots,battlePrevSpot,battleNextSpot
 }));
-

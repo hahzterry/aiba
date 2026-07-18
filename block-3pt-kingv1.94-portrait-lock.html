@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>aiBA·百分大战 v1.94 PORTRAIT LOCK</title>
 <link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">
-<link rel="stylesheet" href="styles.css?v=1.94">
+<link rel="stylesheet" href="styles.css?v=2.05">
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -114,7 +114,7 @@
 <script src="src/leaderboard-ui.js?v=1.92"></script>
 <script src="src/share.js"></script>
 <script src="src/recorder.js?v=1.94"></script>
-<script src="src/shot-physics.js"></script>
+<script src="src/shot-physics.js?v=1.99"></script>
 <script src="src/face-overlays.js"></script>
 <script src="src/haptics.js?v=1.80"></script>
 <script src="src/visual-director.js?v=1.85"></script>
@@ -235,7 +235,7 @@ const DEFAULT_SHOT_PROFILE=CONFIG.DEFAULT_SHOT_PROFILE;
 const SHOT_PROFILES=CONFIG.SHOT_PROFILES;
 function shotProfileFor(star){return CONFIG.shotProfileFor?CONFIG.shotProfileFor(star):(SHOT_PROFILES[star&&(star.id||star.n)]||DEFAULT_SHOT_PROFILE);}
 function playerShotProfile(){return shotProfileFor(G.myStar);}
-function playerSweetZone(){return DIFFS[G.diff].zone*playerShotProfile().window;}
+function playerSweetZone(){const base=DIFFS[G.diff].zone*playerShotProfile().window;return base*((G.practice||G.tutorial||G.interactiveTutorial)?1.5:1);}
 function playerChargeRate(){return DIFFS[G.diff].fill*playerShotProfile().speed;}
 function shotFlightTime(baseTf,star,shot){return CONFIG.shotFlightTime?CONFIG.shotFlightTime(baseTf,star,{deep:!!(shot&&(shot.deep!=null||shot.super))}):baseTf;}
 function shotProfileText(star){const p=shotProfileFor(star);return p.label+" · "+(p.arcLabel||"标准弧线")+" · 甜区 "+Math.round(p.window*100)+"%";}
@@ -385,7 +385,7 @@ function triggerMissRunVoice(){
   return playMomentumCue(pickCue(pool),"#ff8d7a");
 }
 </script>
-<script src="src/vision.js?v=1.94"></script>
+<script src="src/vision.js?v=2.01"></script>
 <script>
 /* ====== 外部音频:本地观众声仅在比赛中循环,其余留空时使用内置合成音 ======
    后续素材可从 pixabay.com/sound-effects 搜索 "applause arena" "buzzer" "crowd boo"
@@ -397,7 +397,7 @@ const EXT_AUDIO=ASSETS.audio||{};
 <script src="src/nba-dna/PoseAnalyzer.js?v=20260701-analysis4"></script>
 <script src="src/nba-dna/PoseVisualizer.js?v=20260701-analysis4"></script>
 <script src="src/nba-dna/ShareCard.js?v=20260701-analysis4"></script>
-<script src="src/nba-dna/NBADNA.js?v=20260701-analysis4"></script>
+<script src="src/nba-dna/NBADNA.js?v=20260718-coming-soon"></script>
 <script>
 /* ---------------- three.js setup ---------------- */
 const renderer=new THREE.WebGLRenderer({canvas:$("c"),antialias:true,powerPreference:"high-performance"});
@@ -3790,7 +3790,7 @@ function resumePauseMenu(){
   if(G.mode==="battle"&&G.state==="battle"&&!G.battleCut&&!G.battleOver)resumeBattleClock();
   hidePanel();updatePauseButton();
 }
-function clearLiveObjectsForMenu(){if(window.AIBANavigation)AIBANavigation.cleanup();
+function clearLiveObjectsForMenu(options){if(window.AIBANavigation)AIBANavigation.cleanup(options);
   if(passing){scene.remove(passing.mesh);passing=null;}
   balls.slice().forEach(b=>{scene.remove(b.mesh);scene.remove(b.blob);});balls.length=0;
   G.charging=false;G.canShoot=false;G.running=false;G.moving=false;G.glideCam=false;G.cutAway=null;G.battleCut=null;
@@ -3879,9 +3879,9 @@ function showMenu(){
               <button class="quickInfo" onclick="ensureAudio(true,true);showModeInfo('battle')" aria-label="百分大战说明">i</button>
               <button class="quickPlay" onclick="ensureAudio(true,true);goDiff('battle')"><small>02 / PERCENT</small><b>百分大战</b><span>先到 100</span></button>
             </div>
-            <div class="quickMode dna">
+            <div class="quickMode dna comingSoon">
               <button class="quickInfo" onclick="ensureAudio(true,true);showModeInfo('nbadna')" aria-label="NBA DNA 说明">i</button>
-              <button class="quickPlay" onclick="ensureAudio(true,true);startNBADNA()"><small>03 / DNA</small><b>NBA DNA</b><span>投篮像谁</span></button>
+              <button class="quickPlay" disabled aria-disabled="true"><small>03 / DNA</small><b>NBA DNA</b><span>【即将上线】</span></button>
             </div>
             <div class="quickMode">
               <button class="quickInfo" onclick="ensureAudio(true,true);showModeInfo('contest')" aria-label="三分挑战说明">i</button>
@@ -3914,9 +3914,7 @@ function showModeInfo(mode){
   }
   if(mode==="nbadna"){
     showPanel(`<h1 class="title" style="font-size:22px">NBA DNA</h1>
-      <div class="card">上传一张投篮姿势照片，生成你的 <b>Kobe DNA</b> 球员卡。V1 只匹配 Kobe，后续可以继续加入 Curry、Jordan、Klay 等模板。</div>
-      <div class="card">照片只在浏览器本地处理；姿势模型不可用时，会退回娱乐化风格评分，保证流程不断。</div>
-      <button class="btn gold" onclick="ensureAudio(true,true);startNBADNA()">开始 NBA DNA</button>
+      <div class="card"><b>【即将上线】</b><br>投篮姿势分析与 NBA 球星风格匹配正在完善中，当前测试版暂不开放。</div>
       <button class="btn sm" onclick="showMenu()">返回封面</button>`);
     return;
   }
@@ -4785,7 +4783,7 @@ function updatePlayerPowerUI(){
     else{const y=112-power;fill.setAttribute("y",String(clamp(y,12,112)));fill.setAttribute("height",String(124-clamp(y,12,112)));}
   }
   if(sweet){
-    const zone=clamp(playerSweetZone()*1.05,4.5,10),center=78,start=clamp(center-zone*.5,70,86),end=clamp(center+zone*.5,74,90),span=end-start;
+    const training=G.practice||G.tutorial||G.interactiveTutorial,zone=clamp(playerSweetZone()*1.05,4.5,training?15:10),center=78,start=clamp(center-zone*.5,training?68:70,86),end=clamp(center+zone*.5,74,training?92:90),span=end-start;
     sweet.style.strokeDasharray=span+" 100";
     sweet.style.strokeDashoffset=String(-start);
   }
@@ -5613,13 +5611,13 @@ bootGame();
 animate();
 </script>
 <script src="src/game-flow.js?v=1.93"></script>
-<script src="src/navigation.js?v=1.90"></script>
+<script src="src/navigation.js?v=1.97"></script>
 <script src="src/scene-lifecycle.js?v=1.88"></script>
 <script src="src/result-stats.js?v=1.78"></script>
 <script src="src/gear.js?v=1.81"></script>
 <script src="src/avatar-customizer.js?v=1.79"></script>
 <script src="src/roster-style.js?v=1.79"></script>
-<script src="src/shot-motion.js?v=1.80"></script>
+<script src="src/shot-motion.js?v=1.99"></script>
 <script src="src/hero-moments.js?v=1.79"></script>
 <script src="src/hot-hand.js?v=1.81"></script>
 <script src="src/perf.js?v=1.72"></script>
@@ -5627,5 +5625,6 @@ animate();
 <script src="src/ui/contest-progress.js?v=1.95"></script>
 <script src="src/ui/onboarding.js?v=1.95"></script>
 <script src="src/ui/vision-tutorial.js?v=1.95"></script>
+<script src="src/ui/interactive-tutorial.js?v=2.04"></script>
 </body>
 </html>
