@@ -9,7 +9,11 @@
     "prestill": "npm run prepare:assets",
     "still": "remotion still src/index.ts ProofOfStyle out/proof-frame.png --frame=360",
     "prerender:proof": "npm run prepare:assets",
-    "render:proof": "remotion render src/index.ts ProofOfStyle out/aiba-proof-of-style.mp4 --codec=h264 --crf=15"
+    "render:proof": "remotion render src/index.ts ProofOfStyle out/aiba-proof-of-style.mp4 --codec=h264 --crf=15",
+    "prestill:launch": "npm run prepare:assets",
+    "still:launch": "remotion still src/index.ts LaunchFilm out/launch-frame.png --frame=2340",
+    "prerender:launch": "npm run prepare:assets",
+    "render:launch": "remotion render src/index.ts LaunchFilm out/aiba-launch-film.mp4 --codec=h264 --crf=15 --audio-bitrate=320k"
   },
   "dependencies": {
     "@remotion/cli": "4.0.490",
