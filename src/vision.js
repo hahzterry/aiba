@@ -45,6 +45,7 @@ const VISION={
   machine:{phase:"idle",holdStart:0,chargeStart:0,lastSeen:0,cooldownUntil:0,releaseFlashUntil:0,chargeBaseY:0,releaseLineY:.32,power:0,lastPowerAt:0},
   body:{samples:[],startedAt:0,ready:false,noseY:.23,shoulderY:.39,hipY:.66,centerX:.5,shoulderW:.22,bodyH:.27,releaseLineY:.32,hipVisible:false,lastAt:0},
   tracking:{left:null,right:null,prevLeft:null,prevRight:null,lastValidAt:0,lastAnyAt:0},
+  dock:{name:"",stance:"",lockedUntil:0},
   readyArea:{x:.5,bottom:1,w:.88,h:.35},releaseLineY:.32,
   frame:{width:0,height:0,aspect:9/16,sourcePortrait:true,displayAspect:9/16,portrait:true,cropPortrait:false,requestedPortrait:false,inferCanvas:null,inferCtx:null,inferWidth:0,inferHeight:0},orientationBlocked:false,
   connections:[[11,12],[11,13],[13,15],[15,17],[15,19],[15,21],[12,14],[14,16],[16,18],[16,20],[16,22],[11,23],[12,24],[23,24]],
@@ -52,6 +53,7 @@ const VISION={
 };
 const VISION_READY_HOLD_MS=120;
 const VISION_RELEASE_LOST_MS=140;
+const _visionDockPoint=typeof THREE!=="undefined"?new THREE.Vector3():null;
 function visionSyncFrameGeometry(video){
   if(!video)return VISION.frame;
   const w=video.videoWidth||0,h=video.videoHeight||0;if(!w||!h)return VISION.frame;
@@ -275,9 +277,110 @@ function visionLandmarkSample(lm,handLandmarks,now){
     liftY,readyY,lostMs,body,readyArea:visionDynamicReadyArea(body),releaseLineY:releaseLine,now};
   VISION.lastSample=sample;return sample;
 }
+function visionClampPx(v,min,max){return Math.max(min,Math.min(max,v));}
+function visionClearPreviewDock(wrap){
+  if(!wrap)return;
+  delete wrap.dataset.dock;
+  wrap.style.removeProperty("--vision-x");wrap.style.removeProperty("--vision-y");
+  VISION.dock.name="";VISION.dock.stance="";VISION.dock.lockedUntil=0;
+  delete document.documentElement.dataset.visionDock;
+}
+function visionLivePlayState(){return G.state==="round"||G.state==="tiebreak"||G.state==="battle"||G.state==="rackrush";}
+function visionPreviewPlayState(){return visionLivePlayState()||G.state==="pregame"||G.state==="rushintro"||G.state==="rushbetween";}
+function visionSyncPreviewVisibility(wrap){
+  if(!wrap)return;
+  wrap.style.display=(VISION.desired&&(visionPreviewPlayState()||VISION.orientationBlocked))?"block":"none";
+}
+function visionDockStanceKey(){
+  const x=P&&P.pos?Math.round(P.pos.x*10):0,z=P&&P.pos?Math.round(P.pos.z*10):0;
+  const mode=typeof CAM!=="undefined"&&CAM?CAM.mode:"";
+  const spot=G.mode==="battle"?(G.battleSpot||0):"";
+  return [G.mode,G.state,spot,mode,x,z,innerWidth,innerHeight].join(":");
+}
+function visionPlayerScreenRect(){
+  if(!_visionDockPoint||typeof P==="undefined"||!P||!P.pos||typeof camera==="undefined"||!camera)return null;
+  const W=innerWidth,H=innerHeight,jump=P.jump||0;
+  const pts=[
+    [P.pos.x,P.pos.y||0,P.pos.z],
+    [P.pos.x,1.05+jump,P.pos.z],
+    [P.pos.x,1.96+jump,P.pos.z],
+    [P.pos.x-.5,.86+jump,P.pos.z],
+    [P.pos.x+.5,.86+jump,P.pos.z]
+  ];
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity,seen=0;
+  for(const p of pts){
+    _visionDockPoint.set(p[0],p[1],p[2]).project(camera);
+    if(!Number.isFinite(_visionDockPoint.x)||!Number.isFinite(_visionDockPoint.y)||_visionDockPoint.z>1)continue;
+    const x=(_visionDockPoint.x*.5+.5)*W,y=(-_visionDockPoint.y*.5+.5)*H;
+    minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);seen++;
+  }
+  if(!seen)return null;
+  const mobile=innerWidth<=600,padX=mobile?46:62,padTop=mobile?42:56,padBottom=mobile?58:72;
+  minX=visionClampPx(minX-padX,0,W);maxX=visionClampPx(maxX+padX,0,W);
+  minY=visionClampPx(minY-padTop,0,H);maxY=visionClampPx(maxY+padBottom,0,H);
+  return {left:minX,top:minY,right:maxX,bottom:maxY,cx:(minX+maxX)*.5,cy:(minY+maxY)*.5};
+}
+function visionOverlapArea(a,b){
+  const w=Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left));
+  const h=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));
+  return w*h;
+}
+function visionPreviewCandidates(wrap){
+  const W=innerWidth,H=innerHeight,box=wrap.getBoundingClientRect();
+  const w=box.width||142,h=box.height||300,m=10,mobile=innerWidth<=600;
+  const left=m,right=Math.max(m,W-w-m),midTop=visionClampPx((H-h)*.5,m,Math.max(m,H-h-m));
+  const lowBottom=mobile?8:18,lowTop=visionClampPx(H-h-lowBottom,m,Math.max(m,H-h-m));
+  const make=(name,x,y,side,zone)=>({name,side,zone,rect:{left:x,top:y,right:x+w,bottom:y+h,cx:x+w*.5,cy:y+h*.5}});
+  return mobile?[
+    make("left-low",left,lowTop,"left","low"),
+    make("right-low",right,lowTop,"right","low")
+  ]:[
+    make("left-mid",left,midTop,"left","mid"),
+    make("right-mid",right,midTop,"right","mid"),
+    make("left-low",left,lowTop,"left","low"),
+    make("right-low",right,lowTop,"right","low")
+  ];
+}
+function visionDockScore(candidate,player,current,preferred){
+  let score=visionOverlapArea(candidate.rect,player)*3;
+  const W=innerWidth,H=innerHeight;
+  if(candidate.name===current)score-=6200;
+  if(candidate.name===preferred)score-=2400;
+  if(player.cx<W*.42&&candidate.side==="left")score+=32000*(1-player.cx/(W*.42));
+  if(player.cx>W*.58&&candidate.side==="right")score+=32000*((player.cx-W*.58)/(W*.42));
+  if(player.cy>H*.58&&candidate.zone==="low")score+=9000*((player.cy-H*.58)/(H*.42));
+  return score;
+}
+function visionUpdatePreviewDock(now){
+  const wrap=$("visionPreview");if(!wrap)return;
+  visionSyncPreviewVisibility(wrap);
+  const setup=G.state==="menu"||G.state==="diff";
+  if(setup||!visionPreviewPlayState()){visionClearPreviewDock(wrap);return;}
+  const stance=visionDockStanceKey(),current=wrap.dataset.dock||"";
+  if(current&&VISION.dock.stance===stance)return;
+  const playerRect=visionPlayerScreenRect();
+  if(!playerRect){
+    if(!current)visionClearPreviewDock(wrap);
+    return;
+  }
+  const candidates=visionPreviewCandidates(wrap),preferred=innerWidth<=600?"left-low":"left-mid";
+  let best=candidates[0],bestScore=Infinity;
+  for(const candidate of candidates){
+    const score=visionDockScore(candidate,playerRect,current,preferred);
+    if(score<bestScore){best=candidate;bestScore=score;}
+  }
+  if(current&&best.name!==current&&now<VISION.dock.lockedUntil)return;
+  wrap.dataset.dock=best.name;
+  wrap.style.setProperty("--vision-x",Math.round(best.rect.left)+"px");
+  wrap.style.setProperty("--vision-y",Math.round(best.rect.top)+"px");
+  VISION.dock.name=best.name;VISION.dock.stance=stance;
+  if(best.name!==current)VISION.dock.lockedUntil=now+360;
+  document.documentElement.dataset.visionDock=best.name;
+}
 function visionSetUI(phase,label,progress){
   const wrap=$("visionPreview"),state=$("visionState"),fill=$("visionTrackFill");if(!wrap)return;
   wrap.dataset.phase=phase;wrap.dataset.context=(G.state==="menu"||G.state==="diff")?"setup":"game";
+  visionUpdatePreviewDock(performance.now());
   if(state)state.textContent=label;if(fill)fill.style.height=(clamp(progress||0,0,1)*100)+"%";
 }
 function visionPhaseLabel(step,sample){
@@ -461,7 +564,7 @@ async function enableVisionControl(event){
   if(!VISION.supported){toast("此浏览器不支持体感控制","#ff8d7a");return;}
   if(VISION.loading||VISION.enabled)return;
   saveVisionControlPreference("vision");
-  VISION.desired=true;VISION.loading=true;$("visionPreview").style.display="block";visionSetUI("align","正在启动本地识别",.08);
+  VISION.desired=true;VISION.loading=true;visionSyncPreviewVisibility($("visionPreview"));visionSetUI("align","正在启动本地识别",.08);
   try{
     const modelPromise=loadVisionModel();
     VISION.frame.requestedPortrait=visionWantsPortrait();document.documentElement.dataset.visionRequested=VISION.frame.requestedPortrait?"portrait":"landscape";
@@ -474,7 +577,7 @@ async function enableVisionControl(event){
     if(G.state==="diff")goDiff(G.mode,true);
   }catch(e){
     VISION.desired=false;VISION.enabled=false;if(VISION.stream)VISION.stream.getTracks().forEach(t=>t.stop());VISION.stream=null;
-    $("visionPreview").style.display="block";visionSetUI("error",e&&e.name==="NotAllowedError"?"摄像头权限未开启":"体感识别启动失败",0);
+    visionSyncPreviewVisibility($("visionPreview"));visionSetUI("error",e&&e.name==="NotAllowedError"?"摄像头权限未开启":"体感识别启动失败",0);
     document.documentElement.dataset.visionControl="error";toast("体感控制未启动 · 已保留触屏控制","#ff8d7a");
   }finally{VISION.loading=false;}
 }
