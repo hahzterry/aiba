@@ -2,7 +2,7 @@
 (function(global){
   "use strict";
   const FACE_BY_NAME=Object.freeze({
-    "库里":"assets/aiba-faces/curry-smile-pixel-128.png"
+    curry:"assets/aiba-faces/curry-smile-pixel-128.png"
   });
   const cache=Object.create(null);
   function texture(path){

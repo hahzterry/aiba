@@ -14,6 +14,7 @@ html,body{width:100%;height:100%;height:var(--app-height);overflow:hidden;backgr
 #c{position:fixed;inset:0;width:100%;height:var(--app-height);image-rendering:auto}
 html[data-render-crisp="1"] #c{image-rendering:pixelated;image-rendering:crisp-edges}
 .px{text-shadow:2px 2px 0 #000;letter-spacing:1px;font-weight:bold}
+.aibaIcon{display:block;width:20px;height:20px;flex:0 0 auto}.aibaIconLabel{min-width:0;line-height:1.15}
 #scan{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:0;transition:opacity .22s ease;
   background:repeating-linear-gradient(0deg,transparent 0 4px,rgba(0,0,0,.58) 4px 5px)}
 html[data-scan-overlay="menu"] #scan{opacity:.018}
@@ -108,22 +109,18 @@ html[data-scan-overlay="menu"] #scan{opacity:.018}
 #edgeArrows .ea.super{border-color:#ff8d3a;color:#ffb27a}
 @keyframes eapulse{0%,100%{opacity:.7}50%{opacity:1}}
 #battleOppScore{font-size:10px;color:#9fd1ff;text-shadow:1px 1px 0 #000}
-#camBtn{position:absolute;top:max(58px,calc(env(safe-area-inset-top) + 48px));right:12px;background:rgba(0,0,0,.55);
-  border:2px solid #444;color:#cde;font-size:11px;font-weight:bold;padding:7px 9px;cursor:pointer;
-  pointer-events:auto;user-select:none;display:none}
-#camBtn:active{background:#2a2a2a}
-#heroTag{position:absolute;top:max(12vh,72px);left:50%;transform:translateX(-50%);font-size:15px;font-weight:bold;
-  color:#ffd23f;text-shadow:2px 2px 0 #000;display:none;animation:blink 1s steps(2) infinite;white-space:nowrap}
-#muteBtn{position:fixed;top:max(98px,calc(env(safe-area-inset-top) + 88px));right:12px;z-index:48;font-size:18px;
-  background:rgba(0,0,0,.5);border:2px solid #333;padding:6px 9px;cursor:pointer;pointer-events:auto}
+#courtTools{position:fixed;top:max(86px,calc(env(safe-area-inset-top) + 76px));right:max(10px,env(safe-area-inset-right));z-index:48;display:flex;flex-direction:column;align-items:flex-end;gap:7px;pointer-events:none}
+#courtTools button{position:static;min-width:42px;height:40px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;justify-content:center;gap:7px;padding:0 9px;color:#eef7ff;background:rgba(5,8,14,.7);border:1.5px solid rgba(156,184,208,.42);box-shadow:0 3px 0 rgba(0,0,0,.65),inset 0 0 0 1px rgba(255,255,255,.05);font:700 10px/1 "Orbitron","Courier New",monospace;cursor:pointer;pointer-events:auto;user-select:none}
+#courtTools button:active{transform:translateY(2px);background:#202936;box-shadow:0 1px 0 rgba(0,0,0,.7)}
+#camBtn{display:none}
+#heroTag{position:absolute;top:max(12vh,72px);left:50%;transform:translateX(-50%);align-items:center;gap:8px;font-size:15px;font-weight:bold;color:#ffd23f;text-shadow:2px 2px 0 #000;display:none;animation:blink 1s steps(2) infinite;white-space:nowrap}
+#heroTag[style*="block"]{display:flex!important}#heroTag .aibaIcon{width:18px;height:18px}
+#muteBtn{display:grid}
 #muteBtn.needsAudio{border-color:#ffd23f;animation:soundPulse 1s steps(2) infinite}
-#pauseBtn{position:fixed;top:max(138px,calc(env(safe-area-inset-top) + 128px));right:12px;z-index:48;width:40px;height:36px;
-  display:none;align-items:center;justify-content:center;padding:0;background:rgba(0,0,0,.58);border:2px solid #333;color:#fff;
-  font-family:"Orbitron","Courier New",monospace;font-size:20px;line-height:1;font-weight:bold;text-shadow:2px 2px 0 #000;cursor:pointer;pointer-events:auto}
-#pauseBtn.ready{display:flex}
-#pauseBtn:active{transform:translateY(2px);background:#2a2a2a}
-#homeBtn{position:fixed;top:max(10px,env(safe-area-inset-top));right:12px;z-index:58;width:40px;height:36px;display:none;align-items:center;justify-content:center;padding:0;background:rgba(0,0,0,.62);border:2px solid #39485b;color:#eef7ff;box-shadow:3px 3px 0 rgba(0,0,0,.55);font-family:"Orbitron","Courier New",monospace;font-size:22px;line-height:1;font-weight:bold;text-shadow:2px 2px 0 #000;cursor:pointer;pointer-events:auto}
-#homeBtn.ready{display:flex}#homeBtn:active{transform:translateY(2px);background:#202936}
+#pauseBtn{display:none}
+#pauseBtn.ready{display:grid}
+#homeBtn{position:fixed;top:max(10px,env(safe-area-inset-top));right:12px;z-index:58;width:40px;height:36px;display:none;place-items:center;padding:0;background:rgba(0,0,0,.62);border:2px solid #39485b;color:#eef7ff;box-shadow:3px 3px 0 rgba(0,0,0,.55);cursor:pointer;pointer-events:auto}
+#homeBtn .aibaIcon{width:21px;height:21px}#homeBtn .aibaIconLabel{display:none}#homeBtn.ready{display:grid}#homeBtn:active{transform:translateY(2px);background:#202936}
 @keyframes soundPulse{50%{filter:brightness(1.8);transform:scale(1.06)}}
 #hudTarget{position:absolute;top:max(86px,calc(env(safe-area-inset-top) + 76px));left:14px;font-size:11px;
   font-weight:bold;text-shadow:1px 1px 0 #000;color:#ffd23f}
@@ -187,7 +184,8 @@ html[data-scan-overlay="menu"] #scan{opacity:.018}
 #lbT{top:0}#lbB{bottom:0}
 #repUI{position:fixed;inset:0;z-index:49;display:none;pointer-events:none}
 #repTag{position:absolute;top:max(12vh,70px);left:18px;font-size:16px;font-weight:bold;color:#ff4040;text-shadow:2px 2px 0 #000;animation:blink 1s steps(2) infinite}
-#repCam{position:absolute;top:max(12vh,70px);right:18px;font-size:12px;color:#ddd;text-shadow:2px 2px 0 #000;font-weight:bold}
+#repCam{position:absolute;top:max(12vh,70px);right:18px;display:flex;align-items:center;gap:7px;font-size:12px;color:#ddd;text-shadow:2px 2px 0 #000;font-weight:bold}
+#repCam .aibaIcon{width:17px;height:17px}
 #repSkip{position:absolute;bottom:max(12vh,70px);right:18px;pointer-events:auto}
 /* overlay & panels */
 #ov{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;height:var(--app-height);
@@ -453,11 +451,12 @@ table.std tr.adv td{box-shadow:inset 0 0 0 2px #ffd23f}
 @media (max-width:600px){#visionPreview:not([data-context="setup"]):not([data-dock]){left:max(10px,env(safe-area-inset-left));right:auto;top:auto;bottom:max(122px,calc(env(safe-area-inset-bottom) + 112px));transform:none;width:142px}}
 @media (max-width:600px){#visionPreview[data-context="setup"]:not([data-dock]){left:max(10px,env(safe-area-inset-left));right:auto;top:auto;bottom:max(12px,env(safe-area-inset-bottom));transform:none;width:142px}.visionMode{grid-template-columns:minmax(0,1fr) repeat(2,minmax(72px,1fr))}}
 @media (max-width:600px){
-  #hudRound{top:max(8px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));font-size:11px;line-height:1.45;color:#9fd1ff;opacity:.86}
-  #hudTimer{top:max(12px,env(safe-area-inset-top));font-size:28px;letter-spacing:1px}
-  #hudScore{top:max(8px,env(safe-area-inset-top));right:max(62px,calc(env(safe-area-inset-right) + 58px))}
+  #hudRound{top:max(8px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));width:88px;max-width:88px;font-size:10px;line-height:1.4;color:#9fd1ff;opacity:.86}
+  #hudTimer{top:max(12px,env(safe-area-inset-top));width:calc(100vw - 230px);max-width:170px;font-size:28px;letter-spacing:1px;text-align:center;white-space:nowrap;overflow:hidden}
+  #hudScore{top:max(8px,env(safe-area-inset-top));right:max(62px,calc(env(safe-area-inset-right) + 58px));width:52px}
   #hudScore .big{font-size:32px;line-height:.95}
   #hudScore .sm{font-size:9px;letter-spacing:0}
+  #hud[data-mode="practice"] #hudRound,#hud[data-mode="practice"] #hudScore{display:none!important}
   #battleScore{top:max(8px,env(safe-area-inset-top));width:min(310px,calc(100vw - 112px));min-width:0;min-height:72px;
     flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:2px 8px;padding:7px 10px 8px;
     background:linear-gradient(180deg,rgba(7,10,18,.88),rgba(5,7,13,.74));border:2px solid rgba(115,147,176,.32);
@@ -470,16 +469,13 @@ table.std tr.adv td{box-shadow:inset 0 0 0 2px #ffd23f}
   #bsRace{order:4;width:82%;height:7px;margin-top:2px;background:rgba(255,255,255,.14)}
   #bsTimer{order:5;width:100%;font-size:14px;line-height:1.05;color:#ffd23f;text-align:center}
   #hud:has(#battleScore[style*="flex"]) #hudScore,#hud:has(#battleScore[style*="flex"]) #hudRack{display:none!important}
-  #camBtn,#muteBtn,#pauseBtn{right:max(8px,env(safe-area-inset-right));width:44px;height:44px;padding:0;text-align:center;line-height:42px;
-    background:rgba(5,8,14,.58);border:1.5px solid rgba(156,184,208,.35);box-shadow:0 3px 0 rgba(0,0,0,.65),inset 0 0 0 1px rgba(255,255,255,.05);
-    color:#eef7ff;font-size:0;border-radius:0}
-  #muteBtn,#pauseBtn.ready{display:flex;align-items:center;justify-content:center;line-height:1}
-  #camBtn{top:max(92px,calc(env(safe-area-inset-top) + 86px))}
-  #muteBtn{top:max(142px,calc(env(safe-area-inset-top) + 136px))}
-  #pauseBtn{top:max(192px,calc(env(safe-area-inset-top) + 186px));font-size:0}
-  #camBtn:before{content:"📷";font-size:20px;line-height:1}
-  #muteBtn:before{content:"🔈";font-size:20px;line-height:1}
-  #pauseBtn:before{content:"Ⅱ";font-size:21px;line-height:1;font-weight:900}
+  #courtTools{top:max(92px,calc(env(safe-area-inset-top) + 86px));right:max(8px,env(safe-area-inset-right));gap:6px}
+  #courtTools button{width:44px;height:44px;min-width:44px;padding:0;display:none;grid-template-columns:1fr;place-items:center}
+  #courtTools button .aibaIcon{width:21px;height:21px}
+  #courtTools button .aibaIconLabel{display:none}
+  #camBtn[style*="block"]{display:grid!important}
+  #muteBtn{display:grid!important}
+  #pauseBtn.ready{display:grid!important}
   #hudRack{top:auto;bottom:max(88px,calc(env(safe-area-inset-bottom) + 78px));width:min(270px,72vw);padding:8px 10px;
     background:rgba(6,8,13,.58);border:1.5px solid rgba(115,147,176,.34);box-shadow:0 3px 0 rgba(0,0,0,.55)}
   #hudRackName{font-size:12px;line-height:1.2}
@@ -589,7 +585,8 @@ table.std tr.adv td{box-shadow:inset 0 0 0 2px #ffd23f}
 .customNote{margin:2px 0 0;padding:8px 10px;color:#8fa3c8;background:rgba(17,24,33,.6);border:1px dashed rgba(126,231,255,.28);font-size:8px;line-height:1.6}
 
 /* v1.81 性能设置面板 + 常驻入口 + 实时 FPS 读数 */
-#perfBtn{position:fixed;left:10px;top:calc(10px + env(safe-area-inset-top,0px));z-index:70;width:34px;height:34px;padding:0;font-size:17px;line-height:34px;text-align:center;color:#bcd4e6;background:rgba(8,12,20,.62);border:1px solid rgba(126,231,255,.42);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer;opacity:.7;transition:opacity .15s,transform .1s}
+#perfBtn{position:fixed;left:10px;top:calc(10px + env(safe-area-inset-top,0px));z-index:70;width:36px;height:36px;padding:0;display:none;place-items:center;color:#bcd4e6;background:rgba(8,12,20,.72);border:1px solid rgba(126,231,255,.42);border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer;opacity:.78;transition:opacity .15s,transform .1s}
+#perfBtn.ready{display:grid}#perfBtn .aibaIcon{width:19px;height:19px}#perfBtn .aibaIconLabel{display:none}
 #perfBtn:hover{opacity:1}
 #perfBtn:active{transform:scale(.92)}
 #perfMeter{position:fixed;right:10px;top:calc(46px + env(safe-area-inset-top,0px));z-index:70;display:none;flex-direction:column;align-items:flex-end;padding:5px 8px;background:rgba(8,12,20,.72);border:1px solid rgba(126,231,255,.4);border-radius:8px;font-family:Orbitron,monospace;pointer-events:none;line-height:1.1}
@@ -620,22 +617,10 @@ table.std tr.adv td{box-shadow:inset 0 0 0 2px #ffd23f}
 .perfSegBtns button.on{color:#071018;background:#7ee7ff}
 .perfActions{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:2px}
 .perfActions .btn{margin:0}
+.perfHelp{display:flex;align-items:center;gap:11px;width:100%;padding:11px 13px;color:#dff6ff;background:rgba(119,231,255,.06);border:1px solid rgba(119,231,255,.3);font:inherit;text-align:left;cursor:pointer}
+.perfHelp .aibaIcon{width:20px;height:20px;color:#77e7ff}.perfHelp .aibaIconLabel{font-size:12px;font-weight:700}.perfHelp:after{content:"›";margin-left:auto;color:#ffd23f;font-size:16px}
 
-/* ===== v1.95 新手引导 / 体感教学 / 三分大赛进度条 ===== */
-#contestProgress{position:fixed;left:50%;top:96px;transform:translateX(-50%);z-index:60;display:none;align-items:center;gap:7px;padding:7px 12px;background:rgba(5,9,16,.72);border:1px solid #2b3548;border-radius:10px;pointer-events:none}
-#contestProgress .cpRack{display:flex;gap:3px;padding:3px 4px;border-radius:5px}
-#contestProgress .cpRack.cpMoney{box-shadow:inset 0 -2px 0 #ffd23f}
-#contestProgress .cpCell{width:11px;height:11px;border-radius:2px;background:transparent;border:1.5px solid #3a4a5e}
-#contestProgress .cpCell.cpLast{border-color:#8a97ad}
-#contestProgress .cp-made{background:#54e05a;border-color:#54e05a}
-#contestProgress .cp-miss{background:#ff5d4d;border-color:#ff5d4d}
-#contestProgress .cp-cur{border-color:#fff;animation:cpPulse 1s infinite}
-#contestProgress .cpDeep{width:12px;height:12px;border:1.5px solid #b48bff;transform:rotate(45deg);border-radius:2px}
-#contestProgress .cpDeep.cp-made{background:#b48bff}
-#contestProgress .cpDeep.cp-miss{background:#ff5d4d;border-color:#ff5d4d}
-#contestProgress .cpDeep.cp-cur{border-color:#fff;animation:cpPulse 1s infinite}
-#contestProgress .cpCount{font-family:"Orbitron",monospace;color:#ffd23f;font-size:13px;margin-left:4px}
-@keyframes cpPulse{50%{box-shadow:0 0 8px rgba(255,255,255,.9)}}
+/* ===== v1.95 新手引导 / 体感教学 ===== */
 #obTip{position:fixed;left:50%;bottom:24%;transform:translateX(-50%) scale(.9);z-index:120;max-width:82vw;padding:13px 22px;background:rgba(5,9,16,.88);border-left:6px solid #ffd23f;border-radius:8px;color:#fff;font-size:15px;line-height:1.5;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
 #obTip.on{opacity:1;transform:translateX(-50%) scale(1)}
 #obTip .obFinger{display:inline-block;animation:obTap 1s infinite}
@@ -647,12 +632,12 @@ table.std tr.adv td{box-shadow:inset 0 0 0 2px #ffd23f}
 .obSteps{display:flex;gap:8px;margin:14px 0 20px}
 .obSteps span{flex:1;background:#141d2b;border:1px solid #273246;border-radius:10px;padding:12px 6px;font-size:12px;line-height:1.5}
 .obSteps b{display:block;color:#ffd23f;font-family:"Orbitron",monospace}
-.obSteps i{display:block;font-style:normal;font-size:24px;margin:6px 0}
-.obBtn{display:block;width:100%;margin-top:10px;padding:13px;border:0;border-radius:9px;background:#232f42;color:#fff;font-size:15px;font-weight:bold;cursor:pointer}
+.obSteps i{display:grid;place-items:center;margin:6px 0}.obSteps i .aibaIcon{width:24px;height:24px;color:#77e7ff}
+.obBtn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:10px;padding:13px;border:0;border-radius:7px;background:#232f42;color:#fff;font-size:15px;font-weight:bold;cursor:pointer}
 .obBtn.gold{background:#ffd23f;color:#111}
 .obLink{background:none;border:0;color:#8ea3b8;margin-top:12px;font-size:13px;cursor:pointer}
 .vtPriv{font-size:12.5px;color:#9fd1ff;background:rgba(112,232,255,.08);border-radius:8px;padding:9px 12px;margin:4px 0 6px}
-#obHelpBtn{position:fixed;right:10px;top:112px;z-index:58;width:34px;height:34px;border-radius:50%;border:1px solid #33405a;background:rgba(10,16,26,.8);color:#9fd1ff;font-size:17px;font-weight:bold;cursor:pointer}
+.btn[data-aiba-icon]{display:flex;align-items:center;justify-content:center;gap:8px}.btn[data-aiba-icon] .aibaIcon{width:18px;height:18px}
 #vtOverlay{position:fixed;inset:0;z-index:210;background:rgba(3,6,11,.93);display:flex;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 20px}
 .vtHead{width:100%;display:flex;justify-content:space-between;align-items:center;color:#70e8ff;font-family:"Orbitron",monospace;font-size:13px;letter-spacing:2px}
 .vtHead button{border:1px solid #33405a;background:none;color:#8ea3b8;border-radius:7px;padding:6px 14px;font-size:13px;cursor:pointer}
@@ -678,7 +663,6 @@ html[data-interactive-tutorial="1"] #hudStreak,
 html[data-interactive-tutorial="1"] #battleControls,
 html[data-interactive-tutorial="1"] #battleScore,
 html[data-interactive-tutorial="1"] #midBtn,
-html[data-interactive-tutorial="1"] #contestProgress,
 html[data-interactive-tutorial="1"] #camBtn,
 html[data-interactive-tutorial="1"] #muteBtn,
 html[data-interactive-tutorial="1"] #pauseBtn,

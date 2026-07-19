@@ -38,19 +38,19 @@
     G.opponents.forEach((opponent,index)=>applyStarStyle(rivals[index],opponent));
     G.stage="semi";G.stats={best:0,moneyM:0,moneyT:0,deepM:0,deepT:0};G.semiDone=false;G.finalDone=false;
 
-    let html=`<h1 class="title" style="font-size:22px">🎤 对位介绍</h1>
+    let html=`<h1 class="title" style="font-size:22px">对位介绍</h1>
       <div class="note">今晚的像素之夜 · ${count+1} 人半决赛 · 前 2 名晋级决赛<br>出手顺序随机抽签 · 对手比赛全程直播</div>`;
     G.opponents.forEach(opponent=>{
       const talk=TALK_PRE[(Math.random()*TALK_PRE.length)|0];
       html+=`<div class="card"><b>${opponent.n}</b> #${opponent.num} <span style="color:#ffb">${stars(opponent.r)}</span><br>
-        <span style="color:#9ab;font-size:11px">${opponent.t} · 三分能力 ${opponent.r}</span><br>
+        <span style="color:#9ab;font-size:11px">三分能力 ${opponent.r}</span><br>
         <span style="color:#ff9d8d;font-size:11px">「${talk}」</span></div>`;
     });
     html+=`<div class="card" style="border-color:#3a6"><b style="color:#9dff8d">你 (YOU)</b> #${G.myNum} ${stars(G.myStar.r||88)}<br>
-      <span style="color:#9ab;font-size:11px">${G.myStar.n} · ${G.myStar.t||"街球场走出的方块新星"}</span><br>
+      <span style="color:#9ab;font-size:11px">${G.myStar.n} · 三分能力 ${G.myStar.r||88}</span><br>
       <span style="color:#9dff8d;font-size:11px">${shotProfileText(G.myStar)}</span></div>
-      <button class="btn green" onclick="startPractice()">🏀 热身练习 (3球)</button>
-      <button class="btn gold" onclick="hidePanel();beginStage()">⚡ 直接开赛 →</button>`;
+      <button class="btn green" data-aiba-icon="target" data-aiba-label="热身练习 (3球)" onclick="startPractice()">热身练习 (3球)</button>
+      <button class="btn gold" data-aiba-icon="play" data-aiba-label="直接开赛 →" onclick="hidePanel();beginStage()">直接开赛 →</button>`;
     global.showPanel(html);
   }
 
@@ -59,7 +59,7 @@
     const myShot=shotProfileText(G.myStar),opponentShot=shotProfileText(opponent);
     global.showPanel(`<h1 class="title" style="font-size:22px">aiBA·百分大战</h1>
       <div class="card"><b style="color:#9dff8d">你 · ${G.myStar.n}</b> #${G.myNum}  VS  <b style="color:#ffd23f">${opponent.n}</b> #${opponent.num}<br>
-        <span style="font-size:11px;color:#9ab">${opponent.t} · ${stars(opponent.r)}</span><br>
+        <span style="font-size:11px;color:#9ab">三分能力 ${opponent.r} · ${stars(opponent.r)}</span><br>
         <span style="font-size:11px;color:#9dff8d">你: ${myShot}</span> · <span style="font-size:11px;color:#ffd23f">对手: ${opponentShot}</span><br>
         <span style="color:#ff9d8d;font-size:11px">「${talk}」</span></div>
       <div class="card">规则:<br>

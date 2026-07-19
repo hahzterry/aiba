@@ -311,7 +311,7 @@ function syncAudioDebug(){
     r.dataset.audioGullReady=s.gullReady?"1":"0";
     const b=$("muteBtn");
     if(b){
-      b.textContent=s.muted?"🔇":(s.ready?"🔊":"🔈");
+      if(window.AIBASetIcon)AIBASetIcon(b,s.muted?"volume-x":(s.ready?"volume-2":"volume-1"),s.muted?"开启声音":(s.ready?"静音":"启动声音"));
       b.classList.toggle("needsAudio",!s.muted&&!s.ready);
     }
   }catch(e){}
@@ -1131,7 +1131,7 @@ function toggleMute(){
     const needsStart=MUTED||!AC||AC.state==="suspended"||(menuLike&&!s.menuMusic)||
       (arenaLike&&(!arenaTimer||(extA.crowd&&extA.crowd.paused)||(extA.crowdCheer&&extA.crowdCheer.paused)));
     if(needsStart){
-      MUTED=false;$("muteBtn").textContent="🔊";
+      MUTED=false;if(window.AIBASetIcon)AIBASetIcon("muteBtn","volume-2","静音");
       ensureAudio(menuLike,true);
       if(arenaLike&&!arenaTimer)enterArenaAudio(0.85);
       if(extA.crowd&&arenaLike)extPlay("crowd");
@@ -1140,7 +1140,7 @@ function toggleMute(){
       syncAudioDebug();
       return;
     }
-    MUTED=true;$("muteBtn").textContent="🔇";
+    MUTED=true;if(window.AIBASetIcon)AIBASetIcon("muteBtn","volume-x","开启声音");
     if(AC)AC.suspend();
     if(window.speechSynthesis&&MUTED)speechSynthesis.cancel();
     if(MUTED){clearTimeout(SPK.timer);SPK.queue.length=0;SPK.speaking=false;}

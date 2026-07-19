@@ -6,9 +6,11 @@
   function sync(){
     const button=$("homeBtn");
     if(!button)return;
-    const visible=!global.BOOT_GATE_ACTIVE&&G.state!=="boot"&&G.state!=="menu";
+    const arena=/^(cinematic|pregame|aishow|round|tiebreak|battle|rackrush|rushintro|rushbetween|replay|victorycine|wincine)$/.test(G.state);
+    const visible=!global.BOOT_GATE_ACTIVE&&G.state!=="boot"&&G.state!=="menu"&&!arena;
     button.classList.toggle("ready",visible);
     button.setAttribute("aria-hidden",visible?"false":"true");
+    if(global.AIBAPerfSettings&&global.AIBAPerfSettings.syncButton)global.AIBAPerfSettings.syncButton();
   }
 
   function cancelPregame(){
@@ -72,7 +74,8 @@
 
   function boot(){
     const button=document.createElement("button");
-    button.id="homeBtn";button.type="button";button.textContent="←";
+    button.id="homeBtn";button.type="button";button.textContent="返回首页";
+    if(global.AIBASetIcon)global.AIBASetIcon(button,"arrow-left","返回首页");
     button.title="返回首页";button.setAttribute("aria-label","返回首页");button.setAttribute("aria-hidden","true");
     button.addEventListener("pointerdown",event=>event.stopPropagation());
     button.addEventListener("click",requestHome);

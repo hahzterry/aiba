@@ -16,7 +16,7 @@
     G.canShoot=false;G.blindToasted=false;G.cutQ=[];
     balls.slice().forEach(ball=>{scene.remove(ball.mesh);scene.remove(ball.blob);});balls.length=0;
     resetRackBalls();
-    $("scoreNum").textContent="-";$("hudStreak").style.display="none";
+    $("hud").dataset.mode="practice";$("scoreNum").textContent="-";$("hudStreak").style.display="none";
     $("hudTimer").style.display="block";$("hudTimer").textContent="热身";$("hudTimer").className="";
     $("hudRound").innerHTML="练习模式<br><span style='color:#778'>无计时 · 无计分</span>";
     $("hudTarget").textContent="";$("hud").style.display="block";

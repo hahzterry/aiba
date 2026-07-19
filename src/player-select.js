@@ -144,7 +144,7 @@
     const stars=allStars(list),current=selectedId(),star=findStar(stars,current);
     const p=star?profileFor(star):null;
     const gear=global.AIBAGear?global.AIBAGear.activeSummary():"";
-    const desc=(star?(p.label||"标准出手")+" · "+(p.arcLabel||"标准弧线"):"每局从球星池随机抽选")+(gear?" · 🎽"+gear:"");
+    const desc=(star?(p.label||"标准出手")+" · "+(p.arcLabel||"标准弧线"):"每局从球星池随机抽选")+(gear?" · "+gear:"");
     return `<button class="playerSelectDock" type="button" onclick="showAIBAPlayerSelect()" aria-label="选择球员">
       <span class="playerSelectBadge">${star?("#"+esc(star.num)):"RND"}</span>
       <span class="playerSelectInfo"><small>PLAYER LOCKER</small><b>${star?esc(star.n):RANDOM_LABEL}</b><em>${esc(desc)}</em></span>

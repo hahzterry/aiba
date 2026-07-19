@@ -31,59 +31,59 @@
   });
 
   const CLASSIC_LEGENDS=Object.freeze([
-    {n:"库里",t:"萌神 · 历史三分王",r:97,col:[0x1d428a,0xffc72c],num:30},
-    {n:"克莱·汤普森",t:"佛祖 · 单节37分",r:93,col:[0xffc72c,0x1d428a],num:11},
-    {n:"雷·阿伦",t:"君子雷 · 致命底角",r:91,col:[0x007a33,0xffffff],num:20},
-    {n:"拉里·伯德",t:"大鸟 · 穿西装夺冠",r:89,col:[0x007a33,0x111111],num:33},
-    {n:"雷吉·米勒",t:"米勒时刻",r:88,col:[0xfdbb30,0x002d62],num:31},
-    {n:"利拉德",t:"利指导 · Logo Shot",r:90,col:[0xe03a3e,0x111111],num:0},
-    {n:"科沃尔",t:"接球就有",r:86,col:[0xc8102e,0x26282a],num:26},
-    {n:"佩贾",t:"三分大赛两连冠",r:87,col:[0x5a2d81,0x8a8d8f],num:16},
-    {n:"萨布丽娜",t:"三分大赛纪录 · 自由人",r:91,col:[0x6eceb2,0x101820],num:20,sex:"f",hairStyle:"ponytail",hair:0x3a2410,skin:0xf4c89c},
-    {n:"陶乐西",t:"白曼巴 · WNBA得分王",r:92,col:[0x2b1a4e,0xe56020],num:3,sex:"f",hairStyle:"bun",hair:0x1a1210,skin:0xe8c39a},
-    {n:"苏·伯德",t:"四冠传奇控卫",r:89,col:[0x2c5234,0xffc600],num:10,sex:"f",hairStyle:"ponytail",hair:0x4a2c12,skin:0xf4c89c}
+    {id:"curry",n:"斯蒂芬·库里",t:"四届总冠军 · 历史三分王",r:97,col:[0x1d428a,0xffc72c],num:30},
+    {id:"thompson",n:"克莱·汤普森",t:"四届总冠军 · 单节37分",r:93,col:[0xffc72c,0x1d428a],num:11},
+    {id:"allen",n:"雷·阿伦",t:"两届总冠军 · 致命底角",r:91,col:[0x007a33,0xffffff],num:20},
+    {id:"bird",n:"拉里·伯德",t:"三届总冠军 · 三届MVP",r:89,col:[0x007a33,0x111111],num:33},
+    {id:"miller",n:"雷吉·米勒",t:"五届全明星 · 关键三分",r:88,col:[0xfdbb30,0x002d62],num:31},
+    {id:"lillard",n:"达米安·利拉德",t:"八届全明星 · 超远三分",r:90,col:[0xe03a3e,0x111111],num:0},
+    {id:"korver",n:"凯尔·科沃尔",t:"全明星射手 · 接球投篮",r:86,col:[0xc8102e,0x26282a],num:26},
+    {id:"stojakovic",n:"佩贾·斯托贾科维奇",t:"两届三分大赛冠军",r:87,col:[0x5a2d81,0x8a8d8f],num:16},
+    {id:"ionescu",n:"萨布丽娜·约内斯库",t:"WNBA全明星 · 三分大赛纪录",r:91,col:[0x6eceb2,0x101820],num:20,sex:"f",hairStyle:"ponytail",hair:0x3a2410,skin:0xf4c89c},
+    {id:"taurasi",n:"戴安娜·陶乐西",t:"三届WNBA总冠军 · 历史得分王",r:92,col:[0x2b1a4e,0xe56020],num:3,sex:"f",hairStyle:"bun",hair:0x1a1210,skin:0xe8c39a},
+    {id:"sue-bird",n:"苏·伯德",t:"四届WNBA总冠军 · 传奇控卫",r:89,col:[0x2c5234,0xffc600],num:10,sex:"f",hairStyle:"ponytail",hair:0x4a2c12,skin:0xf4c89c}
   ]);
 
   const DEFAULT_SHOT_PROFILE=Object.freeze({speed:1,window:1,arc:1,arcLabel:"标准弧线",label:"标准出手"});
   const SHOT_PROFILES=Object.freeze({
-    "库里":{speed:1.13,window:1.1,arc:1.1,arcLabel:"高弧快射",label:"极速出手"},
-    "克莱·汤普森":{speed:1.09,window:1.08,arc:.98,arcLabel:"平快定点",label:"快速定点"},
-    "雷·阿伦":{speed:1.02,window:1.09,arc:.94,arcLabel:"低平快弧",label:"标准快出手"},
-    "拉里·伯德":{speed:.88,window:1.1,arc:1.12,arcLabel:"慢节奏高抛",label:"沉稳高出手"},
-    "雷吉·米勒":{speed:1,window:1.02,arc:1,arcLabel:"标准弧线",label:"标准出手"},
-    "利拉德":{speed:1.07,window:.98,arc:1.08,arcLabel:"远射高弧",label:"快速远射"},
-    "科沃尔":{speed:1.1,window:1.12,arc:1.02,arcLabel:"接投快弧",label:"极速接投"},
-    "佩贾":{speed:.94,window:1.07,arc:1.11,arcLabel:"舒展高弧",label:"舒展出手"},
+    curry:{speed:1.13,window:1.1,arc:1.1,arcLabel:"高弧快射",label:"极速出手"},
+    thompson:{speed:1.09,window:1.08,arc:.98,arcLabel:"平快定点",label:"快速定点"},
+    allen:{speed:1.02,window:1.09,arc:.94,arcLabel:"低平快弧",label:"标准快出手"},
+    bird:{speed:.88,window:1.1,arc:1.12,arcLabel:"慢节奏高抛",label:"沉稳高出手"},
+    miller:{speed:1,window:1.02,arc:1,arcLabel:"标准弧线",label:"标准出手"},
+    lillard:{speed:1.07,window:.98,arc:1.08,arcLabel:"远射高弧",label:"快速远射"},
+    korver:{speed:1.1,window:1.12,arc:1.02,arcLabel:"接投快弧",label:"极速接投"},
+    stojakovic:{speed:.94,window:1.07,arc:1.11,arcLabel:"舒展高弧",label:"舒展出手"},
     k24:{speed:.89,window:.97,arc:1.06,arcLabel:"后仰中高弧",label:"沉稳后仰"},
     j23:{speed:.84,window:.94,arc:1.13,arcLabel:"滞空高弧",label:"滞空出手"},
     a03:{speed:1.04,window:.99,arc:.96,arcLabel:"低平快拔",label:"快速拔起"},
     v15:{speed:.87,window:.92,arc:1.15,arcLabel:"高点大弧",label:"高点出手"},
     t01:{speed:.92,window:.97,arc:.90,arcLabel:"极低平弧",label:"舒展远射"},
-    "萨布丽娜":{speed:1.08,window:1.06,arc:1.05,arcLabel:"高弧快射",label:"快速出手"},
-    "陶乐西":{speed:1,window:1.05,arc:1.03,arcLabel:"标准高弧",label:"冷血出手"},
-    "苏·伯德":{speed:.99,window:1.04,arc:1,arcLabel:"平稳弧线",label:"节奏出手"}
+    ionescu:{speed:1.08,window:1.06,arc:1.05,arcLabel:"高弧快射",label:"快速出手"},
+    taurasi:{speed:1,window:1.05,arc:1.03,arcLabel:"标准高弧",label:"冷血出手"},
+    "sue-bird":{speed:.99,window:1.04,arc:1,arcLabel:"平稳弧线",label:"节奏出手"}
   });
 
   /* 体型档案:h=身高缩放 w=横向体格缩放,按真实球员身材粗调
      (库里1.88偏瘦 / 伯德2.06 / 米勒瘦长 / AI 1.83小个 / KD高瘦 / 女性球员整体更小) */
   const DEFAULT_BODY=Object.freeze({h:1,w:1});
   const BODY_PROFILES=Object.freeze({
-    "库里":{h:.97,w:.96},
-    "克莱·汤普森":{h:1.01,w:1.02},
-    "雷·阿伦":{h:1,w:.99},
-    "拉里·伯德":{h:1.05,w:1.03},
-    "雷吉·米勒":{h:1.02,w:.92},
-    "利拉德":{h:.97,w:1.04},
-    "科沃尔":{h:1.02,w:1},
-    "佩贾":{h:1.05,w:1.01},
+    curry:{h:.97,w:.96},
+    thompson:{h:1.01,w:1.02},
+    allen:{h:1,w:.99},
+    bird:{h:1.05,w:1.03},
+    miller:{h:1.02,w:.92},
+    lillard:{h:.97,w:1.04},
+    korver:{h:1.02,w:1},
+    stojakovic:{h:1.05,w:1.01},
     k24:{h:1.01,w:1},
     j23:{h:1.01,w:1.02},
     a03:{h:.93,w:.94},
     v15:{h:1.01,w:1.03},
     t01:{h:1.07,w:.93},
-    "萨布丽娜":{h:.94,w:.9},
-    "陶乐西":{h:.95,w:.93},
-    "苏·伯德":{h:.92,w:.88}
+    ionescu:{h:.94,w:.9},
+    taurasi:{h:.95,w:.93},
+    "sue-bird":{h:.92,w:.88}
   });
   function bodyProfileFor(star){
     if(star&&star.body)return star.body;

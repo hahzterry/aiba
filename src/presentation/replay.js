@@ -71,13 +71,13 @@ function updReplay(dt){
   if(photo){
     rig.pos.copy(rep.photoCam.p);rig.pos.y+=Math.sin(rep.t*8)*0.03;
     rig.look.copy(rep.photoCam.look);
-    $("repCam").textContent="📺 机位 0 · "+rep.photoCam.n;
+    global.AIBASetIcon("repCam","video","机位 0 · "+rep.photoCam.n);
   }else if(t<cut){
     rig.pos.copy(rep.camA.p);rig.pos.x+=Math.sin(rep.t*0.5)*0.5;rig.pos.y+=Math.sin(rep.t*0.7)*0.15;
-    $("repCam").textContent="📺 机位 1 · "+rep.camA.n;
+    global.AIBASetIcon("repCam","video","机位 1 · "+rep.camA.n);
   }else{
     rig.pos.copy(rep.camB.p);rig.pos.y+=Math.sin(rep.t*0.6)*0.12;
-    $("repCam").textContent="📺 机位 2 · "+rep.camB.n;
+    global.AIBASetIcon("repCam","video","机位 2 · "+rep.camB.n);
   }
   if(!photo)rig.look.copy(rep.ghost.position);
   if(!rep.scoredFx&&t>=h.tf*0.98){
@@ -105,4 +105,3 @@ function aiProb(r){return clamp(0.36+(r-85)*0.02+DIFFS[G.diff].ai,0.2,0.78);}
 window.AIBA.runtime.register("presentation:replay",Object.freeze({
   rep,startReplay,startClip,updReplay,finishReplay,skipReplay,aiProb
 }));
-

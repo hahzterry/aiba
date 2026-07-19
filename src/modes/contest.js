@@ -23,7 +23,7 @@
     G.lineup=names;G.lineIdx=0;G.posted=[];
     if(G.stage==="semi")G.semiDone=false;else G.finalDone=false;
     benchSetup();
-    let html=`<h1 class="title" style="font-size:20px">🎲 出手顺序抽签</h1><div class="note">${G.stage==="final"?"决赛":"半决赛"}出场顺序:</div>`;
+    let html=`<h1 class="title" style="font-size:20px">出手顺序抽签</h1><div class="note">${G.stage==="final"?"决赛":"半决赛"}出场顺序:</div>`;
     names.forEach((who,i)=>{
       const me=who==="YOU";
       html+=`<div class="card" style="${me?"border-color:#3a6":""}"><b style="${me?"color:#9dff8d":""}">${i+1}. ${me?"你 (YOU)":who.n}</b></div>`;
@@ -46,13 +46,14 @@
     }else{
       html+=`<div class="note">你率先出手 · 给他们立个标杆<br>${G.stage==="final"?"投出一个让"+G.finalist.n+"绝望的分数":""}</div>`;
     }
-    html+=`<button class="btn gold" onclick="hidePanel();startRound()">上场 🏀</button>`;
+    html+=`<button class="btn gold" data-aiba-icon="play" data-aiba-label="上场" onclick="hidePanel();startRound()">上场</button>`;
     showPanel(html);
   }
   function stageDone(){
     if(G.stage==="semi")showBracket();else finalResult(G.finalist.posted);
   }
   function startRound(){
+    $("hud").dataset.mode="contest";
     G.moneyRack=(seededRandom()*5)|0;
     resetAudioCueMemory();resetProgressiveSceneForRun();enterArenaAudio(G.stage==="final"?1.03:.9);
     broadcastSting(G.stage==="final"?"danger":"score");crowdSwell(G.stage==="final"?.16:.1,2);

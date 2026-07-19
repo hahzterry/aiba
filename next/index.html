@@ -7,9 +7,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>aiBA·百分大战 v1.96 NEXT</title>
-<script src="src/i18n.js"></script>
+<script src="src/i18n.js?v=1.97-toolbar7"></script>
+<script src="src/ui/icons.js?v=1"></script>
 <link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">
-<link rel="stylesheet" href="styles.css?v=2.05">
+<link rel="stylesheet" href="styles.css?v=2.08">
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -66,10 +67,12 @@
   <button id="midBtn" onpointerdown="event.stopPropagation();event.preventDefault();battleSetSpot(7)" onclick="event.stopPropagation();event.preventDefault()">🔥 中场10分</button>
   <div id="edgeArrows"></div>
   <div id="spotDots"></div>
-  <div id="camBtn" onclick="cycleCam()">📷 第一人称</div>
-  <div id="muteBtn" class="needsAudio" onclick="toggleMute()">🔈</div>
-  <button id="pauseBtn" aria-label="暂停菜单" title="暂停菜单" onclick="openPauseMenu(event)">Ⅱ</button>
-  <div id="heroTag">🎬 英雄时刻 HERO BALL</div>
+  <div id="courtTools" aria-label="球场工具">
+    <button id="camBtn" type="button" data-aiba-icon="camera" data-aiba-label="第一人称" onclick="cycleCam()">第一人称</button>
+    <button id="muteBtn" class="needsAudio" type="button" data-aiba-icon="volume-1" data-aiba-label="启动声音" onclick="toggleMute()">启动声音</button>
+    <button id="pauseBtn" type="button" data-aiba-icon="pause" data-aiba-label="暂停菜单" onclick="openPauseMenu(event)">暂停菜单</button>
+  </div>
+  <div id="heroTag" data-aiba-icon="clapperboard" data-aiba-label="英雄时刻 HERO BALL">英雄时刻 HERO BALL</div>
   <div id="hudTarget"></div>
   <div id="vsBanner"></div>
   <div id="hint">按住屏幕蓄力 · 松开出手 · 停在绿色甜区</div>
@@ -89,7 +92,7 @@
 <div id="lbT"></div><div id="lbB"></div>
 <div id="repUI">
   <div id="repTag">● REPLAY 精彩回放</div>
-  <div id="repCam">📺 机位 1 · 侧翼跟踪</div>
+  <div id="repCam" data-aiba-icon="video" data-aiba-label="机位 1 · 侧翼跟踪">机位 1 · 侧翼跟踪</div>
   <button id="repSkip" class="btn sm" onclick="skipReplay()">跳过 ≫</button>
 </div>
 
@@ -111,9 +114,9 @@
 <script>typeof THREE==="undefined"&&document.write('<script src="https://unpkg.com/three@0.128.0/build/three.min.js"><\/script>')</script>
 <script>typeof THREE==="undefined"&&document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>')</script>
 <script>typeof THREE==="undefined"&&document.write('<script src="https://lib.baomitu.com/three.js/r128/three.min.js"><\/script>')</script>
-<script src="src/assets-manifest.js"></script>
-<script src="src/config.js?v=1.92"></script>
-<script src="src/player-select.js?v=1.76"></script>
+<script src="src/assets-manifest.js?v=20260719-realnames"></script>
+<script src="src/config.js?v=1.93"></script>
+<script src="src/player-select.js?v=1.77"></script>
 <script src="src/player-locker-preview.js?v=1.76"></script>
 <script src="src/core/player-id-sandbox.js"></script>
 <script src="src/core/leaderboard-sandbox.js"></script>
@@ -121,7 +124,7 @@
 <script src="src/share.js"></script>
 <script src="src/recorder.js?v=refactor9"></script>
 <script src="src/shot-physics.js?v=1.99"></script>
-<script src="src/face-overlays.js"></script>
+<script src="src/face-overlays.js?v=1.1-realnames"></script>
 <script src="src/haptics.js?v=1.80"></script>
 <script src="src/visual-director.js?v=1.85"></script>
 <script src="src/core/error-boundary.js?v=refactor39"></script>
@@ -132,7 +135,7 @@
 <script src="src/services/audio-cues.js?v=refactor39"></script>
 <script src="src/ui/result-copy.js?v=refactor39"></script>
 <script src="src/vision.js?v=2.01"></script>
-<script src="src/audio.js?v=1.88"></script>
+<script src="src/audio.js?v=1.89"></script>
 <script src="src/nba-dna/ScoreEngine.js?v=20260701-analysis4"></script>
 <script src="src/nba-dna/PoseAnalyzer.js?v=20260701-analysis4"></script>
 <script src="src/nba-dna/PoseVisualizer.js?v=20260701-analysis4"></script>
@@ -147,26 +150,26 @@
 <script src="src/rendering/environments.js?v=refactor22a"></script>
 <script src="src/rendering/props.js?v=refactor23"></script>
 <script src="src/rendering/characters.js?v=refactor24"></script>
-<script src="src/rendering/camera.js?v=refactor25"></script>
+<script src="src/rendering/camera.js?v=refactor25a"></script>
 <script src="src/rendering/motion.js?v=refactor26"></script>
 <script src="src/rendering/effects.js?v=refactor27"></script>
-<script src="src/presentation/cinematics.js?v=refactor28"></script>
+<script src="src/presentation/cinematics.js?v=refactor28a"></script>
 <script src="src/presentation/pregame.js?v=refactor29"></script>
 <script src="src/presentation/battle.js?v=refactor30"></script>
 <script src="src/gameplay/shots.js?v=refactor31"></script>
-<script src="src/presentation/replay.js?v=refactor32"></script>
+<script src="src/presentation/replay.js?v=refactor32a"></script>
 <script src="src/ui/battle-controls.js?v=refactor33a"></script>
 <script src="src/gameplay/collisions.js?v=refactor34"></script>
-<script src="src/presentation/win-cinematic.js?v=refactor35"></script>
+<script src="src/presentation/win-cinematic.js?v=refactor35a"></script>
 <script src="src/core/input.js?v=refactor36"></script>
 <script src="src/core/game-loop.js?v=refactor37"></script>
 <script src="src/core/scene-init.js?v=refactor38"></script>
 <script src="src/core/legacy-adapter.js?v=refactor15"></script>
-<script src="src/modes/rack-rush.js"></script>
-<script src="src/modes/contest.js"></script>
-<script src="src/modes/practice.js?v=refactor5"></script>
-<script src="src/modes/percent-battle/state.js?v=refactor4"></script>
-<script src="src/modes/percent-battle/spots.js?v=refactor4"></script>
+<script src="src/modes/rack-rush.js?v=refactor5a"></script>
+<script src="src/modes/contest.js?v=refactor5a"></script>
+<script src="src/modes/practice.js?v=refactor5a"></script>
+<script src="src/modes/percent-battle/state.js?v=refactor4a"></script>
+<script src="src/modes/percent-battle/spots.js?v=refactor4a"></script>
 <script src="src/modes/percent-battle/opponent.js?v=refactor4"></script>
 <script src="src/modes/percent-battle/results.js?v=refactor4"></script>
 <script src="src/modes/percent-battle/index.js?v=refactor4"></script>
@@ -174,25 +177,24 @@
 <script src="src/ui/loading.js?v=refactor7"></script>
 <script src="src/ui/menu.js?v=refactor12a"></script>
 <script src="src/ui/setup.js?v=refactor13"></script>
-<script src="src/ui/pregame.js?v=refactor15"></script>
-<script src="src/ui/pause.js?v=1.97"></script>
+<script src="src/ui/pregame.js?v=refactor15b"></script>
+<script src="src/ui/pause.js?v=1.98"></script>
 <script src="src/core/bootstrap-next.js?v=refactor12"></script>
 <script src="src/game-flow.js?v=1.93"></script>
-<script src="src/navigation.js?v=1.97"></script>
+<script src="src/navigation.js?v=1.98"></script>
 <script src="src/scene-lifecycle.js?v=1.88"></script>
 <script src="src/result-stats.js?v=1.78"></script>
-<script src="src/gear.js?v=1.81"></script>
+<script src="src/gear.js?v=1.82"></script>
 <script src="src/avatar-customizer.js?v=1.79"></script>
 <script src="src/roster-style.js?v=1.79"></script>
 <script src="src/shot-motion.js?v=1.99"></script>
 <script src="src/hero-moments.js?v=1.79"></script>
 <script src="src/hot-hand.js?v=1.81"></script>
 <script src="src/perf.js?v=1.72"></script>
-<script src="src/perf-settings.js?v=1.92"></script>
+<script src="src/perf-settings.js?v=1.93b"></script>
 <script src="src/trailer-capture.js?v=trailer1"></script>
-<script src="src/ui/contest-progress.js?v=1.95"></script>
-<script src="src/ui/onboarding.js?v=1.95"></script>
+<script src="src/ui/onboarding.js?v=1.96b"></script>
 <script src="src/ui/vision-tutorial.js?v=1.95"></script>
-<script src="src/ui/interactive-tutorial.js?v=2.04"></script>
+<script src="src/ui/interactive-tutorial.js?v=2.05"></script>
 </body>
 </html>

@@ -30,6 +30,23 @@
     G.charging=false;G.power=0;G.apexed=false;$("pFill").style.height="0%";
     if(typeof global.hidePlayerPowerUI==="function")global.hidePlayerPowerUI();
   }
+  function renderPauseMenu(){
+    global.showPanel(`<div class="pausePanel">
+      <div class="pauseMeta">GAME PAUSED</div>
+      <h1>${pauseModeLabel()}</h1>
+      <div class="card">当前进度：<b style="color:#ffd23f">${pauseScoreLine()}</b><br><span style="color:#9ab">可以继续、重开当前模式，或直接返回首页。</span></div>
+      <div class="pauseActions">
+        <button class="btn green" data-aiba-icon="play" data-aiba-label="继续比赛" onclick="resumePauseMenu()">继续比赛</button>
+        <button class="btn" data-aiba-icon="settings" data-aiba-label="游戏设置" onclick="openPausedSettings()">游戏设置</button>
+        <button class="btn gold" data-aiba-icon="rotate-ccw" data-aiba-label="重开当前模式" onclick="restartPausedMode()">重开当前模式</button>
+        <button class="btn red" data-aiba-icon="arrow-left" data-aiba-label="返回首页" onclick="returnHomeFromPause()">返回首页</button>
+      </div>
+    </div>`);
+  }
+  function openPausedSettings(){
+    if(!PAUSE.on||!global.AIBAPerfSettings)return;
+    global.AIBAPerfSettings.open(null,{returnToPause:true});
+  }
   function openPauseMenu(event){
     if(event){event.preventDefault();event.stopPropagation();}
     if(PAUSE.on||!pauseableState())return;
@@ -38,16 +55,7 @@
     cancelLiveChargeForPause();G.running=false;G.canShoot=false;
     if(G.mode==="battle")global.pauseBattleClock();
     updatePauseButton();
-    global.showPanel(`<div class="pausePanel">
-      <div class="pauseMeta">GAME PAUSED</div>
-      <h1>${pauseModeLabel()}</h1>
-      <div class="card">当前进度：<b style="color:#ffd23f">${pauseScoreLine()}</b><br><span style="color:#9ab">可以继续、重开当前模式，或直接返回首页。</span></div>
-      <div class="pauseActions">
-        <button class="btn green" onclick="resumePauseMenu()">继续比赛</button>
-        <button class="btn gold" onclick="restartPausedMode()">重开当前模式</button>
-        <button class="btn red" onclick="returnHomeFromPause()">返回首页</button>
-      </div>
-    </div>`);
+    renderPauseMenu();
   }
   function resumePauseMenu(){
     if(!PAUSE.on)return;
@@ -83,6 +91,6 @@
     PAUSE.on=false;global.hidePanel();clearLiveObjectsForMenu();global.showMenu();updatePauseButton();
   }
 
-  const api=Object.freeze({pauseableState,updatePauseButton,pauseModeLabel,pauseScoreLine,cancelLiveChargeForPause,openPauseMenu,resumePauseMenu,clearLiveObjectsForMenu,restartPausedMode,returnHomeFromPause});
+  const api=Object.freeze({pauseableState,updatePauseButton,pauseModeLabel,pauseScoreLine,cancelLiveChargeForPause,renderPauseMenu,openPausedSettings,openPauseMenu,resumePauseMenu,clearLiveObjectsForMenu,restartPausedMode,returnHomeFromPause});
   Object.assign(global,api);runtime.register("ui:pause",api);
 })(window);

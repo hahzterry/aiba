@@ -111,7 +111,7 @@
   }
   function announceGear(){
     const it=activeItem();
-    if(it)setTimeout(()=>toastSafe("🎽 "+it.name+" 生效 · "+it.desc,it.color),700);
+    if(it)setTimeout(()=>toastSafe(it.name+" · 生效 · "+it.desc,it.color),700);
   }
 
   /* ---------------- HUD ---------------- */

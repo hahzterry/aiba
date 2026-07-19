@@ -65,9 +65,9 @@
   function startRackRush(variant){
     variant=variant==="speed100"?"speed100":"classic";
     ensureAudio(false);hidePanel();music(false);resetProgressiveSceneForRun();resetRackRushState(variant);
-    CAM.mode=1;$("camBtn").textContent="📷 "+CAM.names[1];ctx.setCamSnap(true);
+    CAM.mode=1;global.AIBASetIcon("camBtn","camera",CAM.names[1]);ctx.setCamSnap(true);
     enterArenaAudio(.86);
-    $("hud").style.display="block";$("battleControls").style.display="none";$("battleScore").style.display="none";
+    $("hud").dataset.mode="rackrush";$("hud").style.display="block";$("battleControls").style.display="none";$("battleScore").style.display="none";
     $("midBtn").style.display="none";$("hudTimer").style.display="block";$("hudStreak").style.display="none";
     $("scoreNum").textContent="0";$("hudTarget").textContent="";
     const base=RACKS[2].p;

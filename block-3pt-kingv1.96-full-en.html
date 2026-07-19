@@ -4,9 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>aiBA·百分大战 v1.96 FULL EN</title>
-<script src="src/i18n.js"></script>
+<script src="src/i18n.js?v=1.97-toolbar7"></script>
+<script src="src/ui/icons.js?v=1"></script>
 <link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">
-<link rel="stylesheet" href="styles.css?v=2.05">
+<link rel="stylesheet" href="styles.css?v=2.08">
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -63,10 +64,12 @@
   <button id="midBtn" onpointerdown="event.stopPropagation();event.preventDefault();battleSetSpot(7)" onclick="event.stopPropagation();event.preventDefault()">🔥 中场10分</button>
   <div id="edgeArrows"></div>
   <div id="spotDots"></div>
-  <div id="camBtn" onclick="cycleCam()">📷 第一人称</div>
-  <div id="muteBtn" class="needsAudio" onclick="toggleMute()">🔈</div>
-  <button id="pauseBtn" aria-label="暂停菜单" title="暂停菜单" onclick="openPauseMenu(event)">Ⅱ</button>
-  <div id="heroTag">🎬 英雄时刻 HERO BALL</div>
+  <div id="courtTools" aria-label="球场工具">
+    <button id="camBtn" type="button" data-aiba-icon="camera" data-aiba-label="第一人称" onclick="cycleCam()">第一人称</button>
+    <button id="muteBtn" class="needsAudio" type="button" data-aiba-icon="volume-1" data-aiba-label="启动声音" onclick="toggleMute()">启动声音</button>
+    <button id="pauseBtn" type="button" data-aiba-icon="pause" data-aiba-label="暂停菜单" onclick="openPauseMenu(event)">暂停菜单</button>
+  </div>
+  <div id="heroTag" data-aiba-icon="clapperboard" data-aiba-label="英雄时刻 HERO BALL">英雄时刻 HERO BALL</div>
   <div id="hudTarget"></div>
   <div id="vsBanner"></div>
   <div id="hint">按住屏幕蓄力 · 松开出手 · 停在绿色甜区</div>
@@ -86,7 +89,7 @@
 <div id="lbT"></div><div id="lbB"></div>
 <div id="repUI">
   <div id="repTag">● REPLAY 精彩回放</div>
-  <div id="repCam">📺 机位 1 · 侧翼跟踪</div>
+  <div id="repCam" data-aiba-icon="video" data-aiba-label="机位 1 · 侧翼跟踪">机位 1 · 侧翼跟踪</div>
   <button id="repSkip" class="btn sm" onclick="skipReplay()">跳过 ≫</button>
 </div>
 
@@ -106,9 +109,9 @@
 <script>typeof THREE==="undefined"&&document.write('<script src="https://unpkg.com/three@0.128.0/build/three.min.js"><\/script>')</script>
 <script>typeof THREE==="undefined"&&document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>')</script>
 <script>typeof THREE==="undefined"&&document.write('<script src="https://lib.baomitu.com/three.js/r128/three.min.js"><\/script>')</script>
-<script src="src/assets-manifest.js"></script>
-<script src="src/config.js?v=1.92"></script>
-<script src="src/player-select.js?v=1.76"></script>
+<script src="src/assets-manifest.js?v=20260719-realnames"></script>
+<script src="src/config.js?v=1.93"></script>
+<script src="src/player-select.js?v=1.77"></script>
 <script src="src/player-locker-preview.js?v=1.76"></script>
 <script src="src/player-id.js"></script>
 <script src="src/leaderboard-api.js"></script>
@@ -116,7 +119,7 @@
 <script src="src/share.js"></script>
 <script src="src/recorder.js?v=1.94"></script>
 <script src="src/shot-physics.js?v=1.99"></script>
-<script src="src/face-overlays.js"></script>
+<script src="src/face-overlays.js?v=1.1-realnames"></script>
 <script src="src/haptics.js?v=1.80"></script>
 <script src="src/visual-director.js?v=1.85"></script>
 <script>
@@ -393,7 +396,7 @@ function triggerMissRunVoice(){
    loop类: bgm / crowd / crowdCheer   一次性: applause / boo / horn / buzzer / bounce / swish */
 const EXT_AUDIO=ASSETS.audio||{};
 </script>
-<script src="src/audio.js?v=1.88"></script>
+<script src="src/audio.js?v=1.89"></script>
 <script src="src/nba-dna/ScoreEngine.js?v=20260701-analysis4"></script>
 <script src="src/nba-dna/PoseAnalyzer.js?v=20260701-analysis4"></script>
 <script src="src/nba-dna/PoseVisualizer.js?v=20260701-analysis4"></script>
@@ -2017,7 +2020,7 @@ function faceTo(from,to){return Math.atan2(to.x-from.x,to.z-from.z);}
 const CAM={mode:0,names:["第一人称","球员跟随","转播视角"]};
 function cycleCam(){
   CAM.mode=(CAM.mode+1)%3;
-  $("camBtn").textContent="📷 "+CAM.names[CAM.mode];
+  AIBASetIcon("camBtn","camera",CAM.names[CAM.mode]);
   applyCamMode();blip(700,0.05,"square",0.06);
 }
 function applyCamMode(){
@@ -2683,7 +2686,7 @@ function startVictoryCine(opts){
   if(v.hero&&v.hero.g){stopCelebrate(v.hero);v.hero.g.visible=true;startCelebrate(v.hero,v.heroType);}
   if(v.foil&&v.foil.g){v.foil.g.visible=true;stopCelebrate(v.foil);}
   $("lbT").style.height="10vh";$("lbB").style.height="10vh";
-  $("heroTag").style.display="block";$("heroTag").textContent=v.tag;
+  $("heroTag").style.display="block";AIBASetIcon("heroTag","clapperboard",v.tag);
 }
 function updVictoryCine(dt){
   const v=VICTORY_CINE;if(!v.on)return;
@@ -2700,22 +2703,22 @@ function updVictoryCine(dt){
     const q=p/0.22;
     cp=hp.clone().addScaledVector(dir,2.15-0.25*q).addScaledVector(perp,side*(1.18+0.2*Math.sin(v.camSeed))).setY(1.62+q*0.24+hb);
     lk=hp.clone().setY(1.55);
-    $("heroTag").textContent="🎉 顺利时刻";
+    AIBASetIcon("heroTag","clapperboard","顺利时刻");
   }else if(p<0.5){
     const q=(p-0.22)/0.28;
     cp=focus.clone().addScaledVector(dir,1.95-0.6*q).addScaledVector(perp,side*(2.5+0.7*Math.sin(v.camSeed*1.7))).setY(1.78+Math.sin(q*Math.PI)*0.12+hb);
     lk=hp.clone().lerp(fp,0.18).setY(1.6);
-    $("heroTag").textContent="🏆 胜利庆祝";
+    AIBASetIcon("heroTag","clapperboard","胜利庆祝");
   }else if(p<0.78){
     const q=(p-0.5)/0.28;
     cp=focus.clone().addScaledVector(perp,side*(3.35+0.5*Math.cos(v.camSeed))).addScaledVector(dir,-0.45+q*0.35).setY(2.45+Math.sin(q*Math.PI)*0.22);
     lk=focus.clone().setY(1.95);
-    $("heroTag").textContent="🔥 全场欢呼";
+    AIBASetIcon("heroTag","clapperboard","全场欢呼");
   }else{
     const q=(p-0.78)/0.22;
     cp=hp.clone().addScaledVector(dir,1.68-0.52*q).addScaledVector(perp,side*(0.8+0.22*Math.sin(v.camSeed*1.2))).setY(2.0+Math.sin(q*Math.PI)*0.08+hb);
     lk=hp.clone().setY(1.55);
-    $("heroTag").textContent="✨ 定格";
+    AIBASetIcon("heroTag","clapperboard","定格");
   }
   cp.x=clamp(cp.x,-COURT.halfWidth+0.9,COURT.halfWidth-0.9);
   cp.z=clamp(cp.z,COURT.nearBaseline+0.9,COURT.playMaxZ-0.55);
@@ -3088,7 +3091,7 @@ function startPractice(){
   G.canShoot=false;G.blindToasted=false;G.cutQ=[];
   balls.slice().forEach(b=>{scene.remove(b.mesh);scene.remove(b.blob);});balls.length=0;
   resetRackBalls();
-  $("scoreNum").textContent="-";$("hudStreak").style.display="none";
+  $("hud").dataset.mode="practice";$("scoreNum").textContent="-";$("hudStreak").style.display="none";
   $("hudTimer").style.display="block";$("hudTimer").textContent="热身";$("hudTimer").className="";
   $("hudRound").innerHTML="练习模式<br><span style='color:#778'>无计时 · 无计分</span>";
   $("hudTarget").textContent="";
@@ -3764,25 +3767,12 @@ function cancelLiveChargeForPause(){
   G.charging=false;G.power=0;G.apexed=false;$("pFill").style.height="0%";
   if(typeof hidePlayerPowerUI==="function")hidePlayerPowerUI();
 }
+function renderPauseMenu(){showPanel(`<div class="pausePanel"><div class="pauseMeta">GAME PAUSED</div><h1>${pauseModeLabel()}</h1><div class="card">当前进度：<b style="color:#ffd23f">${pauseScoreLine()}</b><br><span style="color:#9ab">可以继续、重开当前模式，或直接返回首页。</span></div><div class="pauseActions"><button class="btn green" data-aiba-icon="play" data-aiba-label="继续比赛" onclick="resumePauseMenu()">继续比赛</button><button class="btn" data-aiba-icon="settings" data-aiba-label="游戏设置" onclick="openPausedSettings()">游戏设置</button><button class="btn gold" data-aiba-icon="rotate-ccw" data-aiba-label="重开当前模式" onclick="restartPausedMode()">重开当前模式</button><button class="btn red" data-aiba-icon="arrow-left" data-aiba-label="返回首页" onclick="returnHomeFromPause()">返回首页</button></div></div>`);}
+function openPausedSettings(){if(PAUSE.on&&window.AIBAPerfSettings)AIBAPerfSettings.open(null,{returnToPause:true});}
 function openPauseMenu(e){
-  if(e){e.preventDefault();e.stopPropagation();}
-  if(PAUSE.on||!pauseableState())return;
-  PAUSE.on=true;PAUSE.state=G.state;PAUSE.mode=G.mode;PAUSE.wasRunning=G.running;PAUSE.canShoot=G.canShoot;
-  PAUSE.rushVariant=G.rush&&G.rush.variant?G.rush.variant:null;PAUSE.practice=!!G.practice;
-  cancelLiveChargeForPause();
-  G.running=false;G.canShoot=false;
-  if(G.mode==="battle")pauseBattleClock();
-  updatePauseButton();
-  showPanel(`<div class="pausePanel">
-    <div class="pauseMeta">GAME PAUSED</div>
-    <h1>${pauseModeLabel()}</h1>
-    <div class="card">当前进度：<b style="color:#ffd23f">${pauseScoreLine()}</b><br><span style="color:#9ab">可以继续、重开当前模式，或直接返回首页。</span></div>
-    <div class="pauseActions">
-      <button class="btn green" onclick="resumePauseMenu()">继续比赛</button>
-      <button class="btn gold" onclick="restartPausedMode()">重开当前模式</button>
-      <button class="btn red" onclick="returnHomeFromPause()">返回首页</button>
-    </div>
-  </div>`);
+  if(e){e.preventDefault();e.stopPropagation();}if(PAUSE.on||!pauseableState())return;
+  PAUSE.on=true;PAUSE.state=G.state;PAUSE.mode=G.mode;PAUSE.wasRunning=G.running;PAUSE.canShoot=G.canShoot;PAUSE.rushVariant=G.rush&&G.rush.variant?G.rush.variant:null;PAUSE.practice=!!G.practice;
+  cancelLiveChargeForPause();G.running=false;G.canShoot=false;if(G.mode==="battle")pauseBattleClock();updatePauseButton();renderPauseMenu();
 }
 function resumePauseMenu(){
   if(!PAUSE.on)return;
@@ -3995,19 +3985,19 @@ function pickDiff(k){
   });
   G.stage="semi";G.stats={best:0,moneyM:0,moneyT:0,deepM:0,deepT:0};
   G.semiDone=false;G.finalDone=false;
-  let h=`<h1 class="title" style="font-size:22px">🎤 对位介绍</h1>
+  let h=`<h1 class="title" style="font-size:22px">对位介绍</h1>
     <div class="note">今晚的像素之夜 · ${n+1} 人半决赛 · 前 2 名晋级决赛<br>出手顺序随机抽签 · 对手比赛全程直播</div>`;
   G.opponents.forEach(o=>{
     const talk=TALK_PRE[(Math.random()*TALK_PRE.length)|0];
     h+=`<div class="card"><b>${o.n}</b> #${o.num} <span style="color:#ffb">${stars(o.r)}</span><br>
-      <span style="color:#9ab;font-size:11px">${o.t} · 三分能力 ${o.r}</span><br>
+      <span style="color:#9ab;font-size:11px">三分能力 ${o.r}</span><br>
       <span style="color:#ff9d8d;font-size:11px">「${talk}」</span></div>`;
   });
   h+=`<div class="card" style="border-color:#3a6"><b style="color:#9dff8d">你 (YOU)</b> #${G.myNum} ${stars(G.myStar.r||88)}<br>
-    <span style="color:#9ab;font-size:11px">${G.myStar.n} · ${G.myStar.t||"街球场走出的方块新星"}</span><br>
+    <span style="color:#9ab;font-size:11px">${G.myStar.n} · 三分能力 ${G.myStar.r||88}</span><br>
     <span style="color:#9dff8d;font-size:11px">${shotProfileText(G.myStar)}</span></div>
-    <button class="btn green" onclick="startPractice()">🏀 热身练习 (3球)</button>
-    <button class="btn gold" onclick="hidePanel();beginStage()">⚡ 直接开赛 →</button>`;
+    <button class="btn green" data-aiba-icon="target" data-aiba-label="热身练习 (3球)" onclick="startPractice()">热身练习 (3球)</button>
+    <button class="btn gold" data-aiba-icon="play" data-aiba-label="直接开赛 →" onclick="hidePanel();beginStage()">直接开赛 →</button>`;
   showPanel(h);
 }
 function showBattleIntro(){
@@ -4016,7 +4006,7 @@ function showBattleIntro(){
   const myShot=shotProfileText(G.myStar),oppShot=shotProfileText(o);
   showPanel(`<h1 class="title" style="font-size:22px">aiBA·百分大战</h1>
     <div class="card"><b style="color:#9dff8d">你 · ${G.myStar.n}</b> #${G.myNum}  VS  <b style="color:#ffd23f">${o.n}</b> #${o.num}<br>
-      <span style="font-size:11px;color:#9ab">${o.t} · ${stars(o.r)}</span><br>
+      <span style="font-size:11px;color:#9ab">三分能力 ${o.r} · ${stars(o.r)}</span><br>
       <span style="font-size:11px;color:#9dff8d">你: ${myShot}</span> · <span style="font-size:11px;color:#ffd23f">对手: ${oppShot}</span><br>
       <span style="color:#ff9d8d;font-size:11px">「${talk}」</span></div>
     <div class="card">规则:<br>
@@ -4082,9 +4072,9 @@ function resetRackRushState(variant){
 function startRackRush(variant){
   variant=variant==="speed100"?"speed100":"classic";
   ensureAudio(false);hidePanel();music(false);resetProgressiveSceneForRun();resetRackRushState(variant);
-  CAM.mode=1;$('camBtn').textContent="📷 "+CAM.names[1];camSnap=true;
+  CAM.mode=1;AIBASetIcon("camBtn","camera",CAM.names[1]);camSnap=true;
   enterArenaAudio(.86);
-  $("hud").style.display="block";$("battleControls").style.display="none";$("battleScore").style.display="none";
+  $("hud").dataset.mode="rackrush";$("hud").style.display="block";$("battleControls").style.display="none";$("battleScore").style.display="none";
   $("midBtn").style.display="none";$("hudTimer").style.display="block";$("hudStreak").style.display="none";
   $("scoreNum").textContent="0";$("hudTarget").textContent="";
   const base=RACKS[2].p;
@@ -4376,13 +4366,13 @@ function resetBattleState(){
 function startBattle(){
   ensureAudio(false);
   hidePanel();music(false);resetProgressiveSceneForRun();benchSetup();benchVis();resetBattleState();
-  CAM.mode=1;$("camBtn").textContent="📷 "+CAM.names[1];G._preSuperCam=null; // 百分大战默认第三人称开场
+  CAM.mode=1;AIBASetIcon("camBtn","camera",CAM.names[1]);G._preSuperCam=null; // 百分大战默认第三人称开场
   camSnap=true;
   enterArenaAudio(1);
   $("scoreNum").textContent="0";$("hudStreak").style.display="none";
   $("hudTimer").style.display="none";$("bsTimer").textContent="0:00.0";$("hudTimer").className="";
   $("hudRound").innerHTML="百分大战<br><span style='color:#778'>"+DIFFS[G.diff].n+" · 净计时</span>";
-  $("hud").style.display="block";$("battleControls").style.display="flex";
+  $("hud").dataset.mode="battle";$("hud").style.display="block";$("battleControls").style.display="flex";
   updBattleUI();
   const s0=curShot(),b0=shotBase(s0);
   P.pos.copy(b0);P.face=faceTo(b0,HOOP);P.walking=false;P.jump=0;P.eyeDip=0;
@@ -4418,7 +4408,7 @@ function beginStage(){
   if(G.stage==="semi")G.semiDone=false;else G.finalDone=false;
   benchSetup();
   // 抽签结果
-  let h=`<h1 class="title" style="font-size:20px">🎲 出手顺序抽签</h1><div class="note">${G.stage==="final"?"决赛":"半决赛"}出场顺序:</div>`;
+  let h=`<h1 class="title" style="font-size:20px">出手顺序抽签</h1><div class="note">${G.stage==="final"?"决赛":"半决赛"}出场顺序:</div>`;
   names.forEach((w,i)=>{
     const me=w==="YOU";
     h+=`<div class="card" style="${me?"border-color:#3a6":""}"><b style="${me?"color:#9dff8d":""}">${i+1}. ${me?"你 (YOU)":w.n}</b></div>`;
@@ -4442,7 +4432,7 @@ function preMyTurn(){
   }else{
     h+=`<div class="note">你率先出手 · 给他们立个标杆<br>${G.stage==="final"?"投出一个让"+G.finalist.n+"绝望的分数":""}</div>`;
   }
-  h+=`<button class="btn gold" onclick="hidePanel();startRound()">上场 🏀</button>`;
+  h+=`<button class="btn gold" data-aiba-icon="play" data-aiba-label="上场" onclick="hidePanel();startRound()">上场</button>`;
   showPanel(h);
 }
 function stageDone(){
@@ -4453,6 +4443,7 @@ function stageDone(){
   }
 }
 function startRound(){
+  $("hud").dataset.mode="contest";
   G.moneyRack=(seededRandom()*5)|0;
   resetAudioCueMemory();resetProgressiveSceneForRun();
   enterArenaAudio(G.stage==="final"?1.03:0.9);
@@ -4594,13 +4585,13 @@ function updReplay(dt){
   if(photo){
     rig.pos.copy(rep.photoCam.p);rig.pos.y+=Math.sin(rep.t*8)*0.03;
     rig.look.copy(rep.photoCam.look);
-    $("repCam").textContent="📺 机位 0 · "+rep.photoCam.n;
+    AIBASetIcon("repCam","video","机位 0 · "+rep.photoCam.n);
   }else if(t<cut){
     rig.pos.copy(rep.camA.p);rig.pos.x+=Math.sin(rep.t*0.5)*0.5;rig.pos.y+=Math.sin(rep.t*0.7)*0.15;
-    $("repCam").textContent="📺 机位 1 · "+rep.camA.n;
+    AIBASetIcon("repCam","video","机位 1 · "+rep.camA.n);
   }else{
     rig.pos.copy(rep.camB.p);rig.pos.y+=Math.sin(rep.t*0.6)*0.12;
-    $("repCam").textContent="📺 机位 2 · "+rep.camB.n;
+    AIBASetIcon("repCam","video","机位 2 · "+rep.camB.n);
   }
   if(!photo)rig.look.copy(rep.ghost.position);
   if(!rep.scoredFx&&t>=h.tf*0.98){
@@ -4734,8 +4725,8 @@ function battleSetSpot(i){
   G.battleSpot=next;G.canShoot=false;handBall.visible=false;pBall.visible=false;
   // 中场超远点强制第三人称(否则看不到自己),离开时若之前是第一人称则恢复
   const sp=BATTLE_SPOTS[next];
-  if(sp.super&&CAM.mode===0){G._preSuperCam=0;CAM.mode=1;$("camBtn").textContent="📷 "+CAM.names[1];applyCamMode();}
-  else if(!sp.super&&G._preSuperCam===0){G._preSuperCam=null;CAM.mode=0;$("camBtn").textContent="📷 "+CAM.names[0];applyCamMode();}
+  if(sp.super&&CAM.mode===0){G._preSuperCam=0;CAM.mode=1;AIBASetIcon("camBtn","camera",CAM.names[1]);applyCamMode();}
+  else if(!sp.super&&G._preSuperCam===0){G._preSuperCam=null;CAM.mode=0;AIBASetIcon("camBtn","camera",CAM.names[0]);applyCamMode();}
   updBattleUI();updDotsUI();
   walkTo(curShot(),()=>readyBall());
 }
@@ -5139,7 +5130,7 @@ function startWinCine(win,ball){
   w.ghost.position.copy(w.p0);w.gBlob.position.set(w.p0.x,0.02,w.p0.z);
   // 电影感:黑边 + 字幕
   $("lbT").style.height="11vh";$("lbB").style.height="11vh";
-  $("heroTag").style.display="block";$("heroTag").textContent="🎬 英雄时刻";
+  $("heroTag").style.display="block";AIBASetIcon("heroTag","clapperboard","英雄时刻");
   broadcastSting(win?"score":"danger");
 }
 const _wcGhost=new THREE.Vector3();
@@ -5209,7 +5200,7 @@ function updWinCine(dt){
     rig.pos.set(cp.x,cp.y+hb,cp.z);
     const lk=w.sPos.clone().setY(1.85).lerp(w.p0,0.35);
     rig.look.set(lk.x,lk.y,lk.z);
-    $("heroTag").textContent="🎬 出手特写";
+    AIBASetIcon("heroTag","clapperboard","出手特写");
   }else if(tt<WC_T1){
     // 飞行轨迹:侧后方跟拍篮球弧线
     const cp=ballPos.clone().addScaledVector(perp,side*3.2).addScaledVector(sdir,-0.6);
@@ -5217,7 +5208,7 @@ function updWinCine(dt){
     cp.x=clamp(cp.x,-12.5,12.5);
     rig.pos.set(cp.x,cp.y+hb,cp.z);
     rig.look.copy(ballPos);
-    $("heroTag").textContent="🏀 空中轨迹";
+    AIBASetIcon("heroTag","clapperboard","空中轨迹");
   }else if(tt<WC_T2){
     // 顺利时刻:命中后先给投篮者一个庆祝段落
     if(!w.heroStarted){startCelebrate(w.shooter,w.heroType);w.heroStarted=true;}
@@ -5233,7 +5224,7 @@ function updWinCine(dt){
     const cp=(w.camSeed<Math.PI?heroFocus.clone().addScaledVector(sdir,2.0-camPhase*0.5).add(orbit):heroFocus.clone().addScaledVector(sdir,1.65-camPhase*0.3).addScaledVector(perp,side*(2.3+0.2*Math.cos(w.camSeed)))).setY(1.7+Math.sin(camPhase*Math.PI)*0.18+hb);
     rig.pos.set(cp.x,cp.y,cp.z);
     rig.look.set(heroFocus.x,1.55,heroFocus.z);
-    $("heroTag").textContent=w.win?"🎉 顺利时刻":"🎉 成功瞬间";
+    AIBASetIcon("heroTag","clapperboard",w.win?"顺利时刻":"成功瞬间");
   }else if(tt<WC_T2+0.75){
     // 全场沸腾·观众视角:从篮筐后方看台俯视,人群在前景
     if(!w.fxCrowd){
@@ -5244,7 +5235,7 @@ function updWinCine(dt){
     const crowdCp=V3(side*4.5,5.6,HOOP.z-4.6);
     rig.pos.set(crowdCp.x+hb,crowdCp.y,crowdCp.z);
     rig.look.set(w.sPos.x*0.4,2.3,(HOOP.z+w.sPos.z)*0.5);
-    $("heroTag").textContent=w.win?"🔥 全场沸腾":"🔥 对手率先破百";
+    AIBASetIcon("heroTag","clapperboard",w.win?"全场沸腾":"对手率先破百");
   }else{
     // 败方惊讶:贴近失败者的低机位推镜
     updateCelebrate(w.shooter,dt);
@@ -5254,7 +5245,7 @@ function updWinCine(dt){
     const loserCp=w.lPos.clone().addScaledVector(ldir,2.9-0.7*push).addScaledVector(lperp,side*1.25).setY(1.95);
     rig.pos.set(loserCp.x+hb,loserCp.y,loserCp.z);
     rig.look.set(w.lPos.x,1.55,w.lPos.z);
-    $("heroTag").textContent="😱 难以置信";
+    AIBASetIcon("heroTag","clapperboard","难以置信");
   }
 
   if(tt>=WC_T3){
@@ -5612,20 +5603,19 @@ bootGame();
 animate();
 </script>
 <script src="src/game-flow.js?v=1.93"></script>
-<script src="src/navigation.js?v=1.97"></script>
+<script src="src/navigation.js?v=1.98"></script>
 <script src="src/scene-lifecycle.js?v=1.88"></script>
 <script src="src/result-stats.js?v=1.78"></script>
-<script src="src/gear.js?v=1.81"></script>
+<script src="src/gear.js?v=1.82"></script>
 <script src="src/avatar-customizer.js?v=1.79"></script>
 <script src="src/roster-style.js?v=1.79"></script>
 <script src="src/shot-motion.js?v=1.99"></script>
 <script src="src/hero-moments.js?v=1.79"></script>
 <script src="src/hot-hand.js?v=1.81"></script>
 <script src="src/perf.js?v=1.72"></script>
-<script src="src/perf-settings.js?v=1.92"></script>
-<script src="src/ui/contest-progress.js?v=1.95"></script>
-<script src="src/ui/onboarding.js?v=1.95"></script>
+<script src="src/perf-settings.js?v=1.93b"></script>
+<script src="src/ui/onboarding.js?v=1.96b"></script>
 <script src="src/ui/vision-tutorial.js?v=1.95"></script>
-<script src="src/ui/interactive-tutorial.js?v=2.04"></script>
+<script src="src/ui/interactive-tutorial.js?v=2.05"></script>
 </body>
 </html>

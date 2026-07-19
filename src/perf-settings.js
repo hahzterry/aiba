@@ -15,7 +15,7 @@
         ((global.matchMedia&&global.matchMedia("(pointer:coarse)").matches)&&Math.min(innerWidth,innerHeight)<700);
     }catch(e){return false;}
   })();
-  let S=load();
+  let S=load(),returnToPause=false;
   let autoTier=0,autoLowMs=0,autoCriticalMs=0,activeSince=0,lastActive=false;
   function load(){
     try{return Object.assign({},DEFAULTS,JSON.parse(localStorage.getItem(LS_KEY)||"{}"));}
@@ -206,6 +206,7 @@
       <div class="perfHead"><small>GAME SETTINGS</small><h1>游戏设置</h1><p>昵称与画面流畅度都在这里调整。</p></div>
       ${identityRow()}
       ${langRow()}
+      <button class="perfHelp" type="button" data-aiba-icon="book-open" data-aiba-label="帮助与引导" onclick="window.AIBAOnboard&&AIBAOnboard.help('settings')">帮助与引导</button>
       ${toggleRow("autoTune","自动流畅保护",AUTO_DEVICE?(autoTier?`本次已自动降到 ${autoTier} 档,录屏期间不会切档`:"持续低帧时自动精简观众与特效"):"手机端生效,桌面端保持原画质")}
       ${toggleRow("lowRes","省电分辨率","压低渲染分辨率下限,最直接的提帧手段(画面会略糊)")}
       ${toggleRow("hideCones","关灯光光锥","关掉体育馆透明光柱,iOS 填充率大头")}
@@ -218,9 +219,10 @@
       </div>
     </div>`;
   }
-  function openPanel(ev){
+  function openPanel(ev,options){
     if(ev&&ev.stopPropagation)ev.stopPropagation();
     if(typeof global.showPanel!=="function")return;
+    if(options&&Object.prototype.hasOwnProperty.call(options,"returnToPause"))returnToPause=!!options.returnToPause;
     global.showPanel(panelMarkup());
     const box=document.getElementById("ovBox");
     if(box)box.classList.add("perfPanelBox");
@@ -239,6 +241,7 @@
     S=Object.assign({},DEFAULTS);autoTier=0;autoLowMs=0;autoCriticalMs=0;save();applyAll();rerender();
   }
   function close(){
+    if(returnToPause&&global.renderPauseMenu){returnToPause=false;global.renderPauseMenu();return;}
     const g=(typeof G!=="undefined")?G:null;
     const playing=g&&/^(round|tiebreak|battle|rackrush|pregame)$/.test(g.state);
     if(playing&&typeof global.hidePanel==="function")global.hidePanel();      // 恢复对局
@@ -246,21 +249,28 @@
     else if(typeof global.showMenu==="function")global.showMenu();
     else if(typeof global.hidePanel==="function")global.hidePanel();
   }
+  function reopen(){openPanel(null,{returnToPause});}
 
   /* ---------- 常驻入口按钮 ---------- */
   function mountButton(){
     if(document.getElementById("perfBtn"))return;
     const b=document.createElement("button");
-    b.id="perfBtn";b.type="button";b.title="游戏设置";b.textContent="⚙";
+    b.id="perfBtn";b.type="button";b.title="游戏设置";b.textContent="游戏设置";
+    if(global.AIBASetIcon)global.AIBASetIcon(b,"settings","游戏设置");
     const stop=e=>{e.stopPropagation();};
     b.addEventListener("pointerdown",stop);
     b.addEventListener("touchstart",stop,{passive:true});
-    b.addEventListener("click",e=>{e.stopPropagation();openPanel(e);});
+    b.addEventListener("click",e=>{e.stopPropagation();openPanel(e,{returnToPause:false});});
     document.body.appendChild(b);
+  }
+  function syncButton(){
+    const b=document.getElementById("perfBtn"),g=(typeof G!=="undefined")?G:null;
+    if(b)b.classList.toggle("ready",!global.BOOT_GATE_ACTIVE&&!!g&&(g.state==="menu"||g.state==="diff")&&!document.querySelector(".perfPanel")&&!document.documentElement.dataset.aibaHelp);
   }
 
   function boot(){
     mountButton();
+    syncButton();
     wrapConfetti();
     // 场景需已构建;主脚本在本模块前已 boot,直接应用
     applyAll();
@@ -273,5 +283,5 @@
   global.AIBAPerfCrowd=setCrowd;
   global.AIBAPerfReset=reset;
   global.AIBAPerfClose=close;
-  global.AIBAPerfSettings={open:openPanel,get:()=>Object.assign({},S),applyAll,fps:()=>shownFps,auto:()=>({eligible:AUTO_DEVICE,tier:autoTier})};
+  global.AIBAPerfSettings={open:openPanel,reopen,syncButton,get:()=>Object.assign({},S),applyAll,fps:()=>shownFps,auto:()=>({eligible:AUTO_DEVICE,tier:autoTier})};
 })(window);

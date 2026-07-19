@@ -3,7 +3,7 @@ function faceTo(from,to){return Math.atan2(to.x-from.x,to.z-from.z);}
 const CAM={mode:0,names:["第一人称","球员跟随","转播视角"]};
 function cycleCam(){
   CAM.mode=(CAM.mode+1)%3;
-  $("camBtn").textContent="📷 "+CAM.names[CAM.mode];
+  AIBASetIcon("camBtn","camera",CAM.names[CAM.mode]);
   applyCamMode();blip(700,0.05,"square",0.06);
 }
 function applyCamMode(){
@@ -128,4 +128,3 @@ function ballWorldPos(out){
 window.AIBA.runtime.register("rendering:camera",Object.freeze({
   P,CAM,faceTo,cycleCam,applyCamMode,eyePos,autoFrameCam,updPlayCam,ballWorldPos
 }));
-

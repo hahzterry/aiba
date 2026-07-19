@@ -91,8 +91,8 @@
     if(!battleSpotAvailable(next)){toast(battleSpotStatus(next).label,"#9fd1ff");updBattleUI();updDotsUI();return;}
     G.battleSpot=next;G.canShoot=false;handBall.visible=false;pBall.visible=false;
     const spot=BATTLE_SPOTS[next];
-    if(spot.super&&CAM.mode===0){G._preSuperCam=0;CAM.mode=1;$("camBtn").textContent="📷 "+CAM.names[1];applyCamMode();}
-    else if(!spot.super&&G._preSuperCam===0){G._preSuperCam=null;CAM.mode=0;$("camBtn").textContent="📷 "+CAM.names[0];applyCamMode();}
+    if(spot.super&&CAM.mode===0){G._preSuperCam=0;CAM.mode=1;global.AIBASetIcon("camBtn","camera",CAM.names[1]);applyCamMode();}
+    else if(!spot.super&&G._preSuperCam===0){G._preSuperCam=null;CAM.mode=0;global.AIBASetIcon("camBtn","camera",CAM.names[0]);applyCamMode();}
     updBattleUI();updDotsUI();walkTo(curShot(),()=>readyBall());
   }
 

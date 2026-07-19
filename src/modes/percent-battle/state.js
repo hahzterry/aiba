@@ -73,11 +73,11 @@
   }
   function startBattle(){
     ensureAudio(false);hidePanel();music(false);resetProgressiveSceneForRun();benchSetup();ctx.refreshBench();resetBattleState();
-    CAM.mode=1;$("camBtn").textContent="📷 "+CAM.names[1];G._preSuperCam=null;ctx.setCamSnap(true);
+    CAM.mode=1;global.AIBASetIcon("camBtn","camera",CAM.names[1]);G._preSuperCam=null;ctx.setCamSnap(true);
     enterArenaAudio(1);$("scoreNum").textContent="0";$("hudStreak").style.display="none";
     $("hudTimer").style.display="none";$("bsTimer").textContent="0:00.0";$("hudTimer").className="";
     $("hudRound").innerHTML="百分大战<br><span style='color:#778'>"+DIFFS[G.diff].n+" · 净计时</span>";
-    $("hud").style.display="block";$("battleControls").style.display="flex";battle.updBattleUI();
+    $("hud").dataset.mode="battle";$("hud").style.display="block";$("battleControls").style.display="flex";battle.updBattleUI();
     const first=curShot(),base=shotBase(first);
     P.pos.copy(base);P.face=faceTo(base,HOOP);P.walking=false;P.jump=0;P.eyeDip=0;
     player.g.visible=true;passer.g.visible=true;hands.visible=false;G.state="cinematic";

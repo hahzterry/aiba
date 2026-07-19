@@ -279,7 +279,7 @@
     g.cutAway=null;g.battleCut=null;g.blindToasted=false;g.cutQ=[];
 
     if(typeof CAM!=="undefined")CAM.mode=1;
-    const camBtn=byId("camBtn");if(camBtn&&typeof CAM!=="undefined")camBtn.textContent="📷 "+CAM.names[1];
+    const camBtn=byId("camBtn");if(camBtn&&typeof CAM!=="undefined"&&global.AIBASetIcon)global.AIBASetIcon(camBtn,"camera",CAM.names[1]);
     P.pos.copy(RACKS[1].p);P.face=faceTo(RACKS[1].p,HOOP);P.walking=false;P.jump=0;P.eyeDip=0;
     if(typeof rivals!=="undefined")rivals.forEach(rival=>{rival.active=false;rival.g.visible=false;});
     g.state="round";

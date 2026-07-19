@@ -370,7 +370,7 @@ function startVictoryCine(opts){
   if(v.hero&&v.hero.g){stopCelebrate(v.hero);v.hero.g.visible=true;startCelebrate(v.hero,v.heroType);}
   if(v.foil&&v.foil.g){v.foil.g.visible=true;stopCelebrate(v.foil);}
   $("lbT").style.height="10vh";$("lbB").style.height="10vh";
-  $("heroTag").style.display="block";$("heroTag").textContent=v.tag;
+  $("heroTag").style.display="block";global.AIBASetIcon("heroTag","clapperboard",v.tag);
 }
 function updVictoryCine(dt){
   const v=VICTORY_CINE;if(!v.on)return;
@@ -387,22 +387,22 @@ function updVictoryCine(dt){
     const q=p/0.22;
     cp=hp.clone().addScaledVector(dir,2.15-0.25*q).addScaledVector(perp,side*(1.18+0.2*Math.sin(v.camSeed))).setY(1.62+q*0.24+hb);
     lk=hp.clone().setY(1.55);
-    $("heroTag").textContent="🎉 顺利时刻";
+    global.AIBASetIcon("heroTag","clapperboard","顺利时刻");
   }else if(p<0.5){
     const q=(p-0.22)/0.28;
     cp=focus.clone().addScaledVector(dir,1.95-0.6*q).addScaledVector(perp,side*(2.5+0.7*Math.sin(v.camSeed*1.7))).setY(1.78+Math.sin(q*Math.PI)*0.12+hb);
     lk=hp.clone().lerp(fp,0.18).setY(1.6);
-    $("heroTag").textContent="🏆 胜利庆祝";
+    global.AIBASetIcon("heroTag","clapperboard","胜利庆祝");
   }else if(p<0.78){
     const q=(p-0.5)/0.28;
     cp=focus.clone().addScaledVector(perp,side*(3.35+0.5*Math.cos(v.camSeed))).addScaledVector(dir,-0.45+q*0.35).setY(2.45+Math.sin(q*Math.PI)*0.22);
     lk=focus.clone().setY(1.95);
-    $("heroTag").textContent="🔥 全场欢呼";
+    global.AIBASetIcon("heroTag","clapperboard","全场欢呼");
   }else{
     const q=(p-0.78)/0.22;
     cp=hp.clone().addScaledVector(dir,1.68-0.52*q).addScaledVector(perp,side*(0.8+0.22*Math.sin(v.camSeed*1.2))).setY(2.0+Math.sin(q*Math.PI)*0.08+hb);
     lk=hp.clone().setY(1.55);
-    $("heroTag").textContent="✨ 定格";
+    global.AIBASetIcon("heroTag","clapperboard","定格");
   }
   cp.x=clamp(cp.x,-COURT.halfWidth+0.9,COURT.halfWidth-0.9);
   cp.z=clamp(cp.z,COURT.nearBaseline+0.9,COURT.playMaxZ-0.55);
