@@ -713,3 +713,17 @@ html[data-interactive-tutorial="1"] #visionState{font-size:13px;line-height:1.45
   .itActions button{height:32px;font-size:10px}
 }
 @media (max-height:620px){#itCoach{padding-top:8px}.itProgress{margin:6px 0}.itActions{margin-top:7px}.itActions button{height:30px}}
+
+/* ---------------- EN 紧凑化:英文文案更长,压字号/字距防换行 ---------------- */
+html[lang="en"] .quickPlay b{font-size:15px;letter-spacing:0}
+html[lang="en"] .quickPlay span{font-size:9px;letter-spacing:0}
+html[lang="en"] .modeName{font-size:30px;letter-spacing:0}
+html[lang="en"] .modeTile.featured .modeName{font-size:27px}
+html[lang="en"] .modeDesc{font-size:12px;letter-spacing:0}
+html[lang="en"] .modePlay{font-size:15px;letter-spacing:0}
+html[lang="en"] .btn{letter-spacing:0}
+html[lang="en"] .leaderboardDock b{font-size:11px;letter-spacing:0}
+html[lang="en"] .visionModeLabel b{font-size:11px}
+html[lang="en"] .playerProfile b{font-size:12px;letter-spacing:0}
+html[lang="en"] .gearChip b{letter-spacing:0}
+html[lang="en"] .perfSegBtns button{letter-spacing:0}
