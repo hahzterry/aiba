@@ -1,107 +1,82 @@
-# aiBA Percent Battle / aiBA·百分大战
+# aiBA Percent Battle
+
+**English** | [简体中文](README.zh-CN.md)
 
 ![aiBA Percent Battle screenshot](assets/readme-screenshot.jpg)
 
-一个浏览器里的 3D 篮球投篮小游戏。个人作品，持续迭代中。
+A cyberpunk voxel 3D basketball game that runs entirely in your browser — shoot with your touch screen, or with your **real shooting form** through the webcam. A personal open-source project, iterating fast.
 
-在线试玩：
+## Play now
 
-- Vercel 自动部署：https://aiba-percent-battle.vercel.app/
-- GitHub Pages 备用：https://opstiger.github.io/aiba-percent-battle/
+- Vercel (auto-deployed): https://aiba-percent-battle.vercel.app/
+- GitHub Pages (mirror): https://opstiger.github.io/aiba-percent-battle/
 
-当前版本：`v1.94-portrait-lock`
+Current version: `v1.94-portrait-lock`
 
-## 模式
+## Highlights
 
-- 百分大战：两人同时开投，先到 100 分获胜。
-- 三分挑战：限时单人三分赛。
-- RACK RUSH：投篮机连续供球，完成 5 关目标后进入 FINAL RUSH，成绩可进入全球排行榜。
+- **Camera shot control** — charge and release by performing an actual shooting motion in front of your webcam (MediaPipe pose tracking, runs locally, no video leaves your device).
+- **Race to 100 vs. voxel legends** — head-to-head scoring battles against AI stars, with hero-moment cinematics on game winners.
+- **Highlight recorder** — key plays are captured for instant replays and sharing.
+- **Global leaderboard** — Rack Rush scores upload to an online ranking (Cloudflare Workers + D1), with anonymous player IDs and an offline queue.
+- **Locker room & workshop** — pick a player, wear gear that changes real stats, or build your own voxel baller.
+- **Pure static site** — no build step, no framework; clone it and open it.
 
-## 操作
+## Game modes
 
-- 按住屏幕蓄力，松开投篮。
-- 赛前更衣室可穿 3 件装备（球鞋 / 护腕护肘 / 头带），但同时只有 1 件的加成生效；加成覆盖投射速度、准星甜区、关键时刻准星和精力。
-- 比赛中左下角有精力条：连续出手会耗尽精力进入力竭，必须停手休息回到 28% 才能继续投；低精力时出手变慢、准星变差。
-- 难度页可选择“体感控制”，用上半身投篮动作蓄力与出手；游戏会记住上次使用的操作模式。
-- 手机体感模式锁定竖屏摄像头画幅；Safari 返回 4:3 传感器流时只裁左右两侧，预览、骨架和精彩录屏小窗保持一致。
-- 百分大战中，点击场上点位或用左右方向键移动。
-- RACK RUSH 中人物固定在弧顶；普通命中 2 分、每第 5 球 3 分，最后 10 秒命中额外加 1 分。
-- 手机浏览器需要先点一下页面或右上角声音按钮来解锁音频，这是移动端浏览器的自动播放限制。
-- 进入模式后可用右上角返回按钮随时回到首页；比赛进行中会先打开暂停确认。
+- **Percent Battle** — you and an AI legend shoot simultaneously; first to 100 points wins. Tap court spots or use arrow keys to relocate.
+- **3PT Contest** — a timed classic three-point shootout.
+- **Rack Rush** — machine-fed catch-and-shoot: clear 5 stage goals to reach FINAL RUSH. Normal makes score 2, every 5th ball scores 3, and makes in the last 10 seconds earn +1. Scores can enter the global leaderboard.
+- **NBA DNA** (experimental) — match a photo of your shooting pose against the legends for an entertainment-style DNA report.
+- An **interactive tutorial** onboards new players, including a shadow-practice walkthrough for camera control.
 
-## 本地运行
+## How to play
 
-不需要构建，直接启动静态服务：
+- Hold to charge, release to shoot.
+- In the pre-game locker room you can wear up to 3 gear pieces (shoes / arm sleeve / headband), but only **one** bonus is active at a time. Bonuses affect shot speed, sweet-zone size, clutch aim, and stamina.
+- Watch the stamina bar (bottom-left): continuous shooting drains it to exhaustion, and you must rest until it recovers to 28% before shooting again. Low stamina slows your release and shrinks your aim.
+- Choose **camera control** on the difficulty page to shoot with your upper-body motion; the game remembers your last control mode. On phones the camera view is portrait-locked (when Safari returns a 4:3 sensor stream, only the sides are cropped so preview, skeleton and the highlight window stay aligned).
+- On mobile browsers, tap the page (or the sound button, top right) once to unlock audio — an autoplay restriction of mobile browsers.
+- The back button (top right) returns to the home screen at any time; during a match it asks for pause confirmation first.
+
+## Run locally
+
+No build required — serve the folder statically:
 
 ```bash
 python3 -m http.server 4174
 ```
 
-然后打开：
+Then open:
 
 ```text
 http://127.0.0.1:4174/
 ```
 
-提交前可跑一次静态检查：
+Run the static checks before committing:
 
 ```bash
 node scripts/check.js
 ```
 
-## 项目结构
+## Project layout
 
-- `index.html`：当前可玩的入口文件。
-- `block-3pt-kingv1.94-portrait-lock.html`：当前版本快照，和 `index.html` 保持一致。
-- `styles.css`：游戏 HUD、首页、面板和移动端样式。
-- `src/assets-manifest.js`：封面角色、音频等资源清单。
-- `src/player-select.js`：赛前选球员、本地记忆和球员风格展示。
-- `src/player-locker-preview.js`：更衣室选人界面的 3D 方块球员预览。
-- `src/avatar-customizer.js`：自建方块球员工坊、造型保存和上场样式。
-- `src/gear.js`：装备工坊、球员数值和比赛精力条系统。
-- `src/shot-motion.js`：新版投篮动作引擎，可一键恢复经典动作兜底。
-- `src/roster-style.js`：女性发型与球员真实体型差异（高矮胖瘦按球员档案缩放）。
-- `src/hero-moments.js`：百分大战制胜球、投篮机压哨/冲线球的英雄时刻运镜。
-- `src/haptics.js`：震动反馈词表与关键时刻接线（砸框轻震/关键命中长震/胜利节奏震，安卓生效，iOS 不支持网页震动）。
-- `src/hot-hand.js`：热手系统可视化（连中火焰轨迹、观众声浪分级、脚下热手提示）。
-- `src/perf.js`：运行时性能优化（静态几何矩阵冻结、摄像头模式近场观众 LOD）。
-- `src/perf-settings.js`：游戏设置、昵称入口与手机自动流畅保护；持续低帧时分级精简观众、光锥、粒子和分辨率，录屏期间冻结切档。
-- `src/visual-director.js`：比赛画面的低成本天空层和球场材质调校，不启用实时阴影或后处理。
-- `src/player-id.js`：匿名玩家 ID、昵称和本地身份凭证。
-- `src/leaderboard-api.js`：在线成绩提交、离线队列和排行榜 API 客户端。
-- `src/leaderboard-ui.js`：昵称输入、成绩页云端排名、在线排行榜弹层和赛后雷达评分。
-- `src/game-flow.js`：新秀局程投篮条、低成本赛前镁粉特效和低位越肩球员锁定镜头。
-- `src/result-stats.js`：赛后雷达所需的出手节奏、关键球、点位难度和稳定性统计。
-- `src/audio.js`：外部音频、合成音效、现场氛围和按需加载的语音播报，避免首击加载整套语音库。
-- `src/scene-lifecycle.js`：鲜花/夕阳球场的新局原地复位，不销毁重建整套场景。
-- `src/navigation.js`：全流程返回首页、比赛退出清理与首屏加载层防点击穿透。
-- `src/face-overlays.js`：可选球员卡通脸贴图模块，当前用于库里头像试验。
-- `src/vision.js`：摄像头、MediaPipe、体感投篮识别与预览。
-- `scripts/check.js`：提交前静态验收脚本。
-- `assets/`：游戏图片、视频和音频资源。
-- `vendor/`：随项目带的第三方运行文件，包括 Three.js 与 MediaPipe Tasks Vision。
-- `cloudflare/leaderboard/`：Cloudflare D1 + Worker 排行榜 API 的 schema 和源码。
-- `backup/`：本地历史版本归档，不参与发布；根目录只保留当前版本快照。
-- `docs/`：本地需求与迭代文档，不参与发布。
+- `index.html` — the playable entry file.
+- `block-3pt-kingv1.94-portrait-lock.html` — versioned snapshot, kept identical to `index.html`.
+- `styles.css` — HUD, home screen, panels and mobile styles.
+- `src/` — game modules, being progressively extracted from the single-file entry:
+  - `core/` runtime, state and the migration bridge · `modes/` Percent Battle, Rack Rush, contest, practice · `rendering/` Three.js scene core · `ui/` menus, panels, pre-game flow · `gameplay/`, `presentation/`, `services/`, `data/` supporting layers
+  - feature modules at the top level: `vision.js` (camera + MediaPipe), `audio.js`, `gear.js`, `recorder.js`, `share.js`, `leaderboard-api.js` / `leaderboard-ui.js`, `hero-moments.js`, `hot-hand.js`, `perf.js` / `perf-settings.js`, `nba-dna/`, and more.
+- `next/index.html` — parallel modular shell used to migrate code out of the single-file entry, generated by `scripts/build-next.js` and verified by `scripts/check.js`.
+- `cloudflare/leaderboard/` — schema and source for the leaderboard API (Cloudflare Worker + D1).
+- `assets/` — images, video, audio, fonts and vision models. `vendor/` — bundled third-party runtimes (Three.js, MediaPipe Tasks Vision).
+- `backup/` — local archive of past versions (not published). `docs/` — see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the architecture notes and refactor plan.
 
-## 开发方向
+## Notes
 
-项目仍然保持纯静态部署，但已经开始从单 HTML 拆分。后续如果继续扩大，建议继续拆成：
+The project iterates quickly, so the README keeps only stable information — no changelog is maintained here; git history is the source of truth.
 
-- `src/rendering.js`：Three.js 场景、相机、角色、球场和特效。
-- `src/game.js`：主循环、状态机、投篮、比分和模式逻辑。
-- `src/modes/`：百分大战、三分挑战、RACK RUSH 的独立模式逻辑。
-
-拆分时优先保持纯静态项目，不急着引入框架；先让代码边界清楚，再考虑构建工具。
-
-## 说明
-
-项目还在快速迭代，所以 README 只保留稳定信息，不维护详细 changelog。具体版本变化以 Git 历史为准。
-
-Three.js 按其 MIT License 使用。项目生成的图片资源默认随本项目使用，除非后续另有说明。
-第三方音频的来源与独立许可见 [`assets/aiba-audio/SOURCE.md`](assets/aiba-audio/SOURCE.md)。
-视觉模型来源与许可见 [`assets/aiba-vision/SOURCE.md`](assets/aiba-vision/SOURCE.md)。
-Orbitron 字体来源与许可见 [`assets/fonts/orbitron/SOURCE.md`](assets/fonts/orbitron/SOURCE.md)。
+Three.js is used under its MIT license. Sources and licenses for third-party audio, vision models and the Orbitron font: [`assets/aiba-audio/SOURCE.md`](assets/aiba-audio/SOURCE.md), [`assets/aiba-vision/SOURCE.md`](assets/aiba-vision/SOURCE.md), [`assets/fonts/orbitron/SOURCE.md`](assets/fonts/orbitron/SOURCE.md).
 
 ## License
 
