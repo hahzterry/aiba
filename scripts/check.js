@@ -500,14 +500,14 @@ const renderingCore=read("src/rendering/core.js");
 for(const token of ['runtime.register("rendering:core"',"WebGLRenderer","RENDER_QUALITY","updateRenderQuality","dampRig","visualViewport","AmbientLight"])
   if(!renderingCore.includes(token))fail("rendering core token missing "+token);
 const renderingMaterials=read("src/rendering/materials.js");
-for(const token of ['runtime.register("rendering:materials"',"function pixTex","function realBallTex","function triBallTex","function spaldingPanelCurve","function paintBasketballChannels","MeshPhongMaterial","bumpMap:texBallRelief","SphereGeometry(0.16,32,20)"])
+for(const token of ['runtime.register("rendering:materials"',"function pixTex","function realBallTex","function triBallTex","function spaldingPanelCurve","function paintBasketballChannels","function paintTriBallPanels","MeshPhongMaterial","bumpMap:texBallRelief","SphereGeometry(0.16,32,20)"])
   if(!renderingMaterials.includes(token))fail("rendering materials token missing "+token);
 for(const source of [entryHtml,renderingMaterials]){
-  for(const token of ["pixTex(512,256","spaldingPanelCurve(720)","meridianA.push([0,k])","meridianB.push([.5,k])","centerMeridianA.push([.25,k])","centerMeridianB.push([.75,k])","Math.hypot(x,y,z)<radius","LinearMipmapLinearFilter","anisotropy:8","ballTextureRng(0x8badf00d)","SphereGeometry(0.16,32,20)"])
+  for(const token of ["pixTex(512,256","spaldingPanelCurve(720)","candidateMeridianA.push([.75,k])","candidateMeridianAOpposite.push([.25,k])","paintTriBallPanels","rotatedTriColorIndex","labels.fill(-1)","panelVotes","turn=Math.PI/2","BALL_LINE_DEBUG","full ring 1","full ring A","double curve","Math.hypot(x,y,z)<radius","LinearMipmapLinearFilter","anisotropy:8","ballTextureRng(0x8badf00d)","SphereGeometry(0.16,32,20)"])
     if(!source.includes(token))fail("calculated basketball material missing "+token);
-  if(source.includes("Math.random()*96")||source.includes("SphereGeometry(0.16,12,10)"))fail("legacy random basketball pattern remains");
+  if(source.includes("centerMeridian")||source.includes("meridianA.push([0,k])")||source.includes("meridianB.push([.5,k])")||source.includes("candidateMeridianB")||source.includes("Math.random()*96")||source.includes("SphereGeometry(0.16,12,10)"))fail("legacy basketball pattern remains");
 }
-if(!nextHtml.includes('src/rendering/materials.js?v=refactor17b'))fail("next entry must load rendering materials");
+if(!nextHtml.includes('src/rendering/materials.js?v=refactor17h'))fail("next entry must load rendering materials");
 if(nextHtml.includes("function realBallTex("))fail("next entry still contains inline ball materials");
 const renderingCourt=read("src/rendering/court.js");
 for(const token of ['runtime.register("rendering:court"',"function makeCourtTexture","function buildCourt","courtIndoorTexture","curSpotRing=new THREE.Mesh"])

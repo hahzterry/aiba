@@ -519,6 +519,7 @@ function pixTex(w,h,draw,opt){
 }
 function ballTextureRng(seed){let s=seed>>>0;return ()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296;};}
 function ballUvPoint(x,y,z){let u=Math.atan2(z,-x)/(Math.PI*2);if(u<0)u+=1;return [u,Math.acos(Math.max(-1,Math.min(1,y)))/Math.PI];}
+const BALL_LINE_DEBUG=new URLSearchParams(location.search).get("debugBallLines")==="1";let ballLineDebugLegendQueued=false;function ensureBallLineDebugLegend(){if(!BALL_LINE_DEBUG||ballLineDebugLegendQueued)return;ballLineDebugLegendQueued=true;const mount=()=>{if(document.getElementById("ballLineDebugLegend"))return;const el=document.createElement("div");el.id="ballLineDebugLegend";el.style.cssText="position:fixed;right:10px;bottom:10px;z-index:99999;padding:10px 12px;background:rgba(5,9,15,.9);border:1px solid #546170;color:#fff;font:700 13px/1.7 monospace;pointer-events:none";el.innerHTML='<div><span style="color:#ff453a">1 RED</span> full ring 1</div><div><span style="color:#ffd60a">2 YELLOW</span> full ring A</div><div><span style="color:#bf5af2">3 PURPLE</span> double curve</div>';document.body.appendChild(el);};if(document.body)mount();else addEventListener("DOMContentLoaded",mount,{once:true});}
 // 传统八片球:两个正交大圆,加一条 Enneper 曲面与球面的连续交线。
 function spaldingPanelCurve(samples){
   const pts=[],radius=1.5;
@@ -530,9 +531,8 @@ function spaldingPanelCurve(samples){
 }
 let _basketballChannelPaths=null;
 function basketballChannelPaths(){
-  if(_basketballChannelPaths)return _basketballChannelPaths;const equator=[],meridianA=[],meridianB=[],centerMeridianA=[],centerMeridianB=[];
-  for(let i=0;i<=256;i++){const k=i/256;equator.push([k,.5]);meridianA.push([0,k]);meridianB.push([.5,k]);centerMeridianA.push([.25,k]);centerMeridianB.push([.75,k]);}
-  return _basketballChannelPaths=[equator,meridianA,meridianB,centerMeridianA,centerMeridianB,spaldingPanelCurve(720)];
+  if(_basketballChannelPaths)return _basketballChannelPaths;const equator=[],candidateMeridianA=[],candidateMeridianAOpposite=[];
+  for(let i=0;i<=256;i++){const k=i/256;equator.push([k,.5]);candidateMeridianA.push([.75,k]);candidateMeridianAOpposite.push([.25,k]);}const panelCurve=spaldingPanelCurve(720);equator.debugColor="#ff453a";candidateMeridianA.debugColor=candidateMeridianAOpposite.debugColor="#ffd60a";panelCurve.debugColor="#bf5af2";return _basketballChannelPaths=[equator,candidateMeridianA,candidateMeridianAOpposite,panelCurve];
 }
 function strokeWrappedBallPath(g,pts,w,h,width,color){
   const unwrapped=[[pts[0][0],pts[0][1]]];let offset=0,prev=pts[0][0];
@@ -540,9 +540,9 @@ function strokeWrappedBallPath(g,pts,w,h,width,color){
   g.strokeStyle=color;g.lineWidth=width;g.lineCap="round";g.lineJoin="round";
   for(let shift=-2;shift<=2;shift++){g.beginPath();g.moveTo((unwrapped[0][0]+shift)*w,unwrapped[0][1]*h);for(let i=1;i<unwrapped.length;i++)g.lineTo((unwrapped[i][0]+shift)*w,unwrapped[i][1]*h);g.stroke();}
 }
-function paintBasketballChannels(g,w,h,relief){const scale=h/256,paths=basketballChannelPaths();for(const p of paths)strokeWrappedBallPath(g,p,w,h,8*scale,relief?"#303030":"#54250e");for(const p of paths)strokeWrappedBallPath(g,p,w,h,4.4*scale,relief?"#090909":"#130905");}
+function paintBasketballChannels(g,w,h,relief){const scale=h/256,paths=basketballChannelPaths();if(BALL_LINE_DEBUG&&!relief){ensureBallLineDebugLegend();for(const p of paths)strokeWrappedBallPath(g,p,w,h,10*scale,"#05070a");for(const p of paths)strokeWrappedBallPath(g,p,w,h,6*scale,p.debugColor);return;}for(const p of paths)strokeWrappedBallPath(g,p,w,h,8*scale,relief?"#303030":"#54250e");for(const p of paths)strokeWrappedBallPath(g,p,w,h,4.4*scale,relief?"#090909":"#130905");}function rotatedTriColorIndex(px,py,w,h,colorCount){const theta=(py+.5)/h*Math.PI,sinTheta=Math.sin(theta),y=Math.cos(theta),phi=(px+.5)/w*Math.PI*2,x=-Math.cos(phi)*sinTheta,z=Math.sin(phi)*sinTheta,turn=Math.PI/2,c=Math.cos(-turn),s=Math.sin(-turn),sourceZ=s*y+c*z;let sourceU=Math.atan2(sourceZ,-x)/(Math.PI*2);if(sourceU<0)sourceU+=1;return Math.floor(sourceU*8)%colorCount;}function paintTriBallPanels(g,w,h,palette){const cv=document.createElement("canvas");cv.width=w;cv.height=h;const mg=cv.getContext("2d");for(const path of basketballChannelPaths())strokeWrappedBallPath(mg,path,w,h,4*h/256,"#000");const mask=mg.getImageData(0,0,w,h).data,labels=new Int16Array(w*h),queue=new Int32Array(w*h),votes=[];labels.fill(-1);let panel=0;for(let seed=0;seed<w*h;seed++){if(mask[seed*4+3]>32||labels[seed]>=0)continue;const panelVotes=new Uint32Array(palette.length);votes.push(panelVotes);let head=0,tail=0;queue[tail++]=seed;labels[seed]=panel;while(head<tail){const p=queue[head++],x=p%w,y=(p/w)|0;panelVotes[rotatedTriColorIndex(x,y,w,h,palette.length)]++;const left=y*w+(x?x-1:w-1),right=y*w+(x+1<w?x+1:0);if(mask[left*4+3]<=32&&labels[left]<0){labels[left]=panel;queue[tail++]=left;}if(mask[right*4+3]<=32&&labels[right]<0){labels[right]=panel;queue[tail++]=right;}if(y){const up=p-w;if(mask[up*4+3]<=32&&labels[up]<0){labels[up]=panel;queue[tail++]=up;}}if(y+1<h){const down=p+w;if(mask[down*4+3]<=32&&labels[down]<0){labels[down]=panel;queue[tail++]=down;}}}panel++;}const colors=palette.map(color=>[parseInt(color.slice(1,3),16),parseInt(color.slice(3,5),16),parseInt(color.slice(5,7),16)]),panelColors=votes.map(panelVotes=>{let best=0;for(let i=1;i<panelVotes.length;i++)if(panelVotes[i]>panelVotes[best])best=i;return colors[best];}),image=g.createImageData(w,h);for(let p=0;p<w*h;p++){const color=labels[p]>=0?panelColors[labels[p]]:colors[0],i=p*4;image.data[i]=color[0];image.data[i+1]=color[1];image.data[i+2]=color[2];image.data[i+3]=255;}g.putImageData(image,0,0);}
 function paintBallLeather(g,w,h,base,dark,palette){
-  if(palette){for(let panel=0;panel<8;panel++){g.fillStyle=palette[panel%palette.length];g.fillRect(Math.floor(panel*w/8),0,Math.ceil(w/8)+1,h);}}else{g.fillStyle=base;g.fillRect(0,0,w,h);}
+  if(palette)paintTriBallPanels(g,w,h,palette);else{g.fillStyle=base;g.fillRect(0,0,w,h);}
   const rnd=ballTextureRng(palette?0x51f15e:0xba11c0de);g.fillStyle=dark;g.globalAlpha=palette ? .15 : .24;
   for(let y=2,row=0;y<h-1;y+=3,row++)for(let x=2+(row&1)*1.5;x<w-1;x+=3){const px=x+(rnd()-.5)*1.2,py=y+(rnd()-.5)*1.2,r=rnd()>.82?1.15:.72;g.beginPath();g.arc(px,py,r,0,Math.PI*2);g.fill();}
   g.globalAlpha=1;paintBasketballChannels(g,w,h,false);

@@ -25,7 +25,21 @@ function ballUvPoint(x,y,z){
   return [u,Math.acos(Math.max(-1,Math.min(1,y)))/Math.PI];
 }
 
-// Three orthogonal great circles form the base panels; the sphere curve completes the molded channel layout.
+const BALL_LINE_DEBUG=new URLSearchParams(location.search).get("debugBallLines")==="1";
+let ballLineDebugLegendQueued=false;
+function ensureBallLineDebugLegend(){
+  if(!BALL_LINE_DEBUG||ballLineDebugLegendQueued)return;ballLineDebugLegendQueued=true;
+  const mount=()=>{
+    if(document.getElementById("ballLineDebugLegend"))return;
+    const el=document.createElement("div");el.id="ballLineDebugLegend";
+    el.style.cssText="position:fixed;right:10px;bottom:10px;z-index:99999;padding:10px 12px;background:rgba(5,9,15,.9);border:1px solid #546170;color:#fff;font:700 13px/1.7 monospace;pointer-events:none";
+    el.innerHTML='<div><span style="color:#ff453a">1 RED</span> full ring 1</div><div><span style="color:#ffd60a">2 YELLOW</span> full ring A</div><div><span style="color:#bf5af2">3 PURPLE</span> double curve</div>';
+    document.body.appendChild(el);
+  };
+  if(document.body)mount();else addEventListener("DOMContentLoaded",mount,{once:true});
+}
+
+// Two orthogonal great circles and the sphere curve define the molded channel layout.
 function spaldingPanelCurve(samples){
   const pts=[],radius=1.5;
   for(let i=0;i<=samples;i++){
@@ -50,14 +64,18 @@ function spaldingPanelCurve(samples){
 let basketballChannelPathCache=null;
 function basketballChannelPaths(){
   if(basketballChannelPathCache)return basketballChannelPathCache;
-  const equator=[],meridianA=[],meridianB=[],centerMeridianA=[],centerMeridianB=[];
+  const equator=[],candidateMeridianA=[],candidateMeridianAOpposite=[];
   for(let i=0;i<=256;i++){
     const k=i/256;
     equator.push([k,.5]);
-    meridianA.push([0,k]);meridianB.push([.5,k]);
-    centerMeridianA.push([.25,k]);centerMeridianB.push([.75,k]);
+    candidateMeridianA.push([.75,k]);
+    candidateMeridianAOpposite.push([.25,k]);
   }
-  basketballChannelPathCache=[equator,meridianA,meridianB,centerMeridianA,centerMeridianB,spaldingPanelCurve(720)];
+  const panelCurve=spaldingPanelCurve(720);
+  equator.debugColor="#ff453a";
+  candidateMeridianA.debugColor=candidateMeridianAOpposite.debugColor="#ffd60a";
+  panelCurve.debugColor="#bf5af2";
+  basketballChannelPathCache=[equator,candidateMeridianA,candidateMeridianAOpposite,panelCurve];
   return basketballChannelPathCache;
 }
 
@@ -77,17 +95,57 @@ function strokeWrappedBallPath(g,pts,w,h,width,color){
 
 function paintBasketballChannels(g,w,h,relief){
   const scale=h/256,paths=basketballChannelPaths();
+  if(BALL_LINE_DEBUG&&!relief){
+    ensureBallLineDebugLegend();
+    for(const p of paths)strokeWrappedBallPath(g,p,w,h,10*scale,"#05070a");
+    for(const p of paths)strokeWrappedBallPath(g,p,w,h,6*scale,p.debugColor);
+    return;
+  }
   for(const p of paths)strokeWrappedBallPath(g,p,w,h,8*scale,relief?"#303030":"#54250e");
   for(const p of paths)strokeWrappedBallPath(g,p,w,h,4.4*scale,relief?"#090909":"#130905");
 }
 
-function paintBallLeather(g,w,h,base,dark,palette){
-  if(palette){
-    for(let panel=0;panel<8;panel++){
-      g.fillStyle=palette[panel%palette.length];
-      g.fillRect(Math.floor(panel*w/8),0,Math.ceil(w/8)+1,h);
+function rotatedTriColorIndex(px,py,w,h,colorCount){
+  const theta=(py+.5)/h*Math.PI,sinTheta=Math.sin(theta),y=Math.cos(theta);
+  const phi=(px+.5)/w*Math.PI*2,x=-Math.cos(phi)*sinTheta,z=Math.sin(phi)*sinTheta;
+  const turn=Math.PI/2,c=Math.cos(-turn),s=Math.sin(-turn),sourceZ=s*y+c*z;
+  let sourceU=Math.atan2(sourceZ,-x)/(Math.PI*2);if(sourceU<0)sourceU+=1;
+  return Math.floor(sourceU*8)%colorCount;
+}
+
+function paintTriBallPanels(g,w,h,palette){
+  const maskCanvas=document.createElement("canvas");maskCanvas.width=w;maskCanvas.height=h;
+  const maskContext=maskCanvas.getContext("2d");
+  for(const path of basketballChannelPaths())strokeWrappedBallPath(maskContext,path,w,h,4*h/256,"#000");
+  const mask=maskContext.getImageData(0,0,w,h).data,labels=new Int16Array(w*h),queue=new Int32Array(w*h),votes=[];
+  labels.fill(-1);let panel=0;
+  for(let seed=0;seed<w*h;seed++){
+    if(mask[seed*4+3]>32||labels[seed]>=0)continue;
+    const panelVotes=new Uint32Array(palette.length);votes.push(panelVotes);
+    let head=0,tail=0;queue[tail++]=seed;labels[seed]=panel;
+    while(head<tail){
+      const p=queue[head++],x=p%w,y=(p/w)|0;
+      panelVotes[rotatedTriColorIndex(x,y,w,h,palette.length)]++;
+      const left=y*w+(x?x-1:w-1),right=y*w+(x+1<w?x+1:0);
+      if(mask[left*4+3]<=32&&labels[left]<0){labels[left]=panel;queue[tail++]=left;}
+      if(mask[right*4+3]<=32&&labels[right]<0){labels[right]=panel;queue[tail++]=right;}
+      if(y){const up=p-w;if(mask[up*4+3]<=32&&labels[up]<0){labels[up]=panel;queue[tail++]=up;}}
+      if(y+1<h){const down=p+w;if(mask[down*4+3]<=32&&labels[down]<0){labels[down]=panel;queue[tail++]=down;}}
     }
-  }else{g.fillStyle=base;g.fillRect(0,0,w,h);}
+    panel++;
+  }
+  const colors=palette.map(color=>[parseInt(color.slice(1,3),16),parseInt(color.slice(3,5),16),parseInt(color.slice(5,7),16)]);
+  const panelColors=votes.map(panelVotes=>{let best=0;for(let i=1;i<panelVotes.length;i++)if(panelVotes[i]>panelVotes[best])best=i;return colors[best];});
+  const image=g.createImageData(w,h);
+  for(let p=0;p<w*h;p++){
+    const color=labels[p]>=0?panelColors[labels[p]]:colors[0],i=p*4;
+    image.data[i]=color[0];image.data[i+1]=color[1];image.data[i+2]=color[2];image.data[i+3]=255;
+  }
+  g.putImageData(image,0,0);
+}
+
+function paintBallLeather(g,w,h,base,dark,palette){
+  if(palette)paintTriBallPanels(g,w,h,palette);else{g.fillStyle=base;g.fillRect(0,0,w,h);}
   const rnd=ballTextureRng(palette?0x51f15e:0xba11c0de);
   g.fillStyle=dark;g.globalAlpha=palette ? 0.15 : 0.24;
   for(let y=2,row=0;y<h-1;y+=3,row++){
