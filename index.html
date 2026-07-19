@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>aiBA·百分大战 v1.95 BILINGUAL</title>
+<title>aiBA·百分大战 v1.96 FULL EN</title>
 <script src="src/i18n.js"></script>
 <link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 <link rel="stylesheet" href="styles.css?v=2.05">
@@ -15,7 +15,7 @@
 <div id="bootLoad" role="dialog" aria-modal="true" aria-busy="true" aria-label="游戏资源加载" tabindex="0">
   <div class="bootFrame">
     <div class="bootBrand"><span>ai</span>BA</div>
-    <div class="bootEdition">BILINGUAL / v1.95</div>
+    <div class="bootEdition">FULL EN / v1.96</div>
     <div class="bootRule"></div>
     <div id="bootStatus" class="bootStatus">正在展开赛场</div>
     <div class="bootMeter" aria-hidden="true"><i id="bootBar"></i></div>
@@ -121,7 +121,7 @@
 <script src="src/visual-director.js?v=1.85"></script>
 <script>
 /* =====================================================
-   aiBA·百分大战 v1.95 BILINGUAL
+   aiBA·百分大战 v1.96 FULL EN
    Minecraft-style NBA 3-Point Contest · 单文件实现
    ===================================================== */
 "use strict";
@@ -151,7 +151,7 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------------- constants ---------------- */
-const GAME_VERSION="v1.95-bilingual";
+const GAME_VERSION="v1.96-full-en";
 const GAME_NAME="aiBA·百分大战";
 const CONFIG=window.AIBA_CONFIG||{};
 // NBA 标准全场坐标：保留原篮筐/三分点，只向远端延长球场。
@@ -643,7 +643,7 @@ function makeCourtTexture(theme){
     function spotDecal(x,z,r,fill,line,lw,txt,txtCol,fs){
       g.fillStyle=fill;g.beginPath();g.arc(u(x),v(z),r*PXM,0,7);g.fill();
       if(line){g.strokeStyle=line;g.lineWidth=lw;g.beginPath();g.arc(u(x),v(z),r*PXM,0,7);g.stroke();}
-      if(txt){g.fillStyle=txtCol;g.font="bold "+fs+"px Orbitron, monospace";g.textAlign="center";g.fillText(txt,u(x),v(z)+fs*0.36);}
+      if(txt){g.fillStyle=txtCol;g.font="bold "+fs+"px Orbitron, monospace";g.textAlign="center";g.fillText(window.AIBAI18N?AIBAI18N.t(txt):txt,u(x),v(z)+fs*0.36);}
     }
     // 5 个常规三分点:仅一圈淡淡的脚位环,不带数字
     for(const rk of RACKS){
@@ -681,7 +681,7 @@ function bannerTex(txt,bg,fg){
     g.fillStyle="rgba(255,255,255,.06)";
     for(let i=0;i<768;i+=24)g.fillRect(i,0,12,144);
     g.fillStyle=fg;g.font="bold 66px Orbitron, monospace";g.textAlign="center";g.textBaseline="middle";
-    g.fillText(txt,384,75);
+    g.fillText(window.AIBAI18N?AIBAI18N.t(txt):txt,384,75);
   },{smooth:true});
 }
 function buildStands(){
@@ -856,7 +856,7 @@ function miniSignTex(txt,bg,fg){
     g.fillStyle=bg;g.fillRect(0,0,160,76);
     g.strokeStyle=fg;g.globalAlpha=.68;g.lineWidth=5;g.strokeRect(5,5,150,66);
     g.globalAlpha=1;g.fillStyle=fg;g.font="bold 28px Orbitron, monospace";
-    g.textAlign="center";g.textBaseline="middle";g.fillText(txt,80,39);
+    g.textAlign="center";g.textBaseline="middle";g.fillText(window.AIBAI18N?AIBAI18N.t(txt):txt,80,39);
   },{smooth:true});
 }
 function makeNearCourtPerson(parent,cube,cfg,mats){
@@ -1217,9 +1217,9 @@ function updJumbo(){
   g.fillStyle="#ffd23f";g.fillText(battle?"RACE TO 100":(rush?"RACK RUSH":"3PT CONTEST"),128,34);
   g.font="bold 40px Orbitron, monospace";
   g.fillStyle=G.timer<=10&&G.running?"#ff4040":"#7CFC6B";
-  g.fillText(battle?Math.min(G.score,BATTLE_TARGET)+"-"+Math.min(G.battleOppScore||0,BATTLE_TARGET):(rush?(G.running?Math.max(0,G.timer).toFixed(0)+'"  '+G.rush.total+"分":"READY"):(G.running?G.timer.toFixed(0)+'"  '+G.score+"分":"BLOCK KING")),128,84);
+  g.fillText(battle?Math.min(G.score,BATTLE_TARGET)+"-"+Math.min(G.battleOppScore||0,BATTLE_TARGET):(rush?(G.running?Math.max(0,G.timer).toFixed(0)+'"  '+AIBAI18N.t(G.rush.total+"分"):"READY"):(G.running?G.timer.toFixed(0)+'"  '+AIBAI18N.t(G.score+"分"):"BLOCK KING")),128,84);
   g.font="bold 16px Orbitron, monospace";g.fillStyle="#8fd0ff";
-  g.fillText(battle?"PERCENT BATTLE":(rush?(RACK_RUSH_LEVELS[G.rush.level]||RACK_RUSH_LEVELS[0]).name:(G.running?(G.stage==="final"?"决赛 FINAL":"半决赛 SEMI"):"PIXEL NIGHT")),128,114);
+  g.fillText(AIBAI18N.t(battle?"PERCENT BATTLE":(rush?(RACK_RUSH_LEVELS[G.rush.level]||RACK_RUSH_LEVELS[0]).name:(G.running?(G.stage==="final"?"决赛 FINAL":"半决赛 SEMI"):"PIXEL NIGHT"))),128,114);
   jumboTex.needsUpdate=true;
 }
 

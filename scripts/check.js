@@ -10,7 +10,7 @@ const {generate:generateNext}=require("./build-next");
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
 const nextEntry="next/index.html";
-const snapshot="block-3pt-kingv1.95-bilingual.html";
+const snapshot="block-3pt-kingv1.96-full-en.html";
 const requiredFiles=[
   entry,
   nextEntry,
@@ -159,7 +159,7 @@ for(const pair of [["state","spots"],["spots","opponent"],["opponent","results"]
 }
 if(nextHtml.indexOf('<script src="src/modes/percent-battle/index.js?v=refactor4"></script>')>nextHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Percent Battle module must load before late hooks");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v1.95 BILINGUAL","BILINGUAL / v1.95","v1.95-bilingual"])
+for(const token of ["v1.96 FULL EN","FULL EN / v1.96","v1.96-full-en"])
   if(!entryHtml.includes(token))fail("visible/game version token missing "+token);
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=2.05">'))fail("stylesheet link missing");
 if(!entryHtml.includes('<script src="src/nba-dna/NBADNA.js?v=20260718-coming-soon"></script>'))fail("NBA DNA gate cache version missing");
