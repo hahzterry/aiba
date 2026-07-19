@@ -2,7 +2,7 @@
 
 [English](README.md) | **简体中文**
 
-![aiBA 百分大战 截图](assets/readme-screenshot.jpg)
+![aiBA 百分大战 截图](assets/readme/hero-court.jpg)
 
 一个完全跑在浏览器里的赛博朋克方块风 3D 篮球游戏——可以按屏幕投篮，也可以对着摄像头**用真实投篮动作**出手。个人开源作品，持续快速迭代中。
 
@@ -11,10 +11,15 @@
 - Vercel 自动部署：https://aiba-percent-battle.vercel.app/
 - GitHub Pages 备用：https://opstiger.github.io/aiba-percent-battle/
 
-当前版本：`v1.94-portrait-lock`
+当前版本：`v1.95-bilingual`
+
+| 首页 | 百分大战 | 更衣室 | 体感控制 |
+|---|---|---|---|
+| ![首页](assets/readme/home.jpg) | ![百分大战](assets/readme/battle.jpg) | ![更衣室](assets/readme/locker.jpg) | ![体感控制](assets/readme/motion.jpg) |
 
 ## 亮点
 
+- **中英双语** —— 界面按浏览器语言自动切换（中文 / English），也可在设置（⚙）里随时切换，或用 URL 参数 `?lang=en` / `?lang=zh`。
 - **体感投篮** —— 对着摄像头做真实投篮动作完成蓄力和出手（MediaPipe 姿态识别，全部本地运行，视频不会离开你的设备）。
 - **百分竞速对战** —— 与方块球星同场竞速先到 100 分，制胜球带英雄时刻运镜。
 - **精彩录屏** —— 关键球自动截取，即时回放、方便分享。
@@ -62,7 +67,7 @@ node scripts/check.js
 ## 项目结构
 
 - `index.html`：当前可玩的入口文件。
-- `block-3pt-kingv1.94-portrait-lock.html`：当前版本快照，和 `index.html` 保持一致。
+- `block-3pt-kingv1.95-bilingual.html`：当前版本快照，和 `index.html` 保持一致。
 - `styles.css`：游戏 HUD、首页、面板和移动端样式。
 - `src/`：游戏模块，正在从单文件入口渐进拆分：
   - `core/` 运行时、状态与迁移桥接 · `modes/` 百分大战、RACK RUSH、三分赛、练习 · `rendering/` Three.js 场景核心 · `ui/` 菜单、面板、赛前流程 · `gameplay/`、`presentation/`、`services/`、`data/` 支撑层

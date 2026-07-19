@@ -2,7 +2,7 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-![aiBA Percent Battle screenshot](assets/readme-screenshot.jpg)
+![aiBA Percent Battle screenshot](assets/readme/hero-court.jpg)
 
 A cyberpunk voxel 3D basketball game that runs entirely in your browser — shoot with your touch screen, or with your **real shooting form** through the webcam. A personal open-source project, iterating fast.
 
@@ -11,10 +11,15 @@ A cyberpunk voxel 3D basketball game that runs entirely in your browser — shoo
 - Vercel (auto-deployed): https://aiba-percent-battle.vercel.app/
 - GitHub Pages (mirror): https://opstiger.github.io/aiba-percent-battle/
 
-Current version: `v1.94-portrait-lock`
+Current version: `v1.95-bilingual`
+
+| Home | Percent Battle | Locker room | Motion control |
+|---|---|---|---|
+| ![Home screen](assets/readme/home.jpg) | ![Percent Battle](assets/readme/battle.jpg) | ![Locker room](assets/readme/locker.jpg) | ![Motion control](assets/readme/motion.jpg) |
 
 ## Highlights
 
+- **Bilingual** — the UI auto-detects your browser language (English / 中文); switch anytime in Settings (⚙) or with `?lang=en` / `?lang=zh` in the URL.
 - **Camera shot control** — charge and release by performing an actual shooting motion in front of your webcam (MediaPipe pose tracking, runs locally, no video leaves your device).
 - **Race to 100 vs. voxel legends** — head-to-head scoring battles against AI stars, with hero-moment cinematics on game winners.
 - **Highlight recorder** — key plays are captured for instant replays and sharing.
@@ -62,7 +67,7 @@ node scripts/check.js
 ## Project layout
 
 - `index.html` — the playable entry file.
-- `block-3pt-kingv1.94-portrait-lock.html` — versioned snapshot, kept identical to `index.html`.
+- `block-3pt-kingv1.95-bilingual.html` — versioned snapshot, kept identical to `index.html`.
 - `styles.css` — HUD, home screen, panels and mobile styles.
 - `src/` — game modules, being progressively extracted from the single-file entry:
   - `core/` runtime, state and the migration bridge · `modes/` Percent Battle, Rack Rush, contest, practice · `rendering/` Three.js scene core · `ui/` menus, panels, pre-game flow · `gameplay/`, `presentation/`, `services/`, `data/` supporting layers
