@@ -121,7 +121,7 @@ The main loop remains the last large extraction because audio, vision, recording
 - complete: authoritative pointer/keyboard/tilt input, one frame loop and one scene-initialization pass
 - complete: constants, seeded configuration, shared runtime state, dialogue, audio-cue arbitration and result copy
 - complete: generated `/next/index.html` reduced to a 192-line static application shell with no gameplay implementation inline
-- next: run the full cutover acceptance matrix and publish an isolated Preview Deployment for side-by-side testing
+- complete: v2.0 cutover executed — `index.html` is now the modular shell with production identity/leaderboard/storage; the legacy inline engine is frozen at `legacy.html` (`?engine=legacy`); `next/` and `scripts/build-next.js` retired
 - keep player selection and NBA DNA as their existing standalone modules until the shared navigation flow no longer depends on inline globals
 
 ## Phase 5: Cutover

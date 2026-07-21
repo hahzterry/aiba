@@ -2,7 +2,7 @@
   "use strict";
 
   const runtime=global.AIBA&&global.AIBA.runtime;
-  if(!runtime||!runtime.experimental)throw new Error("AIBA legacy adapter requires the experimental runtime");
+  if(!runtime)throw new Error("AIBA legacy adapter requires the AIBA runtime");
 
   runtime.attachLegacy({
     $,

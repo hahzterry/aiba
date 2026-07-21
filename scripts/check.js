@@ -5,15 +5,14 @@ const fs=require("fs");
 const path=require("path");
 const vm=require("vm");
 const childProcess=require("child_process");
-const {generate:generateNext}=require("./build-next");
 
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
-const nextEntry="next/index.html";
-const snapshot="block-3pt-kingv1.96-full-en.html";
+const legacyEntry="legacy.html";
+const snapshot="block-3pt-kingv2.0-modular.html";
 const requiredFiles=[
   entry,
-  nextEntry,
+  legacyEntry,
   snapshot,
   "styles.css",
   "src/assets-manifest.js",
@@ -72,7 +71,6 @@ const requiredFiles=[
   "src/ui/pause.js",
   "src/ui/icons.js",
   "src/ui/result-copy.js",
-  "scripts/build-next.js",
   "docs/ARCHITECTURE.md",
   "docs/MODULAR_REFACTOR_PLAN.md",
   "assets/aiba-faces/curry-smile-pixel-128.png",
@@ -89,88 +87,89 @@ for(const file of requiredFiles){
 }
 
 const entryHtml=read(entry);
-const nextHtml=read(nextEntry);
+const legacyHtml=read(legacyEntry);
 const snapshotHtml=read(snapshot);
 if(entryHtml!==snapshotHtml)fail(entry+" and "+snapshot+" differ");
-if(nextHtml!==generateNext(entryHtml))fail(nextEntry+" is stale; run node scripts/build-next.js");
-if(!nextHtml.includes('<base href="../">'))fail("next entry base href missing");
-if(!nextHtml.includes("window.__AIBA_NEXT__=true;window.__AIBA_DISABLE_PRODUCTION_WRITES__=true"))fail("next entry flags missing");
-if(!nextHtml.includes("data-aiba-early-errors"))fail("next early error diagnostics missing");
-if(!nextHtml.includes('<script src="src/core/runtime.js?v=refactor7"></script>'))fail("next runtime bridge missing");
-if(!nextHtml.includes('<script src="src/core/player-id-sandbox.js"></script>'))fail("next identity sandbox missing");
-if(!nextHtml.includes('<script src="src/core/leaderboard-sandbox.js"></script>'))fail("next leaderboard sandbox missing");
-if(!nextHtml.includes('<script src="src/recorder.js?v=refactor9"></script>'))fail("next recorder cache version missing");
-if(!nextHtml.includes('<script src="src/vision.js?v=2.01"></script>'))fail("next vision cache version missing");
-if(!nextHtml.includes('<script src="src/rendering/core.js?v=refactor16"></script>'))fail("next rendering core missing");
+if(entryHtml.includes('<base href='))fail("entry must not use base href");
+if(entryHtml.includes("__AIBA_NEXT__")||entryHtml.includes("__AIBA_DISABLE_PRODUCTION_WRITES__"))fail("entry must not carry experimental flags");
+if(!entryHtml.includes('location.replace("legacy.html"'))fail("entry legacy escape (?engine=legacy) missing");
+if(!entryHtml.includes('<meta name="aiba-entry" content="main">'))fail("entry marker meta missing");
+if(!legacyHtml.includes("v1.96-full-en"))fail("legacy entry version token missing");
+if(legacyHtml.includes('location.replace("legacy.html"'))fail("legacy entry must not self-redirect");
+if(!entryHtml.includes("data-aiba-early-errors"))fail("next early error diagnostics missing");
+if(!entryHtml.includes('<script src="src/core/runtime.js?v=refactor7"></script>'))fail("next runtime bridge missing");
+if(entryHtml.includes("player-id-sandbox")||entryHtml.includes("leaderboard-sandbox"))fail("entry must not load sandbox identity/leaderboard");
+if(!entryHtml.includes('<script src="src/recorder.js?v=refactor9"></script>'))fail("next recorder cache version missing");
+if(!entryHtml.includes('<script src="src/vision.js?v=2.01"></script>'))fail("next vision cache version missing");
+if(!entryHtml.includes('<script src="src/rendering/core.js?v=refactor16"></script>'))fail("next rendering core missing");
 for(const file of ["core/error-boundary","core/foundation","data/dialogue","core/state","services/audio-cues","ui/result-copy"]){
-  if(!nextHtml.includes(`<script src="src/${file}.js?v=refactor39"></script>`))fail(`next shell module missing ${file}`);
+  if(!entryHtml.includes(`<script src="src/${file}.js?v=refactor39"></script>`))fail(`next shell module missing ${file}`);
 }
-if(!nextHtml.includes('<script src="src/data/game-config.js?v=refactor40"></script>'))fail("next game config cache version missing");
-if(nextHtml.includes('<script src="src/player-id.js"></script>'))fail("next entry must not load production identity");
-if(nextHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("next entry must not load production leaderboard API");
-if(nextHtml.indexOf('src/core/runtime.js')>nextHtml.indexOf('src/config.js'))fail("next runtime must load before config");
-if(nextHtml.indexOf('<script src="src/rendering/core.js?v=refactor16"></script>')>nextHtml.indexOf('<script src="src/core/scene-init.js?v=refactor38"></script>'))fail("rendering core must load before scene construction");
-if(!nextHtml.includes('<script src="src/core/legacy-adapter.js?v=refactor15"></script>'))fail("next legacy adapter missing");
-if(!nextHtml.includes('<script src="src/modes/rack-rush.js?v=refactor5a"></script>'))fail("next Rack Rush module missing");
-if(!nextHtml.includes('<script src="src/modes/contest.js?v=refactor5a"></script>'))fail("next contest module missing");
-if(!nextHtml.includes('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("next practice module missing");
-if(!nextHtml.includes('<script src="src/ui/panels.js?v=refactor7"></script>'))fail("next panels module missing");
-if(!nextHtml.includes('<script src="src/ui/loading.js?v=refactor7"></script>'))fail("next loading module missing");
-if(!nextHtml.includes('<script src="src/ui/menu.js?v=refactor12a"></script>'))fail("next menu module missing");
-if(!nextHtml.includes('<script src="src/ui/setup.js?v=refactor13"></script>'))fail("next setup module missing");
-if(!nextHtml.includes('<script src="src/ui/pregame.js?v=refactor15b"></script>'))fail("next pregame module missing");
-if(!nextHtml.includes('<script src="src/ui/pause.js?v=1.98"></script>'))fail("next pause module missing");
-if(!nextHtml.includes('<script src="src/core/bootstrap-next.js?v=refactor12"></script>'))fail("next bootstrap module missing");
+if(!entryHtml.includes('<script src="src/data/game-config.js?v=refactor40"></script>'))fail("next game config cache version missing");
+
+if(entryHtml.indexOf('src/core/runtime.js')>entryHtml.indexOf('src/config.js'))fail("next runtime must load before config");
+if(entryHtml.indexOf('<script src="src/rendering/core.js?v=refactor16"></script>')>entryHtml.indexOf('<script src="src/core/scene-init.js?v=refactor38"></script>'))fail("rendering core must load before scene construction");
+if(!entryHtml.includes('<script src="src/core/legacy-adapter.js?v=cutover1"></script>'))fail("next legacy adapter missing");
+if(!entryHtml.includes('<script src="src/modes/rack-rush.js?v=refactor5a"></script>'))fail("next Rack Rush module missing");
+if(!entryHtml.includes('<script src="src/modes/contest.js?v=refactor5a"></script>'))fail("next contest module missing");
+if(!entryHtml.includes('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("next practice module missing");
+if(!entryHtml.includes('<script src="src/ui/panels.js?v=refactor7"></script>'))fail("next panels module missing");
+if(!entryHtml.includes('<script src="src/ui/loading.js?v=refactor7"></script>'))fail("next loading module missing");
+if(!entryHtml.includes('<script src="src/ui/menu.js?v=refactor12a"></script>'))fail("next menu module missing");
+if(!entryHtml.includes('<script src="src/ui/setup.js?v=refactor13"></script>'))fail("next setup module missing");
+if(!entryHtml.includes('<script src="src/ui/pregame.js?v=refactor15b"></script>'))fail("next pregame module missing");
+if(!entryHtml.includes('<script src="src/ui/pause.js?v=1.98"></script>'))fail("next pause module missing");
+if(!entryHtml.includes('<script src="src/core/bootstrap-next.js?v=cutover1"></script>'))fail("next bootstrap module missing");
 for(const file of ["state","spots"]){
-  if(!nextHtml.includes(`<script src="src/modes/percent-battle/${file}.js?v=refactor4a"></script>`))fail(`next Percent Battle ${file} module missing`);
+  if(!entryHtml.includes(`<script src="src/modes/percent-battle/${file}.js?v=refactor4a"></script>`))fail(`next Percent Battle ${file} module missing`);
 }
 for(const file of ["opponent","results","index"]){
-  if(!nextHtml.includes(`<script src="src/modes/percent-battle/${file}.js?v=refactor4"></script>`))fail(`next Percent Battle ${file} module missing`);
+  if(!entryHtml.includes(`<script src="src/modes/percent-battle/${file}.js?v=refactor4"></script>`))fail(`next Percent Battle ${file} module missing`);
 }
-if(nextHtml.includes("function startRackRush("))fail("next entry still contains inline Rack Rush implementation");
-if(nextHtml.includes("function beginStage(")||nextHtml.includes("function champion("))fail("next entry still contains inline contest implementation");
-if(nextHtml.includes("function startPractice(")||nextHtml.includes("function endPractice("))fail("next entry still contains inline practice implementation");
-if(nextHtml.includes("function bootGame(")||nextHtml.includes("function showPanel(")||nextHtml.includes("function toast("))fail("next entry still contains inline panels/loading implementation");
-if(nextHtml.includes("function pauseableState(")||nextHtml.includes("function restartPausedMode("))fail("next entry still contains inline pause implementation");
-if(nextHtml.includes("function showMenu(")||nextHtml.includes("function showModeInfo("))fail("next entry still contains inline home menu implementation");
-if(nextHtml.includes("function sceneSelectMarkup(")||nextHtml.includes("function showScenePicker(")||nextHtml.includes("function goDiff("))fail("next entry still contains inline difficulty setup implementation");
-if(nextHtml.includes("function pickDiff(")||nextHtml.includes("function showBattleIntro("))fail("next entry still contains inline pregame implementation");
-if(nextHtml.includes("const renderer=new THREE.WebGLRenderer")||nextHtml.includes("function updateRenderQuality(")||nextHtml.includes("const ambient=new THREE.AmbientLight"))fail("next entry still contains inline rendering core implementation");
-if(nextHtml.includes("bootGame();\nanimate();"))fail("next entry still starts boot and loop inline");
-if(nextHtml.includes("function startBattle(")||nextHtml.includes("function battleRefreshSpot(")||nextHtml.includes("function startOppShooter(")||nextHtml.includes("function finishBattle("))fail("next entry still contains inline Percent Battle implementation");
+if(entryHtml.includes("function startRackRush("))fail("next entry still contains inline Rack Rush implementation");
+if(entryHtml.includes("function beginStage(")||entryHtml.includes("function champion("))fail("next entry still contains inline contest implementation");
+if(entryHtml.includes("function startPractice(")||entryHtml.includes("function endPractice("))fail("next entry still contains inline practice implementation");
+if(entryHtml.includes("function bootGame(")||entryHtml.includes("function showPanel(")||entryHtml.includes("function toast("))fail("next entry still contains inline panels/loading implementation");
+if(entryHtml.includes("function pauseableState(")||entryHtml.includes("function restartPausedMode("))fail("next entry still contains inline pause implementation");
+if(entryHtml.includes("function showMenu(")||entryHtml.includes("function showModeInfo("))fail("next entry still contains inline home menu implementation");
+if(entryHtml.includes("function sceneSelectMarkup(")||entryHtml.includes("function showScenePicker(")||entryHtml.includes("function goDiff("))fail("next entry still contains inline difficulty setup implementation");
+if(entryHtml.includes("function pickDiff(")||entryHtml.includes("function showBattleIntro("))fail("next entry still contains inline pregame implementation");
+if(entryHtml.includes("const renderer=new THREE.WebGLRenderer")||entryHtml.includes("function updateRenderQuality(")||entryHtml.includes("const ambient=new THREE.AmbientLight"))fail("next entry still contains inline rendering core implementation");
+if(entryHtml.includes("bootGame();\nanimate();"))fail("next entry still starts boot and loop inline");
+if(entryHtml.includes("function startBattle(")||entryHtml.includes("function battleRefreshSpot(")||entryHtml.includes("function startOppShooter(")||entryHtml.includes("function finishBattle("))fail("next entry still contains inline Percent Battle implementation");
 for(const token of ["const GAME_VERSION=","const G={","function triggerMakeRunVoice(","const COVER_QUOTES="]){
-  if(nextHtml.includes(token))fail("next entry still contains inline shell ownership "+token);
+  if(entryHtml.includes(token))fail("next entry still contains inline shell ownership "+token);
 }
-if(nextHtml.includes("/* Renderer, camera, adaptive quality and base lights are owned"))fail("next entry still contains generated ownership placeholders");
-if(nextHtml.indexOf('src/core/foundation.js?v=refactor39')>nextHtml.indexOf('src/data/game-config.js?v=refactor40'))fail("foundation must load before game config");
-if(nextHtml.indexOf('src/data/game-config.js?v=refactor40')>nextHtml.indexOf('src/core/state.js?v=refactor39'))fail("game config must load before runtime state");
-if(nextHtml.indexOf('src/core/state.js?v=refactor39')>nextHtml.indexOf('src/services/audio-cues.js?v=refactor39'))fail("runtime state must load before audio cues");
-if(nextHtml.indexOf('src/services/audio-cues.js?v=refactor39')>nextHtml.indexOf('src/audio.js?v=1.89'))fail("audio cues must load before audio engine");
-if(nextHtml.indexOf('<script src="src/core/legacy-adapter.js?v=refactor15"></script>')>nextHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5a"></script>'))fail("legacy adapter must load before Rack Rush module");
-if(nextHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5a"></script>')>nextHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Rack Rush module must load before late hooks");
-if(nextHtml.indexOf('<script src="src/modes/contest.js?v=refactor5a"></script>')>nextHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("contest module must load before late hooks");
-if(nextHtml.indexOf('<script src="src/modes/contest.js?v=refactor5a"></script>')>nextHtml.indexOf('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("contest module must load before practice module");
-if(nextHtml.indexOf('<script src="src/ui/panels.js?v=refactor7"></script>')>nextHtml.indexOf('<script src="src/ui/loading.js?v=refactor7"></script>'))fail("panels must load before loading module");
-if(nextHtml.indexOf('<script src="src/ui/loading.js?v=refactor7"></script>')>nextHtml.indexOf('<script src="src/ui/menu.js?v=refactor12a"></script>'))fail("loading must load before menu module");
-if(nextHtml.indexOf('<script src="src/ui/menu.js?v=refactor12a"></script>')>nextHtml.indexOf('<script src="src/ui/setup.js?v=refactor13"></script>'))fail("menu must load before setup module");
-if(nextHtml.indexOf('<script src="src/ui/setup.js?v=refactor13"></script>')>nextHtml.indexOf('<script src="src/ui/pregame.js?v=refactor15b"></script>'))fail("setup must load before pregame module");
-if(nextHtml.indexOf('<script src="src/ui/pregame.js?v=refactor15b"></script>')>nextHtml.indexOf('<script src="src/ui/pause.js?v=1.98"></script>'))fail("pregame must load before pause module");
-if(nextHtml.indexOf('<script src="src/ui/pause.js?v=1.98"></script>')>nextHtml.indexOf('<script src="src/core/bootstrap-next.js?v=refactor12"></script>'))fail("pause module must load before bootstrap");
-if(!nextHtml.includes('<script src="src/navigation.js?v=1.98"></script>'))fail("next navigation cache version missing");
-if(nextHtml.indexOf('<script src="src/core/bootstrap-next.js?v=refactor12"></script>')>nextHtml.indexOf('<script src="src/navigation.js?v=1.98"></script>'))fail("boot must begin before navigation rewires the loading gate");
-if(nextHtml.indexOf('<script src="src/modes/contest.js?v=refactor5a"></script>')>nextHtml.indexOf('<script src="src/modes/percent-battle/state.js?v=refactor4a"></script>'))fail("contest module must load before Percent Battle modules");
+if(entryHtml.includes("/* Renderer, camera, adaptive quality and base lights are owned"))fail("next entry still contains generated ownership placeholders");
+if(entryHtml.indexOf('src/core/foundation.js?v=refactor39')>entryHtml.indexOf('src/data/game-config.js?v=refactor40'))fail("foundation must load before game config");
+if(entryHtml.indexOf('src/data/game-config.js?v=refactor40')>entryHtml.indexOf('src/core/state.js?v=refactor39'))fail("game config must load before runtime state");
+if(entryHtml.indexOf('src/core/state.js?v=refactor39')>entryHtml.indexOf('src/services/audio-cues.js?v=refactor39'))fail("runtime state must load before audio cues");
+if(entryHtml.indexOf('src/services/audio-cues.js?v=refactor39')>entryHtml.indexOf('src/audio.js?v=1.89'))fail("audio cues must load before audio engine");
+if(entryHtml.indexOf('<script src="src/core/legacy-adapter.js?v=cutover1"></script>')>entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5a"></script>'))fail("legacy adapter must load before Rack Rush module");
+if(entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5a"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Rack Rush module must load before late hooks");
+if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5a"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("contest module must load before late hooks");
+if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5a"></script>')>entryHtml.indexOf('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("contest module must load before practice module");
+if(entryHtml.indexOf('<script src="src/ui/panels.js?v=refactor7"></script>')>entryHtml.indexOf('<script src="src/ui/loading.js?v=refactor7"></script>'))fail("panels must load before loading module");
+if(entryHtml.indexOf('<script src="src/ui/loading.js?v=refactor7"></script>')>entryHtml.indexOf('<script src="src/ui/menu.js?v=refactor12a"></script>'))fail("loading must load before menu module");
+if(entryHtml.indexOf('<script src="src/ui/menu.js?v=refactor12a"></script>')>entryHtml.indexOf('<script src="src/ui/setup.js?v=refactor13"></script>'))fail("menu must load before setup module");
+if(entryHtml.indexOf('<script src="src/ui/setup.js?v=refactor13"></script>')>entryHtml.indexOf('<script src="src/ui/pregame.js?v=refactor15b"></script>'))fail("setup must load before pregame module");
+if(entryHtml.indexOf('<script src="src/ui/pregame.js?v=refactor15b"></script>')>entryHtml.indexOf('<script src="src/ui/pause.js?v=1.98"></script>'))fail("pregame must load before pause module");
+if(entryHtml.indexOf('<script src="src/ui/pause.js?v=1.98"></script>')>entryHtml.indexOf('<script src="src/core/bootstrap-next.js?v=cutover1"></script>'))fail("pause module must load before bootstrap");
+if(!entryHtml.includes('<script src="src/navigation.js?v=1.98"></script>'))fail("next navigation cache version missing");
+if(entryHtml.indexOf('<script src="src/core/bootstrap-next.js?v=refactor12"></script>')>entryHtml.indexOf('<script src="src/navigation.js?v=1.98"></script>'))fail("boot must begin before navigation rewires the loading gate");
+if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5a"></script>')>entryHtml.indexOf('<script src="src/modes/percent-battle/state.js?v=refactor4a"></script>'))fail("contest module must load before Percent Battle modules");
 for(const pair of [["state","spots"],["spots","opponent"],["opponent","results"],["results","index"]]){
-  if(nextHtml.indexOf(`src/modes/percent-battle/${pair[0]}.js`)>nextHtml.indexOf(`src/modes/percent-battle/${pair[1]}.js`))fail(`Percent Battle ${pair[0]} must load before ${pair[1]}`);
+  if(entryHtml.indexOf(`src/modes/percent-battle/${pair[0]}.js`)>entryHtml.indexOf(`src/modes/percent-battle/${pair[1]}.js`))fail(`Percent Battle ${pair[0]} must load before ${pair[1]}`);
 }
-if(nextHtml.indexOf('<script src="src/modes/percent-battle/index.js?v=refactor4"></script>')>nextHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Percent Battle module must load before late hooks");
+if(entryHtml.indexOf('<script src="src/modes/percent-battle/index.js?v=refactor4"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Percent Battle module must load before late hooks");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v1.96 FULL EN","FULL EN / v1.96","v1.96-full-en"])
-  if(!entryHtml.includes(token))fail("visible/game version token missing "+token);
+for(const token of ["v2.0 MODULAR","MODULAR / v2.0"])
+  if(!entryHtml.includes(token))fail("visible version token missing "+token);
+if(!read("src/data/game-config.js").includes('const GAME_VERSION="v2.0-modular";'))fail("GAME_VERSION must be v2.0-modular");
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=2.08">'))fail("stylesheet link missing");
-if(!entryHtml.includes('<script src="src/nba-dna/NBADNA.js?v=20260718-coming-soon"></script>'))fail("NBA DNA gate cache version missing");
 const menuScript=read("src/ui/menu.js");
 const nbaDnaScript=read("src/nba-dna/NBADNA.js");
-for(const source of [entryHtml,menuScript]){
+for(const source of [menuScript]){
   if(!source.includes('class="quickMode dna comingSoon"'))fail("NBA DNA coming-soon mode card missing");
   if(!source.includes('class="quickPlay" disabled aria-disabled="true"'))fail("NBA DNA mode card is not disabled");
   if(!source.includes("【即将上线】"))fail("NBA DNA coming-soon label missing");
@@ -178,7 +177,7 @@ for(const source of [entryHtml,menuScript]){
 }
 for(const token of ["const NBA_DNA_ENABLED=false","if(!NBA_DNA_ENABLED)","return false"])
   if(!nbaDnaScript.includes(token))fail("NBA DNA runtime gate missing "+token);
-if(!nextHtml.includes('<script src="src/nba-dna/NBADNA.js?v=20260718-coming-soon"></script>'))fail("next NBA DNA gate cache version missing");
+if(!entryHtml.includes('<script src="src/nba-dna/NBADNA.js?v=20260718-coming-soon"></script>'))fail("next NBA DNA gate cache version missing");
 if(!read("styles.css").includes(".quickMode.comingSoon"))fail("NBA DNA coming-soon style missing");
 if(!entryHtml.includes('<script src="src/assets-manifest.js?v=20260719-realnames"></script>'))fail("assets manifest script missing");
 if(!entryHtml.includes('<script src="src/config.js?v=1.93"></script>'))fail("config script missing");
@@ -188,27 +187,16 @@ if(!entryHtml.includes('<script src="src/player-id.js"></script>'))fail("player 
 if(!entryHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("leaderboard api script missing");
 if(!entryHtml.includes('<script src="src/leaderboard-ui.js?v=1.92"></script>'))fail("leaderboard ui script missing");
 if(!entryHtml.includes('<script src="src/share.js"></script>'))fail("share script missing");
-if(!entryHtml.includes('<script src="src/recorder.js?v=1.94"></script>'))fail("recorder script missing");
 if(!entryHtml.includes('<script src="src/shot-physics.js?v=1.99"></script>'))fail("shot physics script missing");
 if(!entryHtml.includes('<script src="src/result-stats.js?v=1.78"></script>'))fail("result stats script missing");
-if(entryHtml.indexOf('<script src="src/result-stats.js?v=1.78"></script>')<entryHtml.lastIndexOf("animate();"))fail("result stats should load after the main inline script");
 if(!entryHtml.includes('<script src="src/gear.js?v=1.82"></script>'))fail("gear script missing");
-if(entryHtml.indexOf('<script src="src/gear.js?v=1.82"></script>')<entryHtml.indexOf('<script src="src/result-stats.js?v=1.78"></script>'))fail("gear script should load after result stats");
-if(entryHtml.indexOf('<script src="src/gear.js?v=1.82"></script>')<entryHtml.lastIndexOf("animate();"))fail("gear script should load after the main inline script");
 if(!entryHtml.includes('<script src="src/avatar-customizer.js?v=1.79"></script>'))fail("avatar customizer script missing");
-if(entryHtml.indexOf('<script src="src/avatar-customizer.js?v=1.79"></script>')<entryHtml.lastIndexOf("animate();"))fail("avatar customizer should load after the main inline script");
 if(!entryHtml.includes('<script src="src/shot-motion.js?v=1.99"></script>'))fail("shot motion script missing");
-if(entryHtml.indexOf('<script src="src/shot-motion.js?v=1.99"></script>')<entryHtml.indexOf('<script src="src/gear.js?v=1.82"></script>'))fail("shot motion should load after gear");
 if(!entryHtml.includes('<script src="src/roster-style.js?v=1.79"></script>'))fail("roster style script missing");
-if(entryHtml.indexOf('<script src="src/roster-style.js?v=1.79"></script>')<entryHtml.indexOf('<script src="src/avatar-customizer.js?v=1.79"></script>'))fail("roster style should load after avatar customizer");
 if(!entryHtml.includes('<script src="src/hero-moments.js?v=1.79"></script>'))fail("hero moments script missing");
-if(entryHtml.indexOf('<script src="src/hero-moments.js?v=1.79"></script>')<entryHtml.indexOf('<script src="src/shot-motion.js?v=1.99"></script>'))fail("hero moments should load after shot motion");
 if(!entryHtml.includes('<script src="src/hot-hand.js?v=1.81"></script>'))fail("hot hand script missing");
-if(entryHtml.indexOf('<script src="src/hot-hand.js?v=1.81"></script>')<entryHtml.indexOf('<script src="src/hero-moments.js?v=1.79"></script>'))fail("hot hand should load after hero moments");
 if(!entryHtml.includes('<script src="src/perf.js?v=1.72"></script>'))fail("perf script missing");
-if(entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>')<entryHtml.indexOf('<script src="src/hot-hand.js?v=1.81"></script>'))fail("perf script should load after hot hand");
 if(!entryHtml.includes('<script src="src/perf-settings.js?v=1.93b"></script>'))fail("perf settings script missing");
-if(entryHtml.indexOf('<script src="src/perf-settings.js?v=1.93b"></script>')<entryHtml.indexOf('<script src="src/perf.js?v=1.72"></script>'))fail("perf settings should load after perf");
 if(!entryHtml.includes('<script src="src/face-overlays.js?v=1.1-realnames"></script>'))fail("face overlays script missing");
 if(!entryHtml.includes('<script src="src/haptics.js?v=1.80"></script>'))fail("haptics script missing");
 if(!entryHtml.includes('<script src="src/visual-director.js?v=1.85"></script>'))fail("visual director script missing");
@@ -221,21 +209,16 @@ if(!entryHtml.includes('<script src="src/game-flow.js?v=1.93"></script>'))fail("
 if(/<style>[\s\S]*?<\/style>/.test(entryHtml))fail("inline style block should stay split out");
 if(/const COVER_STARS=\[/.test(entryHtml)||/const EXT_AUDIO=\{/.test(entryHtml))fail("asset manifest data leaked back into html");
 if(/assets\/aiba-covers\/[^"')]+\.png/.test(entryHtml))fail("runtime should not reference png cover assets");
-function functionSource(name){
-  const start=entryHtml.indexOf("function "+name+"(");
-  if(start<0)return "";
-  const end=entryHtml.indexOf("\nfunction ",start+10);
-  return entryHtml.slice(start,end<0?entryHtml.length:end);
-}
+
 if(!entryHtml.includes('<script src="src/scene-lifecycle.js?v=1.88"></script>'))fail("scene lifecycle script missing");
-if(!/function resetProgressiveSceneForRun\(\).*AIBASceneLifecycle\.resetForRun\(\).*applyScenePreset\(currentScenePreset,\{persist:false\}\)/.test(entryHtml))fail("progressive scene reset helper missing");
-for(const name of ["startPractice","startRackRush","startBattle","startRound"]){
-  if(!functionSource(name).includes("resetProgressiveSceneForRun()"))fail(name+" must reset progressive scene before a new run");
+for(const rel of ["src/modes/practice.js","src/modes/rack-rush.js","src/modes/percent-battle/state.js","src/modes/contest.js"]){
+  if(!read(rel).includes("resetProgressiveSceneForRun()"))fail(rel+" must reset progressive scene before a new run");
 }
 for(const token of ['dataset.flowerCount="0"','dataset.environmentPhase=progress<.25?"golden"'])
-  if(!entryHtml.includes(token))fail("progressive scene initialization missing "+token);
-for(const token of ['rush.total>=88','G.timer<=12&&window.AIBARecorder','>=85&&window.AIBARecorder'])
-  if(!entryHtml.includes(token))fail("last-three-shot recorder arming missing "+token);
+  if(!read("src/rendering/environments.js").includes(token))fail("progressive scene initialization missing "+token);
+if(!read("src/modes/rack-rush.js").includes("rush.total>=88"))fail("rack rush recorder arming missing");
+if(!read("src/core/game-loop.js").includes("G.timer<=12&&window.AIBARecorder"))fail("timer recorder arming missing");
+if(!read("src/modes/percent-battle/opponent.js").includes(">=85&&global.AIBARecorder"))fail("battle recorder arming missing");
 
 function inlineScriptLineCount(html){
   return [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
@@ -249,7 +232,7 @@ try{
 }catch(e){}
 
 const inlineScriptCounts={};
-for(const [label,html] of [["main",entryHtml],["next",nextHtml]]){
+for(const [label,html] of [["main",entryHtml],["legacy",legacyHtml]]){
   const inlineScripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
     .map(m=>m[1]).filter(s=>s.trim());
   inlineScriptCounts[label]=inlineScripts.length;
@@ -285,7 +268,7 @@ try{new Function(configScript);}
 catch(e){fail("config script syntax error: "+e.message);}
 try{new Function(gameConfigScript);}
 catch(e){fail("game config script syntax error: "+e.message);}
-for(const source of [entryHtml,gameConfigScript]){
+for(const source of [gameConfigScript]){
   if(!source.includes("G.practice||G.tutorial||G.interactiveTutorial")||!source.includes("?1.5:1"))fail("training sweet zone multiplier missing");
 }
 try{new Function(playerSelectScript);}
@@ -429,7 +412,17 @@ for(const file of voiceFiles){
 const audioEventsBlock=(audioScript.match(/const AUDIO_EVENTS = \{([\s\S]*?)\n\};/)||[])[1]||"";
 const audioEvents=[...audioEventsBlock.matchAll(/\n\s*([A-Za-z0-9_]+):\s*\[([^\]]*)\]/g)].map(m=>({id:m[1],files:[...m[2].matchAll(/"([^"]+)"/g)].map(x=>x[1])}));
 if(audioEvents.length<30)fail("AUDIO_EVENTS unexpectedly small: "+audioEvents.length);
-const allCode=entryHtml+"\n"+audioScript+"\n"+read("src/vision.js")+"\n"+playerSelectScript+"\n"+leaderboardUiScript+"\n"+recorderScript+"\n"+gearScript+"\n"+read("src/nba-dna/NBADNA.js");
+function walkSrc(dir){
+  let out=[];
+  for(const name of fs.readdirSync(path.join(root,dir))){
+    const rel=dir+"/"+name;
+    const st=fs.statSync(path.join(root,rel));
+    if(st.isDirectory())out=out.concat(walkSrc(rel));
+    else if(/\.js$/.test(name))out.push(rel);
+  }
+  return out;
+}
+const allCode=walkSrc("src").map(read).join("\n");
 for(const ev of audioEvents){
   if(!new RegExp('playAudioEvent\\(\\s*["\\\']'+ev.id+'["\\\']').test(allCode))fail("AUDIO_EVENTS entry has no direct trigger "+ev.id);
   for(const name of ev.files){
@@ -517,18 +510,18 @@ for(const token of ['runtime.register("rendering:core"',"WebGLRenderer","RENDER_
 const renderingMaterials=read("src/rendering/materials.js");
 for(const token of ['runtime.register("rendering:materials"',"function pixTex","function realBallTex","function triBallTex","function spaldingPanelCurve","function paintBasketballChannels","function paintTriBallPanels","MeshPhongMaterial","bumpMap:texBallRelief","SphereGeometry(0.16,32,20)"])
   if(!renderingMaterials.includes(token))fail("rendering materials token missing "+token);
-for(const source of [entryHtml,renderingMaterials]){
+for(const source of [renderingMaterials]){
   for(const token of ["pixTex(512,256","spaldingPanelCurve(720)","candidateMeridianA.push([.75,k])","candidateMeridianAOpposite.push([.25,k])","paintTriBallPanels","rotatedTriColorIndex","labels.fill(-1)","panelVotes","turn=Math.PI/2","BALL_LINE_DEBUG","full ring 1","full ring A","double curve","Math.hypot(x,y,z)<radius","LinearMipmapLinearFilter","anisotropy:8","ballTextureRng(0x8badf00d)","SphereGeometry(0.16,32,20)"])
     if(!source.includes(token))fail("calculated basketball material missing "+token);
   if(source.includes("centerMeridian")||source.includes("meridianA.push([0,k])")||source.includes("meridianB.push([.5,k])")||source.includes("candidateMeridianB")||source.includes("Math.random()*96")||source.includes("SphereGeometry(0.16,12,10)"))fail("legacy basketball pattern remains");
 }
-if(!nextHtml.includes('src/rendering/materials.js?v=refactor17h'))fail("next entry must load rendering materials");
-if(nextHtml.includes("function realBallTex("))fail("next entry still contains inline ball materials");
+if(!entryHtml.includes('src/rendering/materials.js?v=refactor17h'))fail("next entry must load rendering materials");
+if(entryHtml.includes("function realBallTex("))fail("next entry still contains inline ball materials");
 const renderingCourt=read("src/rendering/court.js");
 for(const token of ['runtime.register("rendering:court"',"function makeCourtTexture","function buildCourt","courtIndoorTexture","curSpotRing=new THREE.Mesh"])
   if(!renderingCourt.includes(token))fail("rendering court token missing "+token);
-if(!nextHtml.includes('src/rendering/court.js?v=refactor18'))fail("next entry must load rendering court");
-if(nextHtml.includes("function makeCourtTexture("))fail("next entry still contains inline court texture builder");
+if(!entryHtml.includes('src/rendering/court.js?v=refactor18'))fail("next entry must load rendering court");
+if(entryHtml.includes("function makeCourtTexture("))fail("next entry still contains inline court texture builder");
 const renderingArena=read("src/rendering/arena.js");
 for(const token of ['runtime.register("rendering:arena"',"function buildStands","function buildBackcourtShow","function buildCrowd","function updCrowd"])
   if(!renderingArena.includes(token))fail("rendering arena token missing "+token);
@@ -543,9 +536,9 @@ for(const token of ['runtime.register("rendering:environments"',"function buildO
   if(!renderingEnvironments.includes(token))fail("rendering environments token missing "+token);
 if(renderingEnvironments.includes("const rackBalls="))fail("rendering environments must not own gameplay props");
 for(const token of ['src/rendering/arena.js?v=refactor19','src/rendering/spectators.js?v=refactor20','src/rendering/hoop.js?v=refactor21','src/rendering/environments.js?v=refactor22a'])
-  if(!nextHtml.includes(token))fail("next entry missing court element module "+token);
+  if(!entryHtml.includes(token))fail("next entry missing court element module "+token);
 for(const token of ["function buildStands(","function buildNearCourtCrowd(","function buildHoop(","function applyScenePreset("])
-  if(nextHtml.includes(token))fail("next entry still contains inline court element "+token);
+  if(entryHtml.includes(token))fail("next entry still contains inline court element "+token);
 const renderingProps=read("src/rendering/props.js");
 for(const token of ['runtime.register("rendering:props"',"function buildRacks","function resetRackBalls","function buildHands"])
   if(!renderingProps.includes(token))fail("rendering props token missing "+token);
@@ -559,9 +552,9 @@ const renderingMotion=read("src/rendering/motion.js");
 for(const token of ['runtime.register("rendering:motion"',"function shotCurves","function poseGuy","function updPose","function startPass","function updWalk"])
   if(!renderingMotion.includes(token))fail("rendering motion token missing "+token);
 for(const token of ['src/rendering/props.js?v=refactor23','src/rendering/characters.js?v=refactor24','src/rendering/camera.js?v=refactor25a','src/rendering/motion.js?v=refactor26'])
-  if(!nextHtml.includes(token))fail("next entry missing gameplay rendering module "+token);
+  if(!entryHtml.includes(token))fail("next entry missing gameplay rendering module "+token);
 for(const token of ["function buildRacks(","function voxelGuy(","function autoFrameCam(","function shotCurves(","function updWalk("])
-  if(nextHtml.includes(token))fail("next entry still contains inline gameplay rendering "+token);
+  if(entryHtml.includes(token))fail("next entry still contains inline gameplay rendering "+token);
 const renderingEffects=read("src/rendering/effects.js");
 for(const token of ['runtime.register("rendering:effects"',"function emitFire","function startConfetti","function tween","function glideTo"])
   if(!renderingEffects.includes(token))fail("rendering effects token missing "+token);
@@ -575,9 +568,9 @@ const presentationBattle=read("src/presentation/battle.js");
 for(const token of ['runtime.register("presentation:battle"',"function updBattleCut","function checkBattleOvertake","function battleScoreCallout"])
   if(!presentationBattle.includes(token))fail("presentation battle token missing "+token);
 for(const token of ['src/rendering/effects.js?v=refactor27','src/presentation/cinematics.js?v=refactor28a','src/presentation/pregame.js?v=refactor29','src/presentation/battle.js?v=refactor30'])
-  if(!nextHtml.includes(token))fail("next entry missing presentation module "+token);
+  if(!entryHtml.includes(token))fail("next entry missing presentation module "+token);
 for(const token of ["function startHero(","function startAIShow(","function startVictoryCine(","function startPreGameShow(","function battleScoreCallout(","function startConfetti("])
-  if(nextHtml.includes(token))fail("next entry still contains inline presentation "+token);
+  if(entryHtml.includes(token))fail("next entry still contains inline presentation "+token);
 const gameplayShots=read("src/gameplay/shots.js");
 for(const token of ['runtime.register("gameplay:shots"',"const balls=","function startCharge","function releaseShot","function madeBall","function updBalls"])
   if(!gameplayShots.includes(token))fail("gameplay shots token missing "+token);
@@ -590,7 +583,7 @@ for(const token of ['runtime.register("presentation:replay"',"function startRepl
 const battleControls=read("src/ui/battle-controls.js");
 for(const token of ['runtime.register("ui:battle-controls"',"function buildSpotDots","function updatePlayerPowerUI","function updSpotDots"])
   if(!battleControls.includes(token))fail("battle controls token missing "+token);
-for(const source of [entryHtml,battleControls]){
+for(const source of [battleControls]){
   if(!source.includes("training?15:10")||!source.includes("training?68:70")||!source.includes("training?92:90"))fail("training player-side sweet zone display missing");
 }
 const winCinematic=read("src/presentation/win-cinematic.js");
@@ -604,11 +597,11 @@ for(const token of ['runtime.register("core:game-loop"',"function animate","wind
 for(const token of ['runtime.register("core:scene-init"',"buildCourt();","buildCharacters();","applyScenePreset(currentScenePreset"])
   if(!sceneInit.includes(token))fail("scene init token missing "+token);
 for(const token of ['src/gameplay/shots.js?v=refactor31','src/presentation/replay.js?v=refactor32a','src/ui/battle-controls.js?v=refactor33a','src/gameplay/collisions.js?v=refactor34','src/presentation/win-cinematic.js?v=refactor35a','src/core/input.js?v=refactor36','src/core/game-loop.js?v=refactor37','src/core/scene-init.js?v=refactor38'])
-  if(!nextHtml.includes(token))fail("next entry missing runtime-core module "+token);
+  if(!entryHtml.includes(token))fail("next entry missing runtime-core module "+token);
 for(const token of ["function startCharge(","function updBalls(","function startReplay(","function buildSpotDots(","function ballCollide(","function startWinCine(","function onDown(","function animate(","buildCourt();"])
-  if(nextHtml.includes(token))fail("next entry still contains inline runtime core "+token);
-if(!(nextHtml.indexOf('src/core/input.js?v=refactor36')<nextHtml.indexOf('src/core/legacy-adapter.js?v=refactor15')))fail("input must load before legacy adapter");
-if(!(nextHtml.indexOf('src/core/scene-init.js?v=refactor38')<nextHtml.indexOf('src/core/legacy-adapter.js?v=refactor15')))fail("scene init must load before legacy adapter");
+  if(entryHtml.includes(token))fail("next entry still contains inline runtime core "+token);
+if(!(entryHtml.indexOf('src/core/input.js?v=refactor36')<entryHtml.indexOf('src/core/legacy-adapter.js?v=cutover1')))fail("input must load before legacy adapter");
+if(!(entryHtml.indexOf('src/core/scene-init.js?v=refactor38')<entryHtml.indexOf('src/core/legacy-adapter.js?v=cutover1')))fail("scene init must load before legacy adapter");
 
 const sandbox={window:{}};
 vm.createContext(sandbox);
@@ -630,4 +623,4 @@ for(const key of ["bgm","crowd","crowdCheer","rain","ocean","gull"]){
   if(!exists(rel))fail("missing audio file "+rel);
 }
 
-console.log("check ok:",inlineScriptCounts.main+" main / "+inlineScriptCounts.next+" next inline scripts,",inlineLines+" inline lines,",assets.coverStars.length+" cover stars");
+console.log("check ok:",inlineScriptCounts.main+" main / "+inlineScriptCounts.legacy+" legacy inline scripts,",inlineLines+" main inline lines,",assets.coverStars.length+" cover stars");

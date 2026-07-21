@@ -2,7 +2,7 @@
   "use strict";
 
   const runtime=global.AIBA&&global.AIBA.runtime;
-  if(!runtime||!runtime.experimental)throw new Error("NEXT bootstrap requires experimental runtime");
+  if(!runtime)throw new Error("bootstrap requires AIBA runtime");
   if(global.__AIBA_BOOT_STARTED__)return;
   global.__AIBA_BOOT_STARTED__=true;
   Promise.resolve(global.bootGame()).catch(error=>setTimeout(()=>{throw error;},0));

@@ -11,7 +11,7 @@
 - Vercel 自动部署：https://aiba-percent-battle.vercel.app/
 - GitHub Pages 备用：https://opstiger.github.io/aiba-percent-battle/
 
-当前版本：`v1.96-full-en`
+当前版本：`v2.0-modular`
 
 | 首页 | 百分大战 | 更衣室 | 体感控制 |
 |---|---|---|---|
@@ -66,13 +66,13 @@ node scripts/check.js
 
 ## 项目结构
 
-- `index.html`：当前可玩的入口文件。
-- `block-3pt-kingv1.96-full-en.html`：当前版本快照，和 `index.html` 保持一致。
+- `index.html`：正式入口——约 200 行的模块化外壳，游戏全部从 `src/` 加载（v2.0 完成切换）。
+- `block-3pt-kingv2.0-modular.html`：当前版本快照，和 `index.html` 保持一致。
 - `styles.css`：游戏 HUD、首页、面板和移动端样式。
-- `src/`：游戏模块，正在从单文件入口渐进拆分：
+- `src/`：游戏本体，已完全模块化：
   - `core/` 运行时、状态与迁移桥接 · `modes/` 百分大战、RACK RUSH、三分赛、练习 · `rendering/` Three.js 场景核心 · `ui/` 菜单、面板、赛前流程 · `gameplay/`、`presentation/`、`services/`、`data/` 支撑层
   - 顶层功能模块：`vision.js`（摄像头 + MediaPipe）、`audio.js`、`gear.js`、`recorder.js`、`share.js`、`leaderboard-api.js` / `leaderboard-ui.js`、`hero-moments.js`、`hot-hand.js`、`perf.js` / `perf-settings.js`、`nba-dna/` 等。
-- `next/index.html`：单文件拆分用的并行模块化外壳，由 `scripts/build-next.js` 生成、`scripts/check.js` 验收。
+- `legacy.html`：切换前的旧引擎冻结版（v1.96），可用 `?engine=legacy` 访问，保留一个版本作为回滚通道。
 - `cloudflare/leaderboard/`：排行榜 API 的 schema 与源码（Cloudflare Worker + D1）。
 - `assets/`：图片、视频、音频、字体与视觉模型。`vendor/`：随项目携带的第三方运行文件（Three.js、MediaPipe Tasks Vision）。
 - `backup/`：本地历史版本归档，不参与发布。`docs/`：架构说明与重构计划见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
