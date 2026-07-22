@@ -12,8 +12,8 @@ function audioGestureUnlock(e){
 function onDown(e){
   if(BOOT_GATE_ACTIVE)return;
   if(PAUSE.on)return;
-  if(e.target&&e.target.id==="camBtn")return;
-  if(e.target&&e.target.id==="pauseBtn")return;
+  if(e.target&&e.target.closest&&e.target.closest("#courtTools"))return;
+  if(e.target&&e.target.closest&&e.target.closest("#ov"))return;
   if(e.target&&e.target.closest&&e.target.closest("#visionPreview"))return;
   if(e.target&&e.target.closest&&e.target.closest("#battleControls"))return;
   if(e.target&&e.target.closest&&e.target.closest("#spotDots"))return;
@@ -22,8 +22,8 @@ function onDown(e){
 function onUp(e){
   if(BOOT_GATE_ACTIVE)return;
   if(PAUSE.on)return;
-  if(e.target&&e.target.id==="camBtn")return;
-  if(e.target&&e.target.id==="pauseBtn")return;
+  if(e.target&&e.target.closest&&e.target.closest("#courtTools"))return;
+  if(e.target&&e.target.closest&&e.target.closest("#ov"))return;
   if(e.target&&e.target.closest&&e.target.closest("#visionPreview"))return;
   if(e.target&&e.target.closest&&e.target.closest("#battleControls"))return;
   if(e.target&&e.target.closest&&e.target.closest("#spotDots"))return;

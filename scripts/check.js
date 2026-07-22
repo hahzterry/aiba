@@ -596,11 +596,11 @@ for(const token of ['runtime.register("core:game-loop"',"function animate","wind
   if(!coreLoop.includes(token))fail("core game-loop token missing "+token);
 for(const token of ['runtime.register("core:scene-init"',"buildCourt();","buildCharacters();","applyScenePreset(currentScenePreset"])
   if(!sceneInit.includes(token))fail("scene init token missing "+token);
-for(const token of ['src/gameplay/shots.js?v=refactor31','src/presentation/replay.js?v=refactor32a','src/ui/battle-controls.js?v=refactor33a','src/gameplay/collisions.js?v=refactor34','src/presentation/win-cinematic.js?v=refactor35a','src/core/input.js?v=refactor36','src/core/game-loop.js?v=refactor37','src/core/scene-init.js?v=refactor38'])
+for(const token of ['src/gameplay/shots.js?v=refactor31','src/presentation/replay.js?v=refactor32a','src/ui/battle-controls.js?v=refactor33a','src/gameplay/collisions.js?v=refactor34','src/presentation/win-cinematic.js?v=refactor35a','src/core/input.js?v=cutover2','src/core/game-loop.js?v=refactor37','src/core/scene-init.js?v=refactor38'])
   if(!entryHtml.includes(token))fail("next entry missing runtime-core module "+token);
 for(const token of ["function startCharge(","function updBalls(","function startReplay(","function buildSpotDots(","function ballCollide(","function startWinCine(","function onDown(","function animate(","buildCourt();"])
   if(entryHtml.includes(token))fail("next entry still contains inline runtime core "+token);
-if(!(entryHtml.indexOf('src/core/input.js?v=refactor36')<entryHtml.indexOf('src/core/legacy-adapter.js?v=cutover1')))fail("input must load before legacy adapter");
+if(!(entryHtml.indexOf('src/core/input.js?v=cutover2')<entryHtml.indexOf('src/core/legacy-adapter.js?v=cutover1')))fail("input must load before legacy adapter");
 if(!(entryHtml.indexOf('src/core/scene-init.js?v=refactor38')<entryHtml.indexOf('src/core/legacy-adapter.js?v=cutover1')))fail("scene init must load before legacy adapter");
 
 const sandbox={window:{}};

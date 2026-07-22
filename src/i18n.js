@@ -960,6 +960,7 @@ const DICT={
 /* 参数化文案:整节点正则规则 */
 const RULES=[
 [/^aiBA·百分大战(.*)$/,m=>"aiBA · Percent Battle"+m[1]],
+[/^(\d+\/\d+) 核心资源$/,m=>m[1]+" core assets"],
 [/^连中 x(.+)$/,m=>"Streak x"+m[1]],
 [/^· 命中率 ?(.+)$/,m=>"· FG% "+m[1]],
 [/^命中率 ?(.+)$/,m=>"FG% "+m[1]],
