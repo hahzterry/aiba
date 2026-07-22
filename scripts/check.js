@@ -115,7 +115,7 @@ if(!entryHtml.includes('<script src="src/modes/contest.js?v=refactor5a"></script
 if(!entryHtml.includes('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("next practice module missing");
 if(!entryHtml.includes('<script src="src/ui/panels.js?v=refactor7"></script>'))fail("next panels module missing");
 if(!entryHtml.includes('<script src="src/ui/loading.js?v=refactor7"></script>'))fail("next loading module missing");
-if(!entryHtml.includes('<script src="src/ui/menu.js?v=refactor12a"></script>'))fail("next menu module missing");
+if(!entryHtml.includes('<script src="src/ui/menu.js?v=cutover3"></script>'))fail("next menu module missing");
 if(!entryHtml.includes('<script src="src/ui/setup.js?v=refactor13"></script>'))fail("next setup module missing");
 if(!entryHtml.includes('<script src="src/ui/pregame.js?v=refactor15b"></script>'))fail("next pregame module missing");
 if(!entryHtml.includes('<script src="src/ui/pause.js?v=1.98"></script>'))fail("next pause module missing");
@@ -150,8 +150,8 @@ if(entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5a"></script
 if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5a"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("contest module must load before late hooks");
 if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5a"></script>')>entryHtml.indexOf('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("contest module must load before practice module");
 if(entryHtml.indexOf('<script src="src/ui/panels.js?v=refactor7"></script>')>entryHtml.indexOf('<script src="src/ui/loading.js?v=refactor7"></script>'))fail("panels must load before loading module");
-if(entryHtml.indexOf('<script src="src/ui/loading.js?v=refactor7"></script>')>entryHtml.indexOf('<script src="src/ui/menu.js?v=refactor12a"></script>'))fail("loading must load before menu module");
-if(entryHtml.indexOf('<script src="src/ui/menu.js?v=refactor12a"></script>')>entryHtml.indexOf('<script src="src/ui/setup.js?v=refactor13"></script>'))fail("menu must load before setup module");
+if(entryHtml.indexOf('<script src="src/ui/loading.js?v=refactor7"></script>')>entryHtml.indexOf('<script src="src/ui/menu.js?v=cutover3"></script>'))fail("loading must load before menu module");
+if(entryHtml.indexOf('<script src="src/ui/menu.js?v=cutover3"></script>')>entryHtml.indexOf('<script src="src/ui/setup.js?v=refactor13"></script>'))fail("menu must load before setup module");
 if(entryHtml.indexOf('<script src="src/ui/setup.js?v=refactor13"></script>')>entryHtml.indexOf('<script src="src/ui/pregame.js?v=refactor15b"></script>'))fail("setup must load before pregame module");
 if(entryHtml.indexOf('<script src="src/ui/pregame.js?v=refactor15b"></script>')>entryHtml.indexOf('<script src="src/ui/pause.js?v=1.98"></script>'))fail("pregame must load before pause module");
 if(entryHtml.indexOf('<script src="src/ui/pause.js?v=1.98"></script>')>entryHtml.indexOf('<script src="src/core/bootstrap-next.js?v=cutover1"></script>'))fail("pause module must load before bootstrap");

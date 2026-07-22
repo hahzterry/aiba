@@ -17,7 +17,6 @@
     global.showCoverPanel(`
       <div class="coverHero" style="background-image:url('${cover.cover}')">
         ${coverVideo}
-        <div class="coverStar"><b>${cover.n}</b> #${cover.num}<br><span style="color:#9fd1ff">${cover.t}</span></div>
         <div class="coverMenu"><div>
           <div class="coverKicker">CYBER COURT</div>
           <div class="coverTitle">aiBA<br><b>百分大战</b></div>
