@@ -9,7 +9,7 @@ const childProcess=require("child_process");
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
 const legacyEntry="legacy.html";
-const snapshot="block-3pt-kingv2.05-modular.html";
+const snapshot="block-3pt-kingv2.06-modular.html";
 const requiredFiles=[
   entry,
   legacyEntry,
@@ -71,6 +71,7 @@ const requiredFiles=[
   "src/ui/pause.js",
   "src/ui/icons.js",
   "src/ui/result-copy.js",
+  "assets/aiba-brand/aiba-percent-battle-logo-v2.png",
   "docs/ARCHITECTURE.md",
   "docs/MODULAR_REFACTOR_PLAN.md",
   "assets/aiba-faces/curry-smile-pixel-128.png",
@@ -106,7 +107,7 @@ if(!entryHtml.includes('<script src="src/rendering/core.js?v=refactor16"></scrip
 for(const file of ["core/error-boundary","core/foundation","data/dialogue","core/state","services/audio-cues","ui/result-copy"]){
   if(!entryHtml.includes(`<script src="src/${file}.js?v=refactor39"></script>`))fail(`next shell module missing ${file}`);
 }
-if(!entryHtml.includes('<script src="src/data/game-config.js?v=refactor40d"></script>'))fail("next game config cache version missing");
+if(!entryHtml.includes('<script src="src/data/game-config.js?v=refactor40e"></script>'))fail("next game config cache version missing");
 
 if(entryHtml.indexOf('src/core/runtime.js')>entryHtml.indexOf('src/config.js'))fail("next runtime must load before config");
 if(entryHtml.indexOf('<script src="src/rendering/core.js?v=refactor16"></script>')>entryHtml.indexOf('<script src="src/core/scene-init.js?v=refactor38"></script>'))fail("rendering core must load before scene construction");
@@ -116,7 +117,7 @@ if(!entryHtml.includes('<script src="src/modes/contest.js?v=refactor5c"></script
 if(!entryHtml.includes('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("next practice module missing");
 if(!entryHtml.includes('<script src="src/ui/panels.js?v=refactor7"></script>'))fail("next panels module missing");
 if(!entryHtml.includes('<script src="src/ui/loading.js?v=refactor7"></script>'))fail("next loading module missing");
-if(!entryHtml.includes('<script src="src/ui/menu.js?v=cutover5"></script>'))fail("next menu module missing");
+if(!entryHtml.includes('<script src="src/ui/menu.js?v=cutover6"></script>'))fail("next menu module missing");
 if(!entryHtml.includes('<script src="src/ui/setup.js?v=refactor13"></script>'))fail("next setup module missing");
 if(!entryHtml.includes('<script src="src/ui/pregame.js?v=refactor15c"></script>'))fail("next pregame module missing");
 if(!entryHtml.includes('<script src="src/ui/pause.js?v=1.98"></script>'))fail("next pause module missing");
@@ -142,8 +143,8 @@ for(const token of ["const GAME_VERSION=","const G={","function triggerMakeRunVo
   if(entryHtml.includes(token))fail("next entry still contains inline shell ownership "+token);
 }
 if(entryHtml.includes("/* Renderer, camera, adaptive quality and base lights are owned"))fail("next entry still contains generated ownership placeholders");
-if(entryHtml.indexOf('src/core/foundation.js?v=refactor39')>entryHtml.indexOf('src/data/game-config.js?v=refactor40d'))fail("foundation must load before game config");
-if(entryHtml.indexOf('src/data/game-config.js?v=refactor40d')>entryHtml.indexOf('src/core/state.js?v=refactor39'))fail("game config must load before runtime state");
+if(entryHtml.indexOf('src/core/foundation.js?v=refactor39')>entryHtml.indexOf('src/data/game-config.js?v=refactor40e'))fail("foundation must load before game config");
+if(entryHtml.indexOf('src/data/game-config.js?v=refactor40e')>entryHtml.indexOf('src/core/state.js?v=refactor39'))fail("game config must load before runtime state");
 if(entryHtml.indexOf('src/core/state.js?v=refactor39')>entryHtml.indexOf('src/services/audio-cues.js?v=refactor39'))fail("runtime state must load before audio cues");
 if(entryHtml.indexOf('src/services/audio-cues.js?v=refactor39')>entryHtml.indexOf('src/audio.js?v=1.89'))fail("audio cues must load before audio engine");
 if(entryHtml.indexOf('<script src="src/core/legacy-adapter.js?v=cutover1"></script>')>entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5b"></script>'))fail("legacy adapter must load before Rack Rush module");
@@ -151,8 +152,8 @@ if(entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5b"></script
 if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5c"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("contest module must load before late hooks");
 if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5c"></script>')>entryHtml.indexOf('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("contest module must load before practice module");
 if(entryHtml.indexOf('<script src="src/ui/panels.js?v=refactor7"></script>')>entryHtml.indexOf('<script src="src/ui/loading.js?v=refactor7"></script>'))fail("panels must load before loading module");
-if(entryHtml.indexOf('<script src="src/ui/loading.js?v=refactor7"></script>')>entryHtml.indexOf('<script src="src/ui/menu.js?v=cutover5"></script>'))fail("loading must load before menu module");
-if(entryHtml.indexOf('<script src="src/ui/menu.js?v=cutover5"></script>')>entryHtml.indexOf('<script src="src/ui/setup.js?v=refactor13"></script>'))fail("menu must load before setup module");
+if(entryHtml.indexOf('<script src="src/ui/loading.js?v=refactor7"></script>')>entryHtml.indexOf('<script src="src/ui/menu.js?v=cutover6"></script>'))fail("loading must load before menu module");
+if(entryHtml.indexOf('<script src="src/ui/menu.js?v=cutover6"></script>')>entryHtml.indexOf('<script src="src/ui/setup.js?v=refactor13"></script>'))fail("menu must load before setup module");
 if(entryHtml.indexOf('<script src="src/ui/setup.js?v=refactor13"></script>')>entryHtml.indexOf('<script src="src/ui/pregame.js?v=refactor15c"></script>'))fail("setup must load before pregame module");
 if(entryHtml.indexOf('<script src="src/ui/pregame.js?v=refactor15c"></script>')>entryHtml.indexOf('<script src="src/ui/pause.js?v=1.98"></script>'))fail("pregame must load before pause module");
 if(entryHtml.indexOf('<script src="src/ui/pause.js?v=1.98"></script>')>entryHtml.indexOf('<script src="src/core/bootstrap-next.js?v=cutover1"></script>'))fail("pause module must load before bootstrap");
@@ -164,16 +165,25 @@ for(const pair of [["state","spots"],["spots","opponent"],["opponent","results"]
 }
 if(entryHtml.indexOf('<script src="src/modes/percent-battle/index.js?v=refactor4"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Percent Battle module must load before late hooks");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v2.05 MODULAR","MODULAR / v2.05"])
+for(const token of ["v2.06 MODULAR","MODULAR / v2.06"])
   if(!entryHtml.includes(token))fail("visible version token missing "+token);
-if(!read("src/data/game-config.js").includes('const GAME_VERSION="v2.05";'))fail("GAME_VERSION must be v2.05");
-if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=2.12">'))fail("stylesheet link missing");
+if(!read("src/data/game-config.js").includes('const GAME_VERSION="v2.06";'))fail("GAME_VERSION must be v2.06");
+if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=2.13">'))fail("stylesheet link missing");
 const menuScript=read("src/ui/menu.js");
 const nbaDnaScript=read("src/nba-dna/NBADNA.js");
 const homeMenuSource=menuScript.slice(menuScript.indexOf("function showMenu"),menuScript.indexOf("function showModeInfo"));
 if(homeMenuSource.includes("CYBER COURT")||read("styles.css").includes(".coverKicker"))fail("legacy CYBER COURT kicker must stay removed");
 if(!homeMenuSource.includes("对着空气时出手，对着篮筐时杀手"))fail("new home slogan missing");
 if(!read("src/i18n.js").includes('"对着空气时出手,对着篮筐时杀手":"Shoot at the air. Kill at the rim."'))fail("new home slogan translation missing");
+if(!homeMenuSource.includes('<img class="coverTitleLogo" src="assets/aiba-brand/aiba-percent-battle-logo-v2.png"'))fail("home title logo missing");
+if(homeMenuSource.includes("global.coverQuote()")||homeMenuSource.includes('class="coverQuote"'))fail("home quote must stay removed");
+if(homeMenuSource.includes('class="coverTitle"'))fail("legacy text home title must stay removed");
+const homeStyles=read("styles.css");
+if(!homeStyles.includes(".coverTitleLogo{"))fail("home title logo styles missing");
+if(homeStyles.includes(".coverTitle{")||homeStyles.includes(".coverQuote{"))fail("legacy home title or quote styles must stay removed");
+if(!read("src/ui/result-copy.js").includes('class="scoreQuote"')||!homeStyles.includes(".scoreQuote{"))fail("result-page quote module must stay available");
+const titleLogo=fs.readFileSync(path.join(root,"assets/aiba-brand/aiba-percent-battle-logo-v2.png"));
+if(titleLogo.length<10000||titleLogo.subarray(0,8).toString("hex")!=="89504e470d0a1a0a")fail("home title logo must be a valid PNG asset");
 if(/quickMode dna|NBA DNA|showModeInfo\('nbadna'\)/.test(homeMenuSource))fail("NBA DNA entry must stay hidden from home");
 if(!homeMenuSource.includes("grid")&&!read("styles.css").includes(".quickModes{display:grid;grid-template-columns:repeat(2"))fail("home quick modes should use two columns");
 for(const token of ["const NBA_DNA_ENABLED=false","if(!NBA_DNA_ENABLED)","return false"])

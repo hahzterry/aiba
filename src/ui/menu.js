@@ -12,15 +12,14 @@
       if(typeof global.playSFX==="function")global.playSFX("ui_mode_whoosh_01",.42);
     }
     const cover=global.BOOT_GATE_ACTIVE&&global.BOOT_COVER?global.BOOT_COVER:COVER_STARS[(Math.random()*COVER_STARS.length)|0];
-    const quote=global.coverQuote();
     const coverVideo=cover.coverVideo?`<video class="coverVideo" muted loop playsinline preload="none" data-src="${cover.coverVideo}" aria-hidden="true" tabindex="-1"></video>`:"";
     global.showCoverPanel(`
       <div class="coverHero" style="background-image:url('${cover.cover}')">
         ${coverVideo}
         <div class="coverMenu"><div>
-          <div class="coverTitle">aiBA<br><b>百分大战</b></div>
+          <img class="coverTitleLogo" src="assets/aiba-brand/aiba-percent-battle-logo-v2.png" width="1024" height="472" alt="aiBA Percent Battle">
           <div class="coverSub">对着空气时出手，对着篮筐时杀手</div>
-          <blockquote class="coverQuote"><span>${quote.line}</span><cite>${quote.by}</cite></blockquote>${global.AIBAProfileBarMarkup?global.AIBAProfileBarMarkup():""}
+          ${global.AIBAProfileBarMarkup?global.AIBAProfileBarMarkup():""}
           <div class="coverActions schemeA">
             <div class="modeTile rush featured">
               <div class="modeCopy"><div class="modeEyebrow">街机闯关</div><div class="modeName">投篮机挑战</div><div class="modeDesc">连续供球，逐关达标，冲击最高总分。</div></div>
