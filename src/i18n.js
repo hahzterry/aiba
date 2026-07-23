@@ -60,7 +60,7 @@ const DICT={
 "今日榜":"Today",
 "总榜":"All-time",
 "全球榜":"Global",
-"霓虹球场,街机快攻。冲到 100,或者刷出最高分。":"Neon court, arcade pace. Race to 100 or chase the high score.",
+"对着空气时出手,对着篮筐时杀手":"Shoot at the air. Kill at the rim.",
 "统治力不是吼出来的,是每次对抗都赢下来。":"Dominance isn't shouted — it's earned in every matchup.",
 /* ---- 难度页 ---- */
 "选择难度":"Choose difficulty",

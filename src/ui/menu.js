@@ -18,9 +18,8 @@
       <div class="coverHero" style="background-image:url('${cover.cover}')">
         ${coverVideo}
         <div class="coverMenu"><div>
-          <div class="coverKicker">CYBER COURT</div>
           <div class="coverTitle">aiBA<br><b>百分大战</b></div>
-          <div class="coverSub">霓虹球场，街机快攻。冲到 100，或者刷出最高分。</div>
+          <div class="coverSub">对着空气时出手，对着篮筐时杀手</div>
           <blockquote class="coverQuote"><span>${quote.line}</span><cite>${quote.by}</cite></blockquote>${global.AIBAProfileBarMarkup?global.AIBAProfileBarMarkup():""}
           <div class="coverActions schemeA">
             <div class="modeTile rush featured">
