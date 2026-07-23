@@ -1,5 +1,6 @@
 /* shooting pose driven by charge phase: 下蹲→举球(屈肘)→起跳伸展→顶点出手=完美 */
 let poseK=0,landT=0;
+const SHOT_STANCE_YAW=Math.PI/9;
 function ease01(t){
   t=clamp(t,0,1);
   return t*t*(3-2*t);
@@ -54,6 +55,20 @@ function poseGuy(o,c,lk){
   o.g.rotation.x=0.12*load - 0.06*c.over - 0.03*c.jmp + 0.08*land;
   const footY=(poseFootBottomY(hipLead,kneeLead,ankleLead)+poseFootBottomY(hipTrail,kneeTrail,ankleTrail))*0.5;
   return POSE_STAND_FOOT_Y-footY;
+}
+function shotStanceBlend(c,ready){
+  return clamp(Math.max(ready?0.72:0,c.dip*.55+c.lift*.85+c.jmp*.35),0,1);
+}
+function tuneGuideHandPose(o,c,ready){
+  if(!o||!o.arms||!o.elbows)return;
+  const k=shotStanceBlend(c,ready);
+  const guide=o.arms[1],guideEl=o.elbows[1];
+  if(!guide||!guideEl)return;
+  guide.rotation.x=-0.48-0.24*c.dip-1.42*c.lift-0.58*c.jmp+0.38*c.over;
+  guide.rotation.y=0.08*k;
+  guide.rotation.z=-0.18-0.34*c.lift;
+  guideEl.rotation.x=-(0.62+0.96*c.lift)*(1-c.jmp*.62)-0.18*c.over;
+  guideEl.rotation.z=-0.2*k;
 }
 function poseBallPos(v,c){
   v.set(-0.13+0.04*c.jmp,
@@ -172,8 +187,7 @@ function updWalk(dt){
 
 
 window.AIBA.runtime.register("rendering:motion",Object.freeze({
-  ease01,shotCurves,poseFootBottomY,poseGuy,poseBallPos,updPose,
+  ease01,shotCurves,poseFootBottomY,poseGuy,poseBallPos,shotStanceBlend,tuneGuideHandPose,updPose,
   startPass,updPass,walkTo,updWalk,
   getState:()=>({poseK,landT,passing,walk})
 }));
-

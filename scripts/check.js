@@ -111,7 +111,7 @@ if(entryHtml.indexOf('src/core/runtime.js')>entryHtml.indexOf('src/config.js'))f
 if(entryHtml.indexOf('<script src="src/rendering/core.js?v=refactor16"></script>')>entryHtml.indexOf('<script src="src/core/scene-init.js?v=refactor38"></script>'))fail("rendering core must load before scene construction");
 if(!entryHtml.includes('<script src="src/core/legacy-adapter.js?v=cutover1"></script>'))fail("next legacy adapter missing");
 if(!entryHtml.includes('<script src="src/modes/rack-rush.js?v=refactor5a"></script>'))fail("next Rack Rush module missing");
-if(!entryHtml.includes('<script src="src/modes/contest.js?v=refactor5a"></script>'))fail("next contest module missing");
+if(!entryHtml.includes('<script src="src/modes/contest.js?v=refactor5b"></script>'))fail("next contest module missing");
 if(!entryHtml.includes('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("next practice module missing");
 if(!entryHtml.includes('<script src="src/ui/panels.js?v=refactor7"></script>'))fail("next panels module missing");
 if(!entryHtml.includes('<script src="src/ui/loading.js?v=refactor7"></script>'))fail("next loading module missing");
@@ -147,8 +147,8 @@ if(entryHtml.indexOf('src/core/state.js?v=refactor39')>entryHtml.indexOf('src/se
 if(entryHtml.indexOf('src/services/audio-cues.js?v=refactor39')>entryHtml.indexOf('src/audio.js?v=1.89'))fail("audio cues must load before audio engine");
 if(entryHtml.indexOf('<script src="src/core/legacy-adapter.js?v=cutover1"></script>')>entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5a"></script>'))fail("legacy adapter must load before Rack Rush module");
 if(entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5a"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Rack Rush module must load before late hooks");
-if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5a"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("contest module must load before late hooks");
-if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5a"></script>')>entryHtml.indexOf('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("contest module must load before practice module");
+if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5b"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("contest module must load before late hooks");
+if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5b"></script>')>entryHtml.indexOf('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("contest module must load before practice module");
 if(entryHtml.indexOf('<script src="src/ui/panels.js?v=refactor7"></script>')>entryHtml.indexOf('<script src="src/ui/loading.js?v=refactor7"></script>'))fail("panels must load before loading module");
 if(entryHtml.indexOf('<script src="src/ui/loading.js?v=refactor7"></script>')>entryHtml.indexOf('<script src="src/ui/menu.js?v=cutover3"></script>'))fail("loading must load before menu module");
 if(entryHtml.indexOf('<script src="src/ui/menu.js?v=cutover3"></script>')>entryHtml.indexOf('<script src="src/ui/setup.js?v=refactor13"></script>'))fail("menu must load before setup module");
@@ -157,7 +157,7 @@ if(entryHtml.indexOf('<script src="src/ui/pregame.js?v=refactor15b"></script>')>
 if(entryHtml.indexOf('<script src="src/ui/pause.js?v=1.98"></script>')>entryHtml.indexOf('<script src="src/core/bootstrap-next.js?v=cutover1"></script>'))fail("pause module must load before bootstrap");
 if(!entryHtml.includes('<script src="src/navigation.js?v=1.98"></script>'))fail("next navigation cache version missing");
 if(entryHtml.indexOf('<script src="src/core/bootstrap-next.js?v=refactor12"></script>')>entryHtml.indexOf('<script src="src/navigation.js?v=1.98"></script>'))fail("boot must begin before navigation rewires the loading gate");
-if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5a"></script>')>entryHtml.indexOf('<script src="src/modes/percent-battle/state.js?v=refactor4a"></script>'))fail("contest module must load before Percent Battle modules");
+if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5b"></script>')>entryHtml.indexOf('<script src="src/modes/percent-battle/state.js?v=refactor4a"></script>'))fail("contest module must load before Percent Battle modules");
 for(const pair of [["state","spots"],["spots","opponent"],["opponent","results"],["results","index"]]){
   if(entryHtml.indexOf(`src/modes/percent-battle/${pair[0]}.js`)>entryHtml.indexOf(`src/modes/percent-battle/${pair[1]}.js`))fail(`Percent Battle ${pair[0]} must load before ${pair[1]}`);
 }
@@ -191,7 +191,7 @@ if(!entryHtml.includes('<script src="src/shot-physics.js?v=1.99"></script>'))fai
 if(!entryHtml.includes('<script src="src/result-stats.js?v=1.78"></script>'))fail("result stats script missing");
 if(!entryHtml.includes('<script src="src/gear.js?v=1.82"></script>'))fail("gear script missing");
 if(!entryHtml.includes('<script src="src/avatar-customizer.js?v=1.79"></script>'))fail("avatar customizer script missing");
-if(!entryHtml.includes('<script src="src/shot-motion.js?v=1.99"></script>'))fail("shot motion script missing");
+if(!entryHtml.includes('<script src="src/shot-motion.js?v=2.00"></script>'))fail("shot motion script missing");
 if(!entryHtml.includes('<script src="src/roster-style.js?v=1.79"></script>'))fail("roster style script missing");
 if(!entryHtml.includes('<script src="src/hero-moments.js?v=1.79"></script>'))fail("hero moments script missing");
 if(!entryHtml.includes('<script src="src/hot-hand.js?v=1.81"></script>'))fail("hot hand script missing");
@@ -363,7 +363,7 @@ try{new Function(iconScript);new Function(i18nScript);}
 catch(e){fail("icon/i18n script syntax error: "+e.message);}
 for(const key of ["AIBASetIcon","volume-x","book-open","MutationObserver"])
   if(!iconScript.includes(key))fail("local SVG icon token missing "+key);
-for(const key of ["Broadcast cam","Cam \"+m[1]","Replay onboarding","Turn sound on"])
+for(const key of ["Broadcast cam","Cam \"+m[1]","Replay onboarding","Turn sound on","Rack \"+m[1]","YOUR TURN","All-money rack:"])
   if(!i18nScript.includes(key))fail("dynamic English translation missing "+key);
 for(const key of ["returnToPause","AIBAOnboard.help('settings')","syncButton"])
   if(!perfSettingsScript.includes(key))fail("settings/help integration missing "+key);
@@ -551,7 +551,9 @@ for(const token of ['runtime.register("rendering:camera"',"const P=","const CAM=
 const renderingMotion=read("src/rendering/motion.js");
 for(const token of ['runtime.register("rendering:motion"',"function shotCurves","function poseGuy","function updPose","function startPass","function updWalk"])
   if(!renderingMotion.includes(token))fail("rendering motion token missing "+token);
-for(const token of ['src/rendering/props.js?v=refactor23','src/rendering/characters.js?v=refactor24','src/rendering/camera.js?v=refactor25a','src/rendering/motion.js?v=refactor26'])
+for(const token of ["SHOT_STANCE_YAW","function shotStanceBlend","function tuneGuideHandPose"])
+  if(!renderingMotion.includes(token))fail("shared shot pose token missing "+token);
+for(const token of ['src/rendering/props.js?v=refactor23','src/rendering/characters.js?v=refactor24','src/rendering/camera.js?v=refactor25a','src/rendering/motion.js?v=refactor26a'])
   if(!entryHtml.includes(token))fail("next entry missing gameplay rendering module "+token);
 for(const token of ["function buildRacks(","function voxelGuy(","function autoFrameCam(","function shotCurves(","function updWalk("])
   if(entryHtml.includes(token))fail("next entry still contains inline gameplay rendering "+token);
@@ -561,13 +563,15 @@ for(const token of ['runtime.register("rendering:effects"',"function emitFire","
 const presentationCinematics=read("src/presentation/cinematics.js");
 for(const token of ['runtime.register("presentation:cinematics"',"function startHero","function startAIShow","function battleCutaway","function startVictoryCine"])
   if(!presentationCinematics.includes(token))fail("presentation cinematics token missing "+token);
+for(const token of ["function attachShowBall","getWorldPosition(_showReleasePos)","function setAIShowActors","tuneGuideHandPose(g,c,true)"])
+  if(!presentationCinematics.includes(token))fail("contest opponent presentation fix missing "+token);
 const presentationPregame=read("src/presentation/pregame.js");
 for(const token of ['runtime.register("presentation:pregame"',"const PREGAME=","function startPreGameShow","function updPreGameShow"])
   if(!presentationPregame.includes(token))fail("presentation pregame token missing "+token);
 const presentationBattle=read("src/presentation/battle.js");
 for(const token of ['runtime.register("presentation:battle"',"function updBattleCut","function checkBattleOvertake","function battleScoreCallout"])
   if(!presentationBattle.includes(token))fail("presentation battle token missing "+token);
-for(const token of ['src/rendering/effects.js?v=refactor27','src/presentation/cinematics.js?v=refactor28a','src/presentation/pregame.js?v=refactor29','src/presentation/battle.js?v=refactor30'])
+for(const token of ['src/rendering/effects.js?v=refactor27','src/presentation/cinematics.js?v=refactor28b','src/presentation/pregame.js?v=refactor29','src/presentation/battle.js?v=refactor30'])
   if(!entryHtml.includes(token))fail("next entry missing presentation module "+token);
 for(const token of ["function startHero(","function startAIShow(","function startVictoryCine(","function startPreGameShow(","function battleScoreCallout(","function startConfetti("])
   if(entryHtml.includes(token))fail("next entry still contains inline presentation "+token);
@@ -586,6 +590,7 @@ for(const token of ['runtime.register("ui:battle-controls"',"function buildSpotD
 for(const source of [battleControls]){
   if(!source.includes("training?15:10")||!source.includes("training?68:70")||!source.includes("training?92:90"))fail("training player-side sweet zone display missing");
 }
+if(!battleControls.includes("function avoidPowerHudOverlap"))fail("power meter HUD overlap guard missing");
 const winCinematic=read("src/presentation/win-cinematic.js");
 for(const token of ['runtime.register("presentation:win-cinematic"',"const winCine=","function startWinCine","function updWinCine"])
   if(!winCinematic.includes(token))fail("winning cinematic token missing "+token);
@@ -596,7 +601,7 @@ for(const token of ['runtime.register("core:game-loop"',"function animate","wind
   if(!coreLoop.includes(token))fail("core game-loop token missing "+token);
 for(const token of ['runtime.register("core:scene-init"',"buildCourt();","buildCharacters();","applyScenePreset(currentScenePreset"])
   if(!sceneInit.includes(token))fail("scene init token missing "+token);
-for(const token of ['src/gameplay/shots.js?v=refactor31','src/presentation/replay.js?v=refactor32a','src/ui/battle-controls.js?v=refactor33a','src/gameplay/collisions.js?v=refactor34','src/presentation/win-cinematic.js?v=refactor35a','src/core/input.js?v=cutover2','src/core/game-loop.js?v=refactor37','src/core/scene-init.js?v=refactor38'])
+for(const token of ['src/gameplay/shots.js?v=refactor31','src/presentation/replay.js?v=refactor32a','src/ui/battle-controls.js?v=refactor33b','src/gameplay/collisions.js?v=refactor34','src/presentation/win-cinematic.js?v=refactor35a','src/core/input.js?v=cutover2','src/core/game-loop.js?v=refactor37','src/core/scene-init.js?v=refactor38'])
   if(!entryHtml.includes(token))fail("next entry missing runtime-core module "+token);
 for(const token of ["function startCharge(","function updBalls(","function startReplay(","function buildSpotDots(","function ballCollide(","function startWinCine(","function onDown(","function animate(","buildCourt();"])
   if(entryHtml.includes(token))fail("next entry still contains inline runtime core "+token);

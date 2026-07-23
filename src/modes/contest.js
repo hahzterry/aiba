@@ -37,6 +37,7 @@
     if(who==="YOU")preMyTurn();else startAIShow(who,nextTurn);
   }
   function preMyTurn(){
+    benchSetup();
     const target=G.posted.length?G.posted.reduce((a,b)=>a.score>b.score?a:b):null;
     let html=`<h1 class="title" style="font-size:20px">🎯 轮到你出手</h1>`;
     if(target){
@@ -53,6 +54,7 @@
     if(G.stage==="semi")showBracket();else finalResult(G.finalist.posted);
   }
   function startRound(){
+    benchSetup();
     $("hud").dataset.mode="contest";
     G.moneyRack=(seededRandom()*5)|0;
     resetAudioCueMemory();resetProgressiveSceneForRun();enterArenaAudio(G.stage==="final"?1.03:.9);

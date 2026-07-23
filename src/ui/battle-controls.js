@@ -20,6 +20,20 @@ const _projV=new THREE.Vector3(),_ppWorld=new THREE.Vector3();
 function hidePlayerPowerUI(){
   const el=$("playerPower");if(el)el.style.display="none";
 }
+function avoidPowerHudOverlap(el,x,y,W,H){
+  const rack=$("hudRack");
+  if(!rack||getComputedStyle(rack).display==="none")return{x,y};
+  const rr=rack.getBoundingClientRect(),halfW=39,halfH=62,gap=10;
+  const overlaps=()=>x+halfW>rr.left-gap&&x-halfW<rr.right+gap&&y+halfH>rr.top-gap&&y-halfH<rr.bottom+gap;
+  if(!overlaps())return{x,y};
+  const left=rr.left-gap-halfW,right=rr.right+gap+halfW;
+  const candidates=[];
+  if(left>=halfW)candidates.push(clamp(left,halfW,W-halfW));
+  if(right<=W-halfW)candidates.push(clamp(right,halfW,W-halfW));
+  if(candidates.length)x=candidates.reduce((best,v)=>Math.abs(v-x)<Math.abs(best-x)?v:best,candidates[0]);
+  else y=clamp(rr.top-gap-halfH,halfH,H-halfH);
+  return{x,y};
+}
 function updatePlayerPowerUI(){
   const el=$("playerPower");if(!el)return;
   const fixed=$("powerWrap");if(fixed)fixed.style.display="none";
@@ -35,6 +49,7 @@ function updatePlayerPowerUI(){
   let x=(_projV.x*0.5+0.5)*W,y=(-_projV.y*0.5+0.5)*H;
   x=clamp(x+54,56,W-38);
   y=clamp(y-14,78,H-78);
+  ({x,y}=avoidPowerHudOverlap(el,x,y,W,H));
   el.style.display="block";el.style.left=x+"px";el.style.top=y+"px";
   const fill=el.querySelector("#ppFillClipRect"),sweet=el.querySelector(".ppSweet");
   const power=clamp(G.power,0,100);

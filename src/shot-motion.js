@@ -22,7 +22,6 @@
   const BOUNCE_K=0.42;          // 篮板反弹衰减
   const OVER_ERR=19;            // 过力超过该值 → 高弧绕过篮板上方
   const OVER_TOP={y:4.42,z:-9.05,maxX:1.5};
-  const STANCE_YAW=Math.PI/9; // 约20°:投篮手侧略微斜向篮筐,避免正面对框的僵硬感
 
   let on=true;
   try{on=localStorage.getItem(LS_KEY)!=="off";}catch(e){}
@@ -70,32 +69,15 @@
     const cock=0.35+0.4*lift;                    // 蓄力压腕(掌心朝上兜住球)
     const snap=followT>0?Math.sin((0.28-followT)/0.28*Math.PI)*1.15:0; // 出手甩腕
     const r=fpRig.r,l=fpRig.l;
-    const stance=stanceBlend(c);
+    const stance=shotStanceBlend(c,typeof G!=="undefined"&&(G.canShoot||G.charging));
     r.root.position.set(0.16-0.05*lift,-0.25+0.1*lift+0.05*jmp,-0.1);
     // 辅助手贴到球的侧面,第一人称不再像离球很远的单手投篮。
     l.root.position.set(-0.13+0.125*lift,-0.27+0.12*lift+0.03*jmp,-0.13+0.015*lift);
     r.wrist.rotation.x=cock-snap;
     l.wrist.rotation.x=cock*0.8-snap*0.5;
     l.wrist.rotation.z=0.58-0.2*lift;             // 护球手侧扶球,出手时自然打开
-    r.root.rotation.z=-0.08*lift+STANCE_YAW*0.2*stance;
+    r.root.rotation.z=-0.08*lift+SHOT_STANCE_YAW*0.2*stance;
     l.root.rotation.z=0.18+0.16*lift;
-  }
-
-  function stanceBlend(c){
-    const ready=(typeof G!=="undefined"&&(G.canShoot||G.charging))?.72:0;
-    return clampN(Math.max(ready,c.dip*.55+c.lift*.85+c.jmp*.35),0,1);
-  }
-  function tuneGuideHand(c){
-    if(!player||!player.arms||!player.elbows)return;
-    const k=stanceBlend(c);
-    const guide=player.arms[1],guideEl=player.elbows[1];
-    if(!guide||!guideEl)return;
-    // 原 poseGuy 保留下蹲/起跳;这里仅把辅助手向球侧收拢,像扶住球侧面而非飘在外面。
-    guide.rotation.x=-0.48-0.24*c.dip-1.42*c.lift-0.58*c.jmp+0.38*c.over;
-    guide.rotation.y=0.08*k;
-    guide.rotation.z=-0.18-0.34*c.lift;
-    guideEl.rotation.x=-(0.62+0.96*c.lift)*(1-c.jmp*.62)-0.18*c.over;
-    guideEl.rotation.z=-0.2*k;
   }
 
   /* ================= 第三人称球贴手 ================= */
@@ -143,14 +125,14 @@
     hands.position.x=-0.05*c.lift;
     hands.position.y=-0.5-0.2*c.dip+0.3*c.lift+0.42*c.jmp;
     hands.position.z=-0.62+0.12*c.dip-0.17*c.jmp;
-    const stance=stanceBlend(c);
+    const stance=shotStanceBlend(c,G.canShoot||G.charging);
     hands.rotation.x=-0.25*c.lift-0.85*c.jmp+Math.min(c.over,0.35)*1.1;
-    hands.rotation.y=STANCE_YAW*0.38*stance;
-    hands.rotation.z=-0.07*c.lift+STANCE_YAW*0.18*stance;
+    hands.rotation.y=SHOT_STANCE_YAW*0.38*stance;
+    hands.rotation.z=-0.07*c.lift+SHOT_STANCE_YAW*0.18*stance;
     animFpRig(c,phys);
     // 第三人称
     player.g.position.set(P.pos.x,0,P.pos.z);
-    player.g.rotation.y=P.face+(P.walking?0:STANCE_YAW*stance);
+    player.g.rotation.y=P.face+(P.walking?0:SHOT_STANCE_YAW*stance);
     if(P.walking){
       P.walkT+=dt*9;
       const sw=Math.sin(P.walkT);
@@ -163,7 +145,7 @@
       player.elbows[0].rotation.x=-0.4;player.elbows[1].rotation.x=-0.4;
     }else{
       player.g.position.y=poseGuy(player,c,lk)+P.jump;
-      tuneGuideHand(c);
+      tuneGuideHandPose(player,c,G.canShoot||G.charging);
     }
     // 球挂在投篮手肘组上自动跟手,无需 poseBallPos
     if(!ballAttached)poseBallPos(pBall.position,c);

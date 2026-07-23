@@ -47,11 +47,34 @@ function genAIRun(o){
   return {shots,total};
 }
 const show={on:false,o:null,guy:null,q:[],idx:0,t:0,score:0,total:0,cb:null,c:shotCurves(0)};
+const _showReleasePos=new THREE.Vector3();
+function attachShowBall(g){
+  if(!g||!g.ball||g._showBallAttached)return;
+  g._showBallHome={parent:g.ball.parent,pos:g.ball.position.clone()};
+  g.elbows[0].add(g.ball);
+  g.ball.position.set(0,-0.43,0.12);
+  g._showBallAttached=true;
+}
+function detachShowBall(g){
+  if(!g||!g.ball||!g._showBallAttached||!g._showBallHome)return;
+  g._showBallHome.parent.add(g.ball);
+  g.ball.position.copy(g._showBallHome.pos);
+  g.ball.visible=false;
+  g._showBallAttached=false;
+}
+function setAIShowActors(shooter){
+  hands.visible=false;handBall.visible=false;pBall.visible=false;
+  player.g.visible=false;passer.g.visible=false;
+  rivals.forEach(rv=>{rv.g.visible=!!rv.active;});
+  if(shooter)shooter.g.visible=true;
+}
 function startAIShow(o,cb){
   G.state="aishow";enterArenaAudio(0.86);
   const run=genAIRun(o);
   show.on=true;show.o=o;show.cb=cb;show.total=run.total;show.score=0;show.idx=0;show.t=0;
-  show.guy=rivalFor(o);show.guy.active=true;benchVis();
+  benchSetup();
+  show.guy=rivalFor(o);show.guy.active=true;benchVis();setAIShowActors(show.guy);
+  attachShowBall(show.guy);
   // 完整比赛队列:五架各投五球,两记深远球也真实走位并出手。
   const q=[];
   for(let rk=0;rk<5;rk++){
@@ -94,6 +117,7 @@ function nextShowItem(){
     it.from=show.guy.pos.clone();it.to=to.clone();
     it.dur=clamp(it.from.distanceTo(it.to)/4.6,0.48,1.18);
   }else if(it.type==="shot"){
+    attachShowBall(show.guy);
     show.guy.ball.visible=true;
     show.guy.ball.material=it.s.deep!=null?matDeep:(it.s.money?matGold:matBall);
     const profile=shotProfileFor(show.o),speed=Math.max(.78,Number(profile&&profile.speed)||1);
@@ -126,14 +150,20 @@ function updShow(dt){
     const c=shotCurves(ph);show.c=c;
     const y=poseGuy(g,c,0)+Math.max(0,c.jmp*0.55-c.over*0.55);
     g.g.position.set(g.pos.x,y,g.pos.z);
-    poseBallPos(g.ball.position,c);
+    const stance=shotStanceBlend(c,true);
+    g.g.rotation.y=faceTo(g.pos,HOOP)+SHOT_STANCE_YAW*stance;
+    tuneGuideHandPose(g,c,true);
     if(ph>=1.03&&!it.fired){
-      it.fired=true;g.ball.visible=false;
-      fireSilentBall(g.pos,it.s);
+      it.fired=true;
+      g.g.updateMatrixWorld(true);g.ball.getWorldPosition(_showReleasePos);
+      g.ball.visible=false;
+      fireSilentBall(g.pos,it.s,_showReleasePos);
     }
     if(show.t>=(it.totalDur||1.02)){
       const rest=shotCurves(0);
       g.g.position.set(g.pos.x,poseGuy(g,rest,0),g.pos.z);
+      g.g.rotation.y=faceTo(g.pos,HOOP);
+      tuneGuideHandPose(g,rest,false);
       nextShowItem();
     }
   }else if(it.type==="chip"){
@@ -142,9 +172,9 @@ function updShow(dt){
     if(show.t>=1.55)finishShow();
   }
 }
-function fireSilentBall(base,s){
-  const dirH=HOOP.clone().sub(base);dirH.y=0;const dist=dirH.length();dirH.normalize();
-  const p0=base.clone().addScaledVector(dirH,-0.1);p0.y=2.05;
+function fireSilentBall(base,s,releasePos){
+  const p0=releasePos&&Number.isFinite(releasePos.x)?releasePos.clone():base.clone().setY(2.05);
+  const dirH=HOOP.clone().sub(p0);dirH.y=0;const dist=dirH.length();dirH.normalize();
   const perp=V3(dirH.z,0,-dirH.x);
   let depth,lat;
   if(s.make){depth=rnd(-0.03,0.03);lat=rnd(-0.04,0.04);}
@@ -178,7 +208,7 @@ function finishShow(){
   G.posted.push({o,score:show.total});
   paSay(o.n+","+show.total+"分!",true);
   // 回到替补席
-  benchSetup();benchVis();
+  detachShowBall(show.guy);benchSetup();benchVis();
   __afterShow=show.cb;show.cb=null;
   showPanel(`<h1 class="title" style="font-size:20px">${o.n} 完赛</h1>
     <div style="font-size:44px;color:#ffd23f;text-shadow:3px 3px 0 #000;font-weight:bold;margin:6px 0">${show.total} 分</div>
