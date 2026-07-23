@@ -9,7 +9,7 @@ const childProcess=require("child_process");
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
 const legacyEntry="legacy.html";
-const snapshot="block-3pt-kingv2.02-modular.html";
+const snapshot="block-3pt-kingv2.03-modular.html";
 const requiredFiles=[
   entry,
   legacyEntry,
@@ -99,18 +99,18 @@ if(legacyHtml.includes('location.replace("legacy.html"'))fail("legacy entry must
 if(!entryHtml.includes("data-aiba-early-errors"))fail("next early error diagnostics missing");
 if(!entryHtml.includes('<script src="src/core/runtime.js?v=refactor7"></script>'))fail("next runtime bridge missing");
 if(entryHtml.includes("player-id-sandbox")||entryHtml.includes("leaderboard-sandbox"))fail("entry must not load sandbox identity/leaderboard");
-if(!entryHtml.includes('<script src="src/recorder.js?v=refactor9"></script>'))fail("next recorder cache version missing");
+if(!entryHtml.includes('<script src="src/recorder.js?v=refactor10"></script>'))fail("next recorder cache version missing");
 if(!entryHtml.includes('<script src="src/vision.js?v=2.01"></script>'))fail("next vision cache version missing");
 if(!entryHtml.includes('<script src="src/rendering/core.js?v=refactor16"></script>'))fail("next rendering core missing");
 for(const file of ["core/error-boundary","core/foundation","data/dialogue","core/state","services/audio-cues","ui/result-copy"]){
   if(!entryHtml.includes(`<script src="src/${file}.js?v=refactor39"></script>`))fail(`next shell module missing ${file}`);
 }
-if(!entryHtml.includes('<script src="src/data/game-config.js?v=refactor40a"></script>'))fail("next game config cache version missing");
+if(!entryHtml.includes('<script src="src/data/game-config.js?v=refactor40b"></script>'))fail("next game config cache version missing");
 
 if(entryHtml.indexOf('src/core/runtime.js')>entryHtml.indexOf('src/config.js'))fail("next runtime must load before config");
 if(entryHtml.indexOf('<script src="src/rendering/core.js?v=refactor16"></script>')>entryHtml.indexOf('<script src="src/core/scene-init.js?v=refactor38"></script>'))fail("rendering core must load before scene construction");
 if(!entryHtml.includes('<script src="src/core/legacy-adapter.js?v=cutover1"></script>'))fail("next legacy adapter missing");
-if(!entryHtml.includes('<script src="src/modes/rack-rush.js?v=refactor5a"></script>'))fail("next Rack Rush module missing");
+if(!entryHtml.includes('<script src="src/modes/rack-rush.js?v=refactor5b"></script>'))fail("next Rack Rush module missing");
 if(!entryHtml.includes('<script src="src/modes/contest.js?v=refactor5c"></script>'))fail("next contest module missing");
 if(!entryHtml.includes('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("next practice module missing");
 if(!entryHtml.includes('<script src="src/ui/panels.js?v=refactor7"></script>'))fail("next panels module missing");
@@ -141,12 +141,12 @@ for(const token of ["const GAME_VERSION=","const G={","function triggerMakeRunVo
   if(entryHtml.includes(token))fail("next entry still contains inline shell ownership "+token);
 }
 if(entryHtml.includes("/* Renderer, camera, adaptive quality and base lights are owned"))fail("next entry still contains generated ownership placeholders");
-if(entryHtml.indexOf('src/core/foundation.js?v=refactor39')>entryHtml.indexOf('src/data/game-config.js?v=refactor40a'))fail("foundation must load before game config");
-if(entryHtml.indexOf('src/data/game-config.js?v=refactor40a')>entryHtml.indexOf('src/core/state.js?v=refactor39'))fail("game config must load before runtime state");
+if(entryHtml.indexOf('src/core/foundation.js?v=refactor39')>entryHtml.indexOf('src/data/game-config.js?v=refactor40b'))fail("foundation must load before game config");
+if(entryHtml.indexOf('src/data/game-config.js?v=refactor40b')>entryHtml.indexOf('src/core/state.js?v=refactor39'))fail("game config must load before runtime state");
 if(entryHtml.indexOf('src/core/state.js?v=refactor39')>entryHtml.indexOf('src/services/audio-cues.js?v=refactor39'))fail("runtime state must load before audio cues");
 if(entryHtml.indexOf('src/services/audio-cues.js?v=refactor39')>entryHtml.indexOf('src/audio.js?v=1.89'))fail("audio cues must load before audio engine");
-if(entryHtml.indexOf('<script src="src/core/legacy-adapter.js?v=cutover1"></script>')>entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5a"></script>'))fail("legacy adapter must load before Rack Rush module");
-if(entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5a"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Rack Rush module must load before late hooks");
+if(entryHtml.indexOf('<script src="src/core/legacy-adapter.js?v=cutover1"></script>')>entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5b"></script>'))fail("legacy adapter must load before Rack Rush module");
+if(entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5b"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Rack Rush module must load before late hooks");
 if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5c"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("contest module must load before late hooks");
 if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5c"></script>')>entryHtml.indexOf('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("contest module must load before practice module");
 if(entryHtml.indexOf('<script src="src/ui/panels.js?v=refactor7"></script>')>entryHtml.indexOf('<script src="src/ui/loading.js?v=refactor7"></script>'))fail("panels must load before loading module");
@@ -163,9 +163,9 @@ for(const pair of [["state","spots"],["spots","opponent"],["opponent","results"]
 }
 if(entryHtml.indexOf('<script src="src/modes/percent-battle/index.js?v=refactor4"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Percent Battle module must load before late hooks");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v2.02 MODULAR","MODULAR / v2.02"])
+for(const token of ["v2.03 MODULAR","MODULAR / v2.03"])
   if(!entryHtml.includes(token))fail("visible version token missing "+token);
-if(!read("src/data/game-config.js").includes('const GAME_VERSION="v2.02";'))fail("GAME_VERSION must be v2.02");
+if(!read("src/data/game-config.js").includes('const GAME_VERSION="v2.03";'))fail("GAME_VERSION must be v2.03");
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=2.10">'))fail("stylesheet link missing");
 const menuScript=read("src/ui/menu.js");
 const nbaDnaScript=read("src/nba-dna/NBADNA.js");
@@ -217,6 +217,7 @@ for(const rel of ["src/modes/practice.js","src/modes/rack-rush.js","src/modes/pe
 for(const token of ['dataset.flowerCount="0"','dataset.environmentPhase=progress<.25?"golden"'])
   if(!read("src/rendering/environments.js").includes(token))fail("progressive scene initialization missing "+token);
 if(!read("src/modes/rack-rush.js").includes("rush.total>=88"))fail("rack rush recorder arming missing");
+if(!read("src/modes/rack-rush.js").includes("AIBARecorder.discard()"))fail("rack rush cleared rounds must discard their recording");
 if(!read("src/core/game-loop.js").includes("G.timer<=12&&window.AIBARecorder"))fail("timer recorder arming missing");
 if(!read("src/modes/percent-battle/opponent.js").includes(">=85&&global.AIBARecorder"))fail("battle recorder arming missing");
 
@@ -307,6 +308,8 @@ for(const token of ["MOBILE?540:720","MOBILE?15:24","MOBILE?1800000:3600000"])
   if(!recorderScript.includes(token))fail("recorder mobile profile missing "+token);
 for(const token of ["MAX_CLIP_MS=18000","MIN_RESULT_MS=4800","rankUpdated","最后三球已捕捉"])
   if(!recorderScript.includes(token))fail("recorder highlight window missing "+token);
+for(const token of ["function discard()","URL.revokeObjectURL(state.lastUrl)","hasClip:!!state.lastBlob","discard,resultMarkup"])
+  if(!recorderScript.includes(token))fail("recorder round discard missing "+token);
 for(const token of ["function drawContain","AIBAVisionFrame","portrait?(MOBILE?142:170)"])
   if(!recorderScript.includes(token))fail("portrait recorder pip missing "+token);
 const firstMp4=recorderScript.indexOf("video/mp4"),firstWebm=recorderScript.indexOf("video/webm");

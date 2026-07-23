@@ -312,6 +312,13 @@
     updateStatus("精彩录制已取消");
     return true;
   }
+  function discard(){
+    cancel();
+    if(state.lastUrl){try{URL.revokeObjectURL(state.lastUrl);}catch(e){}}
+    state.lastBlob=null;state.lastUrl="";state.lastLabel="精彩时刻";
+    updateStatus(statusText());
+    return true;
+  }
   function finalizeClip(){
     if(!state.capturing&&!state.rec)return;
     state.capturing=false;state.armed=false;
@@ -345,5 +352,5 @@
     if(!supported())return "";
     return `<div class="clipExport"><button id="clipSaveBtn" class="btn sm" onclick="AIBARecorder.save()">🎞 保存MP4视频</button><small id="clipStatus">${wantsMp4()?statusText():"当前浏览器不支持MP4录制,将降级WebM"}</small></div>`;
   }
-  global.AIBARecorder=Object.freeze({tick,arm,mark,result,rankUpdated,save,cancel,resultMarkup,statusText,supported,capturing:()=>state.capturing,debug:()=>({capturing:state.capturing,armed:state.armed,startedAt:state.startedAt,stopAt:state.stopAt})});
+  global.AIBARecorder=Object.freeze({tick,arm,mark,result,rankUpdated,save,cancel,discard,resultMarkup,statusText,supported,capturing:()=>state.capturing,debug:()=>({capturing:state.capturing,armed:state.armed,hasClip:!!state.lastBlob,chunkCount:state.chunks.length,startedAt:state.startedAt,stopAt:state.stopAt})});
 })(window);

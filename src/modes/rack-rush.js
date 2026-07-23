@@ -183,6 +183,7 @@
     rush.levels.push({level:rush.level+1,name:cfg.name,score:rush.levelScore,target,attempts:rush.levelAttempts,makes:rush.levelMakes,passed});
     if(cfg.final){rush.completed=true;startConfetti();cheerSound(true);setTimeout(()=>finishRackRushRun(true),1100);return;}
     if(!passed){broadcastSting("danger");setTimeout(()=>finishRackRushRun(false),900);return;}
+    if(global.AIBARecorder&&AIBARecorder.discard)AIBARecorder.discard();
     const el=$("countN");el.innerHTML=`<span style="font-size:38px;text-align:center;line-height:1.35;color:#7CFC6B">CLEAR<br><small style="font-size:15px;color:#fff">${rush.levelScore} / ${target} · 总分 ${rush.total}</small></span>`;
     el.style.display="flex";cheerSound(true);setTimeout(()=>{el.style.display="none";startRackRushLevel(rush.level+1);},1450);
   }
