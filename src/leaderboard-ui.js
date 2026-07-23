@@ -81,14 +81,13 @@
     return `<div class="leaderboardDock" aria-label="排行榜入口">
       <button type="button" onclick="showLeaderboardHub('today')"><small>TODAY</small><b>今日榜</b></button>
       <button type="button" onclick="showLeaderboardHub('all')"><small>GLOBAL</small><b>总榜</b></button>
-      <button type="button" onclick="copyAIBAChallenge('speed100')"><small>LINK</small><b>好友挑战</b></button>
     </div>`;
   }
   function modeMarkup(mode){
     const focus=mode==="battle"?"battle":(mode==="rackrush"?"rackrush":(mode==="contest"?"contest":""));
     if(!focus)return "";
     return `<nav class="modeUtilityBar" aria-label="模式辅助入口">
-      <button type="button" onclick="showModeUtility('${focus}')">排行与挑战</button>
+      <button type="button" onclick="showModeUtility('${focus}')">排行榜</button>
       <button type="button" onclick="AIBAPerfSettings.open()">游戏设置</button>
     </nav>`;
   }
@@ -96,8 +95,8 @@
     focus=focus==="battle"||focus==="rackrush"||focus==="contest"?focus:"speed100";
     const label=focus==="battle"?"百分大战":(focus==="rackrush"?"投篮机":"三分挑战");
     if(typeof showPanel!=="function")return;
-    showPanel(`<h1 class="title" style="font-size:22px">排行与挑战</h1><div class="note">${esc(label)} · 全球记录与好友同题挑战</div>
-      <div class="modeUtilityMenu"><button class="btn" type="button" onclick="showLeaderboardHub('today','${focus}')">今日榜</button><button class="btn" type="button" onclick="showLeaderboardHub('all','${focus}')">全球总榜</button><button class="btn gold" type="button" onclick="copyAIBAChallenge('${focus}')">复制挑战链接</button></div>
+    showPanel(`<h1 class="title" style="font-size:22px">排行榜</h1><div class="note">${esc(label)} · 全球记录</div>
+      <div class="modeUtilityMenu"><button class="btn" type="button" onclick="showLeaderboardHub('today','${focus}')">今日榜</button><button class="btn" type="button" onclick="showLeaderboardHub('all','${focus}')">全球总榜</button></div>
       <button class="btn sm" type="button" onclick="goDiff(G.mode,true)">返回难度</button>`);
   }
   function refreshProfileUI(){
@@ -365,8 +364,7 @@
     const pendingDaily=period==="today"&&data&&!data.soon&&data.period!=="date";
     const rows=pendingDaily?[]:(data&&data.rows||[]);
     return `<section class="leaderboardCard"><div class="leaderboardCardHead"><span><small>${esc(boardScopeLabel(period,data))}</small><b>${esc(def.title)}</b></span><em>${esc(def.hint)}</em></div>
-      <table class="std onlineBoard"><tr><td>#</td><td>玩家</td><td>${esc(def.scoreLabel)}</td><td>命中</td></tr>${pendingDaily?`<tr><td colspan="4">今日榜服务升级中,可先查看总榜</td></tr>`:boardRowsMarkup(def,rows)}</table>
-      <button class="btn sm" onclick="copyAIBAChallenge('${def.key}')">复制同题挑战</button></section>`;
+      <table class="std onlineBoard"><tr><td>#</td><td>玩家</td><td>${esc(def.scoreLabel)}</td><td>命中</td></tr>${pendingDaily?`<tr><td colspan="4">今日榜服务升级中,可先查看总榜</td></tr>`:boardRowsMarkup(def,rows)}</table></section>`;
   }
   async function showLeaderboardHub(period,focus){
     if(typeof global.playSFX==="function")global.playSFX("ui_leaderboard_open_01");
@@ -377,7 +375,7 @@
       return;
     }
     if(typeof showPanel==="function")showPanel(`<h1 class="title" style="font-size:22px">全球排行榜</h1>
-      <div class="leaderboardTabs"><button class="${period==="today"?"on":""}" onclick="showLeaderboardHub('today','${esc(focus||"")}')">今日榜</button><button class="${period==="all"?"on":""}" onclick="showLeaderboardHub('all','${esc(focus||"")}')">总榜</button><button onclick="copyAIBAChallenge('${esc(focus||"speed100")}')">好友挑战</button></div>
+      <div class="leaderboardTabs"><button class="${period==="today"?"on":""}" onclick="showLeaderboardHub('today','${esc(focus||"")}')">今日榜</button><button class="${period==="all"?"on":""}" onclick="showLeaderboardHub('all','${esc(focus||"")}')">总榜</button></div>
       <div id="leaderboardHubRows" class="leaderboardCards"><div class="note">正在读取全球记录...</div></div><button class="btn sm" onclick="${focus?"goDiff(G.mode,true)":"showMenu()"}">返回</button>`);
     try{
       if(global.AIBALeaderboard&&global.AIBALeaderboard.flush)global.AIBALeaderboard.flush().catch(()=>{});
@@ -388,29 +386,6 @@
       const el=document.getElementById("leaderboardHubRows");
       if(el)el.innerHTML=`<div class="note">全球排行榜读取失败,稍后再试。</div>`;
     }
-  }
-  function challengeUrlFor(key){
-    let url=location.href;
-    try{
-      const u=new URL(location.href);
-      u.searchParams.delete("player_id");u.searchParams.delete("player_tag");
-      if(key==="battle"){u.searchParams.set("mode","battle");u.searchParams.delete("submode");}
-      else if(key==="contest"){u.searchParams.set("mode","contest");u.searchParams.delete("submode");}
-      else if(key==="rackrush"){u.searchParams.set("mode","rackrush");u.searchParams.delete("submode");}
-      else{u.searchParams.set("mode","rackrush");u.searchParams.set("submode","speed100");}
-      try{if(typeof G!=="undefined"&&G.diff)u.searchParams.set("diff",G.diff);}catch(e){}
-      try{if(typeof GAME_SEED!=="undefined")u.searchParams.set("seed",GAME_SEED);}catch(e){}
-      url=u.toString();
-    }catch(e){}
-    return url;
-  }
-  async function copyChallenge(key){
-    key=key==="battle"||key==="rackrush"||key==="contest"||key==="speed100"?key:"speed100";
-    const def=BOARD_DEFS.find(d=>d.key===key)||(key==="battle"?BOARD_DEFS[1]:BOARD_DEFS[0]);
-    const text=`来挑战我的 aiBA 赛道: ${def.title}\n${def.hint} · 打完自动进全球榜\n${challengeUrlFor(key)}`;
-    try{if(navigator.share){await navigator.share({title:"aiBA "+def.title,text,url:challengeUrlFor(key)});return;}}catch(e){if(e&&e.name==="AbortError")return;}
-    try{await navigator.clipboard.writeText(text);if(typeof toast==="function")toast("好友挑战链接已复制","#7CFC6B");}
-    catch(e){if(typeof toast==="function")toast("复制失败,可以手动分享当前链接","#ffd23f");}
   }
   async function showOnlineLeaderboardForRecord(record){
     if(typeof global.playSFX==="function")global.playSFX("ui_leaderboard_open_01");
@@ -437,13 +412,12 @@
   global.savePlayerNameFromInput=savePlayerNameFromInput;
   global.showNicknameEditor=showNicknameEditor;
   global.showLeaderboardHub=showLeaderboardHub;
-  global.copyAIBAChallenge=copyChallenge;
   global.AIBARecordRankText=recordRankText;
   global.AIBACloudRankMarkup=rankMarkup;
   global.AIBAResultBadgeMarkup=resultBadgeMarkup;
   global.AIBAResultHeaderMarkup=resultHeaderMarkup;
   global.AIBAResultMetricsFor=metricsFor;
   global.showOnlineLeaderboardForRecord=showOnlineLeaderboardForRecord;
-  global.AIBALeaderboardUI=Object.freeze({submitRecord,rankMarkup,showOnlineLeaderboardForRecord,refreshProfileUI,resultBadgeMarkup,resultHeaderMarkup,showLeaderboardHub,showModeUtility,copyChallenge,homeMarkup,modeMarkup,recordRankText});
+  global.AIBALeaderboardUI=Object.freeze({submitRecord,rankMarkup,showOnlineLeaderboardForRecord,refreshProfileUI,resultBadgeMarkup,resultHeaderMarkup,showLeaderboardHub,showModeUtility,homeMarkup,modeMarkup,recordRankText});
   setTimeout(refreshProfileUI,0);
 })(window);

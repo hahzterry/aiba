@@ -9,7 +9,7 @@ const childProcess=require("child_process");
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
 const legacyEntry="legacy.html";
-const snapshot="block-3pt-kingv2.0-modular.html";
+const snapshot="block-3pt-kingv2.01-modular.html";
 const requiredFiles=[
   entry,
   legacyEntry,
@@ -105,7 +105,7 @@ if(!entryHtml.includes('<script src="src/rendering/core.js?v=refactor16"></scrip
 for(const file of ["core/error-boundary","core/foundation","data/dialogue","core/state","services/audio-cues","ui/result-copy"]){
   if(!entryHtml.includes(`<script src="src/${file}.js?v=refactor39"></script>`))fail(`next shell module missing ${file}`);
 }
-if(!entryHtml.includes('<script src="src/data/game-config.js?v=refactor40"></script>'))fail("next game config cache version missing");
+if(!entryHtml.includes('<script src="src/data/game-config.js?v=refactor40a"></script>'))fail("next game config cache version missing");
 
 if(entryHtml.indexOf('src/core/runtime.js')>entryHtml.indexOf('src/config.js'))fail("next runtime must load before config");
 if(entryHtml.indexOf('<script src="src/rendering/core.js?v=refactor16"></script>')>entryHtml.indexOf('<script src="src/core/scene-init.js?v=refactor38"></script>'))fail("rendering core must load before scene construction");
@@ -141,8 +141,8 @@ for(const token of ["const GAME_VERSION=","const G={","function triggerMakeRunVo
   if(entryHtml.includes(token))fail("next entry still contains inline shell ownership "+token);
 }
 if(entryHtml.includes("/* Renderer, camera, adaptive quality and base lights are owned"))fail("next entry still contains generated ownership placeholders");
-if(entryHtml.indexOf('src/core/foundation.js?v=refactor39')>entryHtml.indexOf('src/data/game-config.js?v=refactor40'))fail("foundation must load before game config");
-if(entryHtml.indexOf('src/data/game-config.js?v=refactor40')>entryHtml.indexOf('src/core/state.js?v=refactor39'))fail("game config must load before runtime state");
+if(entryHtml.indexOf('src/core/foundation.js?v=refactor39')>entryHtml.indexOf('src/data/game-config.js?v=refactor40a'))fail("foundation must load before game config");
+if(entryHtml.indexOf('src/data/game-config.js?v=refactor40a')>entryHtml.indexOf('src/core/state.js?v=refactor39'))fail("game config must load before runtime state");
 if(entryHtml.indexOf('src/core/state.js?v=refactor39')>entryHtml.indexOf('src/services/audio-cues.js?v=refactor39'))fail("runtime state must load before audio cues");
 if(entryHtml.indexOf('src/services/audio-cues.js?v=refactor39')>entryHtml.indexOf('src/audio.js?v=1.89'))fail("audio cues must load before audio engine");
 if(entryHtml.indexOf('<script src="src/core/legacy-adapter.js?v=cutover1"></script>')>entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5a"></script>'))fail("legacy adapter must load before Rack Rush module");
@@ -163,10 +163,10 @@ for(const pair of [["state","spots"],["spots","opponent"],["opponent","results"]
 }
 if(entryHtml.indexOf('<script src="src/modes/percent-battle/index.js?v=refactor4"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Percent Battle module must load before late hooks");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v2.0 MODULAR","MODULAR / v2.0"])
+for(const token of ["v2.01 MODULAR","MODULAR / v2.01"])
   if(!entryHtml.includes(token))fail("visible version token missing "+token);
-if(!read("src/data/game-config.js").includes('const GAME_VERSION="v2.0-modular";'))fail("GAME_VERSION must be v2.0-modular");
-if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=2.08">'))fail("stylesheet link missing");
+if(!read("src/data/game-config.js").includes('const GAME_VERSION="v2.01";'))fail("GAME_VERSION must be v2.01");
+if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=2.09">'))fail("stylesheet link missing");
 const menuScript=read("src/ui/menu.js");
 const nbaDnaScript=read("src/nba-dna/NBADNA.js");
 for(const source of [menuScript]){
@@ -185,8 +185,8 @@ if(!entryHtml.includes('<script src="src/player-select.js?v=1.77"></script>'))fa
 if(!entryHtml.includes('<script src="src/player-locker-preview.js?v=1.76"></script>'))fail("player locker preview script missing");
 if(!entryHtml.includes('<script src="src/player-id.js"></script>'))fail("player id script missing");
 if(!entryHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("leaderboard api script missing");
-if(!entryHtml.includes('<script src="src/leaderboard-ui.js?v=1.92"></script>'))fail("leaderboard ui script missing");
-if(!entryHtml.includes('<script src="src/share.js"></script>'))fail("share script missing");
+if(!entryHtml.includes('<script src="src/leaderboard-ui.js?v=1.93"></script>'))fail("leaderboard ui script missing");
+if(!entryHtml.includes('<script src="src/share.js?v=2.01"></script>'))fail("share script missing");
 if(!entryHtml.includes('<script src="src/shot-physics.js?v=1.99"></script>'))fail("shot physics script missing");
 if(!entryHtml.includes('<script src="src/result-stats.js?v=1.78"></script>'))fail("result stats script missing");
 if(!entryHtml.includes('<script src="src/gear.js?v=1.82"></script>'))fail("gear script missing");
@@ -264,6 +264,10 @@ const audioScript=read("src/audio.js");
 const visualDirectorScript=read("src/visual-director.js");
 const sceneLifecycleScript=read("src/scene-lifecycle.js");
 const styles=read("styles.css");
+for(const token of ["同题挑战","好友挑战","复制挑战链接","排行与挑战","copyAIBAChallenge","challengeUrlFor","GLOBAL CHALLENGE LINK READY"]){
+  if((leaderboardUiScript+shareScript+read("src/i18n.js")).includes(token))fail("retired same-seed challenge UI remains: "+token);
+}
+if(!styles.includes('#tiltWrap{bottom:max(160px,calc(env(safe-area-inset-bottom) + 150px))}'))fail("mobile balance meter separation missing");
 try{new Function(configScript);}
 catch(e){fail("config script syntax error: "+e.message);}
 try{new Function(gameConfigScript);}

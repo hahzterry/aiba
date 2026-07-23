@@ -91,9 +91,9 @@
     c.font="13px Orbitron, sans-serif";c.fillStyle="#d9f6ff";
     c.fillText(T("下一场,换你接管最后一投。"),W/2,784);
     c.font="bold 16px Orbitron, sans-serif";c.fillStyle="#dde";
-    c.fillText(T("你能打败库里吗? 打开链接挑战同题 →"),W/2,850);
+    c.fillText(T("全球排行榜实时记录"),W/2,850);
     c.font="12px Orbitron, monospace";c.fillStyle="#7a8faa";
-    c.fillText("aiBA GLOBAL CHALLENGE LINK READY",W/2,878);
+    c.fillText("aiBA PERCENT BATTLE",W/2,878);
 
     cv.toBlob(blob=>{
       if(!blob){toast(T("生成失败"),"#ff8d7a");return;}
