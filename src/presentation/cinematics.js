@@ -44,9 +44,9 @@ function genAIRun(o){
       if(mk)total+=3;
     }
   }
-  return {shots,total};
+  return {shots,total,money};
 }
-const show={on:false,o:null,guy:null,q:[],idx:0,t:0,score:0,total:0,cb:null,c:shotCurves(0)};
+const show={on:false,o:null,guy:null,q:[],idx:0,t:0,score:0,total:0,moneyRack:0,shotNo:0,streak:0,missRun:0,cb:null,c:shotCurves(0)};
 const _showReleasePos=new THREE.Vector3();
 function attachShowBall(g){
   if(!g||!g.ball||g._showBallAttached)return;
@@ -71,7 +71,7 @@ function setAIShowActors(shooter){
 function startAIShow(o,cb){
   G.state="aishow";enterArenaAudio(0.86);
   const run=genAIRun(o);
-  show.on=true;show.o=o;show.cb=cb;show.total=run.total;show.score=0;show.idx=0;show.t=0;
+  show.on=true;show.o=o;show.cb=cb;show.total=run.total;show.moneyRack=run.money;show.score=0;show.idx=0;show.t=0;show.shotNo=0;show.streak=0;show.missRun=0;
   benchSetup();
   show.guy=rivalFor(o);show.guy.active=true;benchVis();setAIShowActors(show.guy);
   attachShowBall(show.guy);
@@ -92,7 +92,7 @@ function startAIShow(o,cb){
   $("showScore").textContent="0";
   $("showTgt").textContent=tgt!=null?"目标 "+(tgt+1)+" 分":"";
   $("showUI").style.display="block";
-  paSay("有请,"+o.n+"!",true);
+  if(!playAudioEvent("contest_opponent_intro"))paSay("有请,"+o.n+"!",true);
   setTimeout(()=>boo(1.6),900);
   const chase=TALK_CHASE[(Math.random()*TALK_CHASE.length)|0];
   toast(o.n+":「"+chase+"」","#ffd23f");
@@ -115,14 +115,19 @@ function nextShowItem(){
   if(it.type==="move"){
     const to=it.deep!=null?DEEPS[it.deep].p:RACKS[it.rack].p;
     it.from=show.guy.pos.clone();it.to=to.clone();
-    it.dur=clamp(it.from.distanceTo(it.to)/4.6,0.48,1.18);
+    it.dur=clamp(it.from.distanceTo(it.to)/3.2,0.68,1.65);
+    if(it.rack===show.moneyRack)playAudioEvent("contest_moneyrack");
+    else if(it.rack===4)playAudioEvent("contest_finalrack");
   }else if(it.type==="shot"){
     attachShowBall(show.guy);
     show.guy.ball.visible=true;
     show.guy.ball.material=it.s.deep!=null?matDeep:(it.s.money?matGold:matBall);
     const profile=shotProfileFor(show.o),speed=Math.max(.78,Number(profile&&profile.speed)||1);
-    it.loadDur=clamp(.74/speed,.6,.9);
-    it.totalDur=it.loadDur+(.3+(it.s.ball===0?.08:0));
+    show.shotNo++;
+    it.loadDur=clamp(1.18/speed,.96,1.38);
+    it.totalDur=it.loadDur+(.72+(it.s.ball===0?.14:0));
+    if(show.shotNo===23)playAudioEvent("contest_final10");
+    if(show.shotNo===27)playAudioEvent("final_shot");
     $("showTgt").textContent=it.s.deep!=null?"深远加分球":("第 "+(it.s.rack+1)+" 架 · "+(it.s.ball+1)+"/5");
   }else if(it.type==="chip"){
     show.score+=it.pts;$("showScore").textContent=show.score;
@@ -130,6 +135,19 @@ function nextShowItem(){
   }else if(it.type==="end"){
     $("showTgt").textContent="最终 "+show.total+" 分";
     cheerSound(true);G.cheer=1;
+  }
+}
+function announceAIShowResult(ball,made){
+  if(!show.on||!show.o)return;
+  if(made){
+    show.streak++;show.missRun=0;
+    if(ball&&ball.deep){gameDjSay("深远三分!","special",2);return;}
+    const pool=show.streak===3?TALK_STREAK_THREE:(show.streak===5?TALK_STREAK_FIVE:(show.streak===8?TALK_STREAK_EIGHT:null));
+    if(pool){const cue=pool[(Math.random()*pool.length)|0],text=cue.t||cue;toast(show.o.n+" · "+text,"#ffd23f");gameDjSay(text,"momentum",1.8);}
+  }else{
+    show.streak=0;show.missRun++;
+    const pool=show.missRun===5?TALK_MISS_FIVE:(show.missRun===8?TALK_MISS_EIGHT:null);
+    if(pool){const cue=pool[(Math.random()*pool.length)|0],text=cue.t||cue;toast(show.o.n+" · "+text,"#ff8d7a");gameDjSay(text,"momentum",1.8);}
   }
 }
 function updShow(dt){
@@ -224,6 +242,7 @@ function skipShow(){
   show.score=show.total;$("showScore").textContent=show.total;
   finishShow();
 }
+window.announceAIShowResult=announceAIShowResult;
 
 /* ---------------- 反超对手 → 3秒特写 ---------------- */
 function tryCutAway(){

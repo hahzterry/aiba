@@ -291,9 +291,9 @@ html[data-scan-overlay="menu"] #scan{opacity:.018}
 .quickInfo{position:absolute;z-index:3;right:6px;top:6px;width:22px;height:22px;border-radius:50%;font-size:10px;font-family:inherit;font-weight:bold;
   color:#dff3ff;background:rgba(0,0,0,.56);border:1px solid color-mix(in srgb,var(--accent) 65%,white 10%);cursor:pointer;text-shadow:1px 1px 0 #000}
 .quickPlay:active,.quickInfo:active{transform:translateY(2px)}
-.leaderboardDock{position:relative;z-index:3;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px;max-width:680px}
-.leaderboardDock button{min-height:46px;text-align:left;padding:8px 10px 8px 13px;color:#eef7ff;background:linear-gradient(135deg,rgba(8,14,24,.82),rgba(20,22,28,.56));border:1px solid rgba(255,210,63,.36);box-shadow:4px 4px 0 rgba(0,0,0,.5),inset 0 0 16px rgba(255,210,63,.05);font-family:inherit;text-shadow:1px 1px 0 #000;clip-path:polygon(0 0,100% 0,94% 100%,0 100%);cursor:pointer}
-.leaderboardDock small{display:block;color:#77e7ff;font-size:7px;letter-spacing:2px}.leaderboardDock b{display:block;margin-top:3px;color:#ffd23f;font-size:13px}.leaderboardDock button:active{transform:translateY(2px)}
+.leaderboardDock{position:relative;z-index:3;display:flex;justify-content:flex-end;margin-top:8px;max-width:680px}
+.leaderboardDock button{min-height:34px;display:flex;align-items:center;gap:8px;text-align:left;padding:6px 11px;color:#eef7ff;background:rgba(8,14,24,.7);border:1px solid rgba(119,231,255,.28);box-shadow:3px 3px 0 rgba(0,0,0,.45);font-family:inherit;text-shadow:1px 1px 0 #000;cursor:pointer}
+.leaderboardDock small{color:#77e7ff;font-size:7px;letter-spacing:2px}.leaderboardDock b{color:#dce8f4;font-size:10px}.leaderboardDock span{color:#ffd23f;font-size:14px}.leaderboardDock button:active{transform:translateY(2px)}
 .modeUtilityBar{width:88%;margin:0 auto 5px;display:flex;justify-content:flex-end;gap:14px;border-bottom:1px solid rgba(142,163,184,.2)}
 .modeUtilityBar button{padding:4px 0 6px;color:#8ea3b8;background:none;border:0;font:700 9px Orbitron,monospace;letter-spacing:1px;cursor:pointer}
 .modeUtilityBar button:hover{color:#77e7ff}.modeUtilityBar button:active{color:#ffd23f;transform:translateY(1px)}

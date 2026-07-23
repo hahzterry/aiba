@@ -349,6 +349,7 @@ function updBalls(dt){
             netPulse=1;sSwish();applause(0.3,1.2);if(Math.random()<0.22)boo(1.2);G.cheer=Math.min(1,G.cheer+0.4);
             show.score+=b.val;$("showScore").textContent=show.score;
             popScore("+"+b.val,b.deep?"#54e05a":(b.money?"#ffd23f":"#7CFC6B"));
+            if(typeof announceAIShowResult==="function")announceAIShowResult(b,true);
             b.made=true;
           }else madeBall(b);
           b.phase="fall";
@@ -362,11 +363,11 @@ function updBalls(dt){
           b.ra=Math.atan2(b.mesh.position.z-HOOP.z,b.mesh.position.x-HOOP.x);
           b.rdir=Math.random()<.5?1:-1;
         }else if(b.outcome==="rimout"){
-          playerRimHaptic(b);sClank();if(b.opp)triggerStreetCrowdReaction("oppMiss",0);else if(!b.silent)missBall();b.phase="free";
+          playerRimHaptic(b);sClank();if(b.opp)triggerStreetCrowdReaction("oppMiss",0);else if(b.silent){if(typeof announceAIShowResult==="function")announceAIShowResult(b,false);}else missBall();b.phase="free";
           const d=V3(b.mesh.position.x-HOOP.x,0,b.mesh.position.z-HOOP.z).normalize();
           b.vel.set(d.x*rnd(1.2,2.2)+rnd(-.6,.6),rnd(2.4,3.6),d.z*rnd(1.2,2.2)+rnd(-.6,.6));
         }else{
-          if(b.opp)triggerStreetCrowdReaction("oppMiss",0);else if(!b.silent)missBall();b.phase="free";
+          if(b.opp)triggerStreetCrowdReaction("oppMiss",0);else if(b.silent){if(typeof announceAIShowResult==="function")announceAIShowResult(b,false);}else missBall();b.phase="free";
           b.vel.set(b.v0.x,vy,b.v0.z);
         }
       }

@@ -10,7 +10,7 @@
     deepBalls,player,P,rig,TILT,V3,seededRandom,buildSeq,benchSetup,startAIShow,stars,
     aiProb,applyStarStyle,resetAudioCueMemory,resetProgressiveSceneForRun,resetRackBalls,
     ensureAudio,music,enterArenaAudio,leaveArenaAudio,broadcastSting,crowdSwell,paSay,
-    hidePanel,showPanel,faceTo,applyCamMode,shotEye,glideTo,startPreGameShow,
+    hidePanel,showPanel,showMenu,faceTo,applyCamMode,shotEye,glideTo,startPreGameShow,
     playPregameCountdownCue,sGo,calibrateTilt,readyBall,toast,sBeep,updTargetUI,
     playAudioEvent,sBuzz,cheerSound,scoreQuoteMarkup,airhorn,djSay,endHero,organCharge,
     startConfetti,startVictoryCine
@@ -20,7 +20,7 @@
     ensureAudio(false);music(false);
     const names=G.stage==="final"?["YOU",G.finalist]:["YOU",...G.opponents];
     for(let i=names.length-1;i>0;i--){const j=(seededRandom()*(i+1))|0;[names[i],names[j]]=[names[j],names[i]];}
-    G.lineup=names;G.lineIdx=0;G.posted=[];
+    G.lineup=names;G.lineIdx=0;G.posted=[];G.stageCeremonyDone=false;
     if(G.stage==="semi")G.semiDone=false;else G.finalDone=false;
     benchSetup();
     let html=`<h1 class="title" style="font-size:20px">出手顺序抽签</h1><div class="note">${G.stage==="final"?"决赛":"半决赛"}出场顺序:</div>`;
@@ -28,8 +28,22 @@
       const me=who==="YOU";
       html+=`<div class="card" style="${me?"border-color:#3a6":""}"><b style="${me?"color:#9dff8d":""}">${i+1}. ${me?"你 (YOU)":who.n}</b></div>`;
     });
-    html+=`<button class="btn gold" onclick="hidePanel();nextTurn()">开始 →</button>`;
+    html+=`<button class="btn gold" onclick="hidePanel();startStageCeremony()">开始 →</button>`;
     showPanel(html);
+  }
+  function startStageCeremony(){
+    if(G.stageCeremonyDone){nextTurn();return;}
+    ensureAudio(false);music(false);benchSetup();
+    resetAudioCueMemory();resetProgressiveSceneForRun();enterArenaAudio(G.stage==="final"?1.03:.9);
+    broadcastSting(G.stage==="final"?"danger":"score");crowdSwell(G.stage==="final"?.16:.1,2);
+    if(G.stage==="final")playAudioEvent("contest_finals_start");
+    else playAudioEvent("contest_host_intro");
+    G.seq=[{rack:2,ball:0,val:1,money:false,deep:null}];G.shotIdx=0;
+    const base=RACKS[2].p;P.pos.copy(base);P.face=faceTo(base,HOOP);P.walking=false;P.jump=0;P.eyeDip=0;
+    G.state="cinematic";rig.pos.set(0,11,7);rig.look.copy(HOOP);
+    startPreGameShow({mode:"contest"},()=>{
+      G.stageCeremonyDone=true;benchSetup();G.state="intro";nextTurn();
+    });
   }
   function nextTurn(){
     if(G.lineIdx>=G.lineup.length){stageDone();return;}
@@ -55,16 +69,13 @@
   }
   function startRound(){
     benchSetup();
+    G.contestRoundAdvanced=false;
     $("hud").dataset.mode="contest";
     G.moneyRack=(seededRandom()*5)|0;
     resetAudioCueMemory();resetProgressiveSceneForRun();enterArenaAudio(G.stage==="final"?1.03:.9);
     broadcastSting(G.stage==="final"?"danger":"score");crowdSwell(G.stage==="final"?.16:.1,2);
     G.finalTenTriggered=false;
     if(typeof global.playSFX==="function")global.playSFX("ui_start_game_01");
-    const target=G.posted.length?G.posted.reduce((a,b)=>a.score>b.score?a:b):null;
-    if(G.stage==="final")playAudioEvent("contest_finals_start");
-    else if(target&&Math.random()<.5)playAudioEvent("contest_opponent_intro");
-    else playAudioEvent("contest_host_intro");
     G.seq=buildSeq(G.moneyRack);G.shotIdx=0;
     G.score=0;G.streak=0;G.timer=70;G.buzzed=false;G.running=false;
     G.shots=[];G.canShoot=false;G.blindToasted=false;G.cutQ=[];G.cutAway=null;G.missRun=0;G.organed=false;
@@ -78,11 +89,11 @@
     P.pos.copy(base);P.face=faceTo(base,HOOP);P.walking=false;P.jump=0;P.eyeDip=0;
     G.state="cinematic";
     const eye=shotEye(first);rig.pos.set(0,11,7);rig.look.copy(HOOP);
-    glideTo(eye,HOOP.clone().add(V3(0,.15,0)),2.2,()=>startPreGameShow({mode:"contest"},()=>countdown(3)));
+    glideTo(eye,HOOP.clone().add(V3(0,.15,0)),1.15,()=>countdown(3));
   }
   function countdown(n){
     if(G.state!=="cinematic")return;
-    const el=$("countN");if(n===3)playPregameCountdownCue();
+    const el=$("countN");if(n===3&&!G.stageCeremonyDone)playPregameCountdownCue();
     if(n===0){
       el.textContent="GO!";el.style.display="flex";sGo();setTimeout(()=>el.style.display="none",500);
       calibrateTilt();G.state="round";G.running=!G.practice;applyCamMode();readyBall();
@@ -126,7 +137,13 @@
     return {ev:events,total};
   }
   function afterRound(){
-    hidePanel();if(G.stage==="semi")G.semiDone=true;else G.finalDone=true;nextTurn();
+    if(G.contestRoundAdvanced)return;
+    G.contestRoundAdvanced=true;hidePanel();if(G.stage==="semi")G.semiDone=true;else G.finalDone=true;nextTurn();
+  }
+  function returnContestHome(){
+    G.running=false;G.canShoot=false;G.charging=false;
+    if(global.AIBANavigation&&typeof global.AIBANavigation.returnHome==="function")global.AIBANavigation.returnHome();
+    else{hidePanel();showMenu();}
   }
   function showBracket(){
     const rows=[{n:"你 (YOU)",s:G.semiScore,me:true},...G.opponents.map(opponent=>({n:opponent.n,s:opponent.posted||0,o:opponent}))];
@@ -141,7 +158,7 @@
       html+=`<div class="note">🎉 你晋级决赛!对手:<b style="color:#ffd23f">${G.finalist.n}</b></div><button class="btn gold" onclick="goFinal()">进入决赛 🏆</button>`;
     }else{
       playAudioEvent("contest_eliminated");
-      html+=`<div class="note">差 ${rows[1].s-G.semiScore+1} 分晋级...观众仍为你欢呼</div>${global.AIBARecorder?AIBARecorder.resultMarkup():""}<button class="btn red" onclick="location.reload()">再来一届</button><button class="btn sm" onclick="shareScore(false)">生成战报海报</button>`;
+      html+=`<div class="note">差 ${rows[1].s-G.semiScore+1} 分晋级...观众仍为你欢呼</div>${global.AIBARecorder?AIBARecorder.resultMarkup():""}<button class="btn red" onclick="returnContestHome()">返回首页</button><button class="btn sm" onclick="shareScore(false)">生成战报海报</button>`;
       G.state="eliminated";
     }
     showPanel(html);
@@ -195,7 +212,7 @@
         <div class="card">决赛 <b>${G.finalScore}</b> : ${G.aiFinal} 击败 <b>${G.finalist.n}</b>${tiebreak?" (决胜球)":""}<br>
           最高连中 <b class="flame">x${G.stats.best}</b> · 花球 <b>${G.stats.moneyM}/${G.stats.moneyT}</b> · 深远 <b>${G.stats.deepM}/${G.stats.deepT}</b><br>难度:<b>${DIFFS[G.diff].n}</b></div>
         ${scoreQuoteMarkup()}${global.AIBARecorder?AIBARecorder.resultMarkup():""}
-        <button class="btn gold" onclick="shareScore(true)">📤 生成战报海报</button><button class="btn green" onclick="location.reload()">再来一届</button>`);}
+        <button class="btn gold" onclick="shareScore(true)">📤 生成战报海报</button><button class="btn green" onclick="returnContestHome()">返回首页</button>`);}
     });
   }
   function runnerUp(tiebreak){
@@ -204,7 +221,7 @@
       <div class="card">决赛 <b>${G.finalScore}</b> : ${G.aiFinal} 不敌 <b>${G.finalist.n}</b>${tiebreak?" (决胜球)":""}<br>
         最高连中 <b class="flame">x${G.stats.best}</b> · 全场为你起立鼓掌</div>
       ${scoreQuoteMarkup()}${global.AIBARecorder?AIBARecorder.resultMarkup():""}
-      <button class="btn red" onclick="location.reload()">复仇之战</button><button class="btn sm" onclick="shareScore(false)">生成战报海报</button>`);
+      <button class="btn red" onclick="returnContestHome()">返回首页</button><button class="btn sm" onclick="shareScore(false)">生成战报海报</button>`);
   }
   function shareScore(championResult){
     if(!global.AIBAShare){toast("分享模块未就绪","#ff8d7a");return;}
@@ -212,9 +229,9 @@
   }
 
   const api={
-    beginStage,nextTurn,preMyTurn,stageDone,startRound,countdown,endRound,pickHighlights,
+    beginStage,startStageCeremony,nextTurn,preMyTurn,stageDone,startRound,countdown,endRound,pickHighlights,
     simAI,afterRound,showBracket,goFinal,beginFinal,finalResult,startTiebreak,doTiebreak,
-    tiebreakResolve,champion,runnerUp,shareScore
+    tiebreakResolve,champion,runnerUp,returnContestHome,shareScore
   };
   Object.assign(global,api);
   runtime.register("mode:contest",Object.freeze({

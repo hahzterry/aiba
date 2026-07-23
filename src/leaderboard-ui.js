@@ -79,8 +79,7 @@
   }
   function homeMarkup(){
     return `<div class="leaderboardDock" aria-label="排行榜入口">
-      <button type="button" onclick="showLeaderboardHub('today')"><small>TODAY</small><b>今日榜</b></button>
-      <button type="button" onclick="showLeaderboardHub('all')"><small>GLOBAL</small><b>总榜</b></button>
+      <button type="button" onclick="showLeaderboardHub('all')"><small>GLOBAL</small><b>全球排行榜</b><span>›</span></button>
     </div>`;
   }
   function modeMarkup(mode){
@@ -96,7 +95,7 @@
     const label=focus==="battle"?"百分大战":(focus==="rackrush"?"投篮机":"三分挑战");
     if(typeof showPanel!=="function")return;
     showPanel(`<h1 class="title" style="font-size:22px">排行榜</h1><div class="note">${esc(label)} · 全球记录</div>
-      <div class="modeUtilityMenu"><button class="btn" type="button" onclick="showLeaderboardHub('today','${focus}')">今日榜</button><button class="btn" type="button" onclick="showLeaderboardHub('all','${focus}')">全球总榜</button></div>
+      <div class="modeUtilityMenu"><button class="btn gold" type="button" onclick="showLeaderboardHub('all','${focus}')">全球总榜</button><button class="btn sm" type="button" onclick="showLeaderboardHub('today','${focus}')">今日榜</button></div>
       <button class="btn sm" type="button" onclick="goDiff(G.mode,true)">返回难度</button>`);
   }
   function refreshProfileUI(){
@@ -375,7 +374,7 @@
       return;
     }
     if(typeof showPanel==="function")showPanel(`<h1 class="title" style="font-size:22px">全球排行榜</h1>
-      <div class="leaderboardTabs"><button class="${period==="today"?"on":""}" onclick="showLeaderboardHub('today','${esc(focus||"")}')">今日榜</button><button class="${period==="all"?"on":""}" onclick="showLeaderboardHub('all','${esc(focus||"")}')">总榜</button></div>
+      <div class="leaderboardTabs"><button class="${period==="all"?"on":""}" onclick="showLeaderboardHub('all','${esc(focus||"")}')">全球总榜</button><button class="${period==="today"?"on":""}" onclick="showLeaderboardHub('today','${esc(focus||"")}')">今日榜</button></div>
       <div id="leaderboardHubRows" class="leaderboardCards"><div class="note">正在读取全球记录...</div></div><button class="btn sm" onclick="${focus?"goDiff(G.mode,true)":"showMenu()"}">返回</button>`);
     try{
       if(global.AIBALeaderboard&&global.AIBALeaderboard.flush)global.AIBALeaderboard.flush().catch(()=>{});
