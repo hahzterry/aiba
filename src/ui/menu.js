@@ -17,7 +17,10 @@
       <div class="coverHero" style="background-image:url('${cover.cover}')">
         ${coverVideo}
         <div class="coverMenu"><div>
-          <img class="coverTitleLogo" src="assets/aiba-brand/aiba-percent-battle-logo-v2.png" width="1024" height="472" alt="aiBA Percent Battle">
+          <picture class="coverTitleMark">
+            <source srcset="assets/aiba-brand/aiba-percent-battle-logo-v3.webp" type="image/webp">
+            <img class="coverTitleLogo" src="assets/aiba-brand/aiba-percent-battle-logo-v3.png" width="768" height="425" alt="aiBA Percent Battle">
+          </picture>
           <div class="coverSub">对着空气时出手，对着篮筐时杀手</div>
           ${global.AIBAProfileBarMarkup?global.AIBAProfileBarMarkup():""}
           <div class="coverActions schemeA">

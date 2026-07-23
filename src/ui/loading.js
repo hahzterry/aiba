@@ -52,15 +52,15 @@
   }
   function stopCoverVideo(){
     clearTimeout(coverVideoTimer);coverVideoTimer=null;const video=document.querySelector(".coverVideo");
-    if(video){try{video.classList.remove("ready");video.pause();video.removeAttribute("src");video.load();}catch(error){}}
+    if(video){try{video.classList.remove("ready");video.closest(".coverHero")?.classList.remove("video-active");video.pause();video.removeAttribute("src");video.load();}catch(error){}}
   }
   function startCoverVideo(){
     const video=document.querySelector(".coverVideo");if(!video||!video.dataset.src)return;
     const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
     if(matchMedia("(prefers-reduced-motion: reduce)").matches||(connection&&(connection.saveData||/^(slow-)?2g$/.test(connection.effectiveType||""))))return;
     let failed=false;
-    const fallback=()=>{failed=true;clearTimeout(coverVideoTimer);coverVideoTimer=null;try{video.classList.remove("ready");video.pause();video.removeAttribute("src");video.load();}catch(error){}};
-    const reveal=()=>{if(failed)return;clearTimeout(coverVideoTimer);coverVideoTimer=null;video.classList.add("ready");};
+    const fallback=()=>{failed=true;clearTimeout(coverVideoTimer);coverVideoTimer=null;try{video.classList.remove("ready");video.closest(".coverHero")?.classList.remove("video-active");video.pause();video.removeAttribute("src");video.load();}catch(error){}};
+    const reveal=()=>{if(failed)return;clearTimeout(coverVideoTimer);coverVideoTimer=null;video.classList.add("ready");video.closest(".coverHero")?.classList.add("video-active");};
     video.addEventListener("playing",reveal,{once:true});video.addEventListener("error",fallback,{once:true});video.src=video.dataset.src;video.load();
     try{const promise=video.play();if(promise&&promise.catch)promise.catch(fallback);}catch(error){fallback();return;}
     coverVideoTimer=setTimeout(()=>{if(video.readyState<2)fallback();},3500);
