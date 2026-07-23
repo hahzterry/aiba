@@ -71,6 +71,7 @@ function animate(){
     const _ph=Math.round(G.power)+"%";if($("pFill").style.height!==_ph)$("pFill").style.height=_ph;
   }else hidePlayerPowerUI();
   // cameras
+  if(VICTORY_CINE.on&&G.state!=="victorycine")stopVictoryCine();
   if(rep.on)updReplay(dt);
   else if(VICTORY_CINE.on)updVictoryCine(dt);
   else if(winCine.on)updWinCine(dt);

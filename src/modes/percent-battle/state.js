@@ -10,7 +10,7 @@
     COURT_ATTACK_DIR,HOOP,scene,balls,rivals,player,passer,handBall,pBall,hands,CAM,P,rig,
     camTarget,playerShotProfile,resetFinalRun,resetAudioCueMemory,resetRackBalls,stopCelebrate,
     ensureAudio,hidePanel,music,resetProgressiveSceneForRun,benchSetup,enterArenaAudio,
-    curShot,shotBase,faceTo,applyCamMode,autoFrameCam,glideTo,startPreGameShow,
+    curShot,shotBase,faceTo,applyCamMode,autoFrameCam,glideTo,startPreGameShow,stopVictoryCine,
     playPregameCountdownCue,sGo,calibrateTilt,readyBall,toast,sBeep,paSay
   }=ctx;
   const BATTLE_RUNS_KEY="aiba-battle-runs-v1";
@@ -58,6 +58,7 @@
     return record;
   }
   function resetBattleState(){
+    stopVictoryCine();
     resetFinalRun();resetAudioCueMemory();
     G.seq=[];G.shotIdx=0;G.score=0;G.streak=0;G.timer=0;G.buzzed=false;G.running=false;
     G.shots=[];G.canShoot=false;G.blindToasted=false;G.cutQ=[];G.cutAway=null;G.missRun=0;G.posted=[];

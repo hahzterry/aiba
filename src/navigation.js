@@ -22,7 +22,8 @@
   function cleanup(options){
     cancelPregame();
     tweens.length=0;
-    if(typeof VICTORY_CINE!=="undefined")VICTORY_CINE.on=false;
+    if(typeof stopVictoryCine==="function")stopVictoryCine();
+    else if(typeof VICTORY_CINE!=="undefined")VICTORY_CINE.on=false;
     if(typeof winCine!=="undefined")winCine.on=false;
     if(typeof AIBARecorder!=="undefined"&&AIBARecorder.cancel)AIBARecorder.cancel();
     if(!(options&&options.preserveVision)&&typeof suspendVisionControl==="function")suspendVisionControl();

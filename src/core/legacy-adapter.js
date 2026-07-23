@@ -128,6 +128,7 @@
     scoreQuoteMarkup,
     showPanel:(...args)=>global.showPanel(...args),
     startVictoryCine,
+    stopVictoryCine,
     startWinCine,
     checkBallCollisions,
     showMenu:(...args)=>global.showMenu(...args),

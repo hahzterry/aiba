@@ -9,7 +9,7 @@ const childProcess=require("child_process");
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
 const legacyEntry="legacy.html";
-const snapshot="block-3pt-kingv2.07-modular.html";
+const snapshot="block-3pt-kingv2.08-modular.html";
 const requiredFiles=[
   entry,
   legacyEntry,
@@ -108,11 +108,11 @@ if(!entryHtml.includes('<script src="src/rendering/core.js?v=refactor16"></scrip
 for(const file of ["core/error-boundary","core/foundation","data/dialogue","core/state","services/audio-cues","ui/result-copy"]){
   if(!entryHtml.includes(`<script src="src/${file}.js?v=refactor39"></script>`))fail(`next shell module missing ${file}`);
 }
-if(!entryHtml.includes('<script src="src/data/game-config.js?v=refactor40f"></script>'))fail("next game config cache version missing");
+if(!entryHtml.includes('<script src="src/data/game-config.js?v=refactor40g"></script>'))fail("next game config cache version missing");
 
 if(entryHtml.indexOf('src/core/runtime.js')>entryHtml.indexOf('src/config.js'))fail("next runtime must load before config");
 if(entryHtml.indexOf('<script src="src/rendering/core.js?v=refactor16"></script>')>entryHtml.indexOf('<script src="src/core/scene-init.js?v=refactor38"></script>'))fail("rendering core must load before scene construction");
-if(!entryHtml.includes('<script src="src/core/legacy-adapter.js?v=cutover1"></script>'))fail("next legacy adapter missing");
+if(!entryHtml.includes('<script src="src/core/legacy-adapter.js?v=cutover1a"></script>'))fail("next legacy adapter missing");
 if(!entryHtml.includes('<script src="src/modes/rack-rush.js?v=refactor5b"></script>'))fail("next Rack Rush module missing");
 if(!entryHtml.includes('<script src="src/modes/contest.js?v=refactor5c"></script>'))fail("next contest module missing");
 if(!entryHtml.includes('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("next practice module missing");
@@ -123,9 +123,8 @@ if(!entryHtml.includes('<script src="src/ui/setup.js?v=refactor13"></script>'))f
 if(!entryHtml.includes('<script src="src/ui/pregame.js?v=refactor15c"></script>'))fail("next pregame module missing");
 if(!entryHtml.includes('<script src="src/ui/pause.js?v=1.98"></script>'))fail("next pause module missing");
 if(!entryHtml.includes('<script src="src/core/bootstrap-next.js?v=cutover1"></script>'))fail("next bootstrap module missing");
-for(const file of ["state","spots"]){
-  if(!entryHtml.includes(`<script src="src/modes/percent-battle/${file}.js?v=refactor4a"></script>`))fail(`next Percent Battle ${file} module missing`);
-}
+if(!entryHtml.includes('<script src="src/modes/percent-battle/state.js?v=refactor4b"></script>'))fail("next Percent Battle state module missing");
+if(!entryHtml.includes('<script src="src/modes/percent-battle/spots.js?v=refactor4a"></script>'))fail("next Percent Battle spots module missing");
 for(const file of ["opponent","results","index"]){
   if(!entryHtml.includes(`<script src="src/modes/percent-battle/${file}.js?v=refactor4"></script>`))fail(`next Percent Battle ${file} module missing`);
 }
@@ -144,11 +143,11 @@ for(const token of ["const GAME_VERSION=","const G={","function triggerMakeRunVo
   if(entryHtml.includes(token))fail("next entry still contains inline shell ownership "+token);
 }
 if(entryHtml.includes("/* Renderer, camera, adaptive quality and base lights are owned"))fail("next entry still contains generated ownership placeholders");
-if(entryHtml.indexOf('src/core/foundation.js?v=refactor39')>entryHtml.indexOf('src/data/game-config.js?v=refactor40f'))fail("foundation must load before game config");
-if(entryHtml.indexOf('src/data/game-config.js?v=refactor40f')>entryHtml.indexOf('src/core/state.js?v=refactor39'))fail("game config must load before runtime state");
+if(entryHtml.indexOf('src/core/foundation.js?v=refactor39')>entryHtml.indexOf('src/data/game-config.js?v=refactor40g'))fail("foundation must load before game config");
+if(entryHtml.indexOf('src/data/game-config.js?v=refactor40g')>entryHtml.indexOf('src/core/state.js?v=refactor39'))fail("game config must load before runtime state");
 if(entryHtml.indexOf('src/core/state.js?v=refactor39')>entryHtml.indexOf('src/services/audio-cues.js?v=refactor39'))fail("runtime state must load before audio cues");
 if(entryHtml.indexOf('src/services/audio-cues.js?v=refactor39')>entryHtml.indexOf('src/audio.js?v=1.89'))fail("audio cues must load before audio engine");
-if(entryHtml.indexOf('<script src="src/core/legacy-adapter.js?v=cutover1"></script>')>entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5b"></script>'))fail("legacy adapter must load before Rack Rush module");
+if(entryHtml.indexOf('<script src="src/core/legacy-adapter.js?v=cutover1a"></script>')>entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5b"></script>'))fail("legacy adapter must load before Rack Rush module");
 if(entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5b"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Rack Rush module must load before late hooks");
 if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5c"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("contest module must load before late hooks");
 if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5c"></script>')>entryHtml.indexOf('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("contest module must load before practice module");
@@ -158,17 +157,17 @@ if(entryHtml.indexOf('<script src="src/ui/menu.js?v=cutover7"></script>')>entryH
 if(entryHtml.indexOf('<script src="src/ui/setup.js?v=refactor13"></script>')>entryHtml.indexOf('<script src="src/ui/pregame.js?v=refactor15c"></script>'))fail("setup must load before pregame module");
 if(entryHtml.indexOf('<script src="src/ui/pregame.js?v=refactor15c"></script>')>entryHtml.indexOf('<script src="src/ui/pause.js?v=1.98"></script>'))fail("pregame must load before pause module");
 if(entryHtml.indexOf('<script src="src/ui/pause.js?v=1.98"></script>')>entryHtml.indexOf('<script src="src/core/bootstrap-next.js?v=cutover1"></script>'))fail("pause module must load before bootstrap");
-if(!entryHtml.includes('<script src="src/navigation.js?v=1.98"></script>'))fail("next navigation cache version missing");
-if(entryHtml.indexOf('<script src="src/core/bootstrap-next.js?v=refactor12"></script>')>entryHtml.indexOf('<script src="src/navigation.js?v=1.98"></script>'))fail("boot must begin before navigation rewires the loading gate");
-if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5c"></script>')>entryHtml.indexOf('<script src="src/modes/percent-battle/state.js?v=refactor4a"></script>'))fail("contest module must load before Percent Battle modules");
+if(!entryHtml.includes('<script src="src/navigation.js?v=1.98a"></script>'))fail("next navigation cache version missing");
+if(entryHtml.indexOf('<script src="src/core/bootstrap-next.js?v=refactor12"></script>')>entryHtml.indexOf('<script src="src/navigation.js?v=1.98a"></script>'))fail("boot must begin before navigation rewires the loading gate");
+if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5c"></script>')>entryHtml.indexOf('<script src="src/modes/percent-battle/state.js?v=refactor4b"></script>'))fail("contest module must load before Percent Battle modules");
 for(const pair of [["state","spots"],["spots","opponent"],["opponent","results"],["results","index"]]){
   if(entryHtml.indexOf(`src/modes/percent-battle/${pair[0]}.js`)>entryHtml.indexOf(`src/modes/percent-battle/${pair[1]}.js`))fail(`Percent Battle ${pair[0]} must load before ${pair[1]}`);
 }
 if(entryHtml.indexOf('<script src="src/modes/percent-battle/index.js?v=refactor4"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Percent Battle module must load before late hooks");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v2.07 MODULAR","MODULAR / v2.07"])
+for(const token of ["v2.08 MODULAR","MODULAR / v2.08"])
   if(!entryHtml.includes(token))fail("visible version token missing "+token);
-if(!read("src/data/game-config.js").includes('const GAME_VERSION="v2.07";'))fail("GAME_VERSION must be v2.07");
+if(!read("src/data/game-config.js").includes('const GAME_VERSION="v2.08";'))fail("GAME_VERSION must be v2.08");
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=2.14">'))fail("stylesheet link missing");
 const menuScript=read("src/ui/menu.js");
 const nbaDnaScript=read("src/nba-dna/NBADNA.js");
@@ -210,7 +209,7 @@ if(!entryHtml.includes('<script src="src/gear.js?v=1.83"></script>'))fail("gear 
 if(!entryHtml.includes('<script src="src/avatar-customizer.js?v=1.80"></script>'))fail("avatar customizer script missing");
 if(!entryHtml.includes('<script src="src/shot-motion.js?v=2.00"></script>'))fail("shot motion script missing");
 if(!entryHtml.includes('<script src="src/roster-style.js?v=1.79"></script>'))fail("roster style script missing");
-if(!entryHtml.includes('<script src="src/hero-moments.js?v=1.79"></script>'))fail("hero moments script missing");
+if(!entryHtml.includes('<script src="src/hero-moments.js?v=1.80"></script>'))fail("hero moments script missing");
 if(!entryHtml.includes('<script src="src/hot-hand.js?v=1.81"></script>'))fail("hot hand script missing");
 if(!entryHtml.includes('<script src="src/perf.js?v=1.72"></script>'))fail("perf script missing");
 if(!entryHtml.includes('<script src="src/perf-settings.js?v=1.93b"></script>'))fail("perf settings script missing");
@@ -221,7 +220,7 @@ if(!entryHtml.includes('<script src="src/audio.js?v=1.89"></script>'))fail("audi
 if(!entryHtml.includes('<script src="src/vision.js?v=2.01"></script>'))fail("vision script missing");
 if(!entryHtml.includes('<script src="src/ui/icons.js?v=1"></script>'))fail("local SVG icon script missing");
 if(!entryHtml.includes('<script src="src/ui/interactive-tutorial.js?v=2.05"></script>'))fail("interactive tutorial script missing");
-if(!entryHtml.includes('<script src="src/navigation.js?v=1.98"></script>'))fail("navigation script missing");
+if(!entryHtml.includes('<script src="src/navigation.js?v=1.98a"></script>'))fail("navigation script missing");
 if(!entryHtml.includes('<script src="src/game-flow.js?v=1.93"></script>'))fail("game flow script missing");
 if(/<style>[\s\S]*?<\/style>/.test(entryHtml))fail("inline style block should stay split out");
 if(/const COVER_STARS=\[/.test(entryHtml)||/const EXT_AUDIO=\{/.test(entryHtml))fail("asset manifest data leaked back into html");
@@ -360,8 +359,10 @@ for(const key of ["AIBARosterStyle","ponytail","bodyProfileFor","resetBody"])
 const heroMomentsScript=read("src/hero-moments.js");
 try{new Function(heroMomentsScript);}
 catch(e){fail("hero moments script syntax error: "+e.message);}
-for(const key of ["AIBAHeroMoments","shouldHero","startHero","BATTLE_TARGET","RACK_RUSH_SPEED_TARGET"])
+for(const key of ["AIBAHeroMoments","shouldHero","startHero","RACK_RUSH_SPEED_TARGET"])
   if(!heroMomentsScript.includes(key))fail("hero moments script missing "+key);
+if(heroMomentsScript.includes('G.mode==="battle"')||heroMomentsScript.includes("BATTLE_TARGET"))
+  fail("Percent Battle must not pre-trigger a hero camera before the shot result");
 if(!configScript.includes("BODY_PROFILES")||!configScript.includes("bodyProfileFor"))fail("config missing body profiles");
 if(!configScript.includes("萨布丽娜")||!configScript.includes("苏·伯德"))fail("config missing female legends");
 try{new Function(resultStatsScript);}
@@ -606,8 +607,13 @@ const renderingEffects=read("src/rendering/effects.js");
 for(const token of ['runtime.register("rendering:effects"',"function emitFire","function startConfetti","function tween","function glideTo"])
   if(!renderingEffects.includes(token))fail("rendering effects token missing "+token);
 const presentationCinematics=read("src/presentation/cinematics.js");
-for(const token of ['runtime.register("presentation:cinematics"',"function startHero","function startAIShow","function battleCutaway","function startVictoryCine"])
+for(const token of ['runtime.register("presentation:cinematics"',"function startHero","function startAIShow","function battleCutaway","function startVictoryCine","function stopVictoryCine","function setVictoryTag"])
   if(!presentationCinematics.includes(token))fail("presentation cinematics token missing "+token);
+for(const token of ['if(G.state!=="victorycine"){stopVictoryCine();return;}','setVictoryTag(v,"crowd","全场欢呼")'])
+  if(!presentationCinematics.includes(token))fail("victory cinematic state/DOM guard missing "+token);
+const percentBattleState=read("src/modes/percent-battle/state.js");
+if(!percentBattleState.includes("function resetBattleState(){\n    stopVictoryCine();"))
+  fail("Percent Battle reset must cancel stale victory cinematics");
 for(const token of ["function attachShowBall","getWorldPosition(_showReleasePos)","function setAIShowActors","tuneGuideHandPose(g,c,true)"])
   if(!presentationCinematics.includes(token))fail("contest opponent presentation fix missing "+token);
 const presentationPregame=read("src/presentation/pregame.js");
@@ -616,7 +622,7 @@ for(const token of ['runtime.register("presentation:pregame"',"const PREGAME=","
 const presentationBattle=read("src/presentation/battle.js");
 for(const token of ['runtime.register("presentation:battle"',"function updBattleCut","function checkBattleOvertake","function battleScoreCallout"])
   if(!presentationBattle.includes(token))fail("presentation battle token missing "+token);
-for(const token of ['src/rendering/effects.js?v=refactor27','src/presentation/cinematics.js?v=refactor28c','src/presentation/pregame.js?v=refactor29','src/presentation/battle.js?v=refactor30'])
+for(const token of ['src/rendering/effects.js?v=refactor27','src/presentation/cinematics.js?v=refactor28d','src/presentation/pregame.js?v=refactor29','src/presentation/battle.js?v=refactor30'])
   if(!entryHtml.includes(token))fail("next entry missing presentation module "+token);
 for(const token of ["function startHero(","function startAIShow(","function startVictoryCine(","function startPreGameShow(","function battleScoreCallout(","function startConfetti("])
   if(entryHtml.includes(token))fail("next entry still contains inline presentation "+token);
@@ -645,14 +651,16 @@ for(const token of ['runtime.register("core:input"',"function onDown","function 
   if(!coreInput.includes(token))fail("core input token missing "+token);
 for(const token of ['runtime.register("core:game-loop"',"function animate","window.animate=animate","updatePractice(dt)"])
   if(!coreLoop.includes(token))fail("core game-loop token missing "+token);
+if(!coreLoop.includes('if(VICTORY_CINE.on&&G.state!=="victorycine")stopVictoryCine();'))
+  fail("game loop must cancel a stale victory cinematic before camera dispatch");
 for(const token of ['runtime.register("core:scene-init"',"buildCourt();","buildCharacters();","applyScenePreset(currentScenePreset"])
   if(!sceneInit.includes(token))fail("scene init token missing "+token);
-for(const token of ['src/gameplay/shots.js?v=refactor31a','src/presentation/replay.js?v=refactor32a','src/ui/battle-controls.js?v=refactor33b','src/gameplay/collisions.js?v=refactor34','src/presentation/win-cinematic.js?v=refactor35a','src/core/input.js?v=cutover2','src/core/game-loop.js?v=refactor37','src/core/scene-init.js?v=refactor38'])
+for(const token of ['src/gameplay/shots.js?v=refactor31a','src/presentation/replay.js?v=refactor32a','src/ui/battle-controls.js?v=refactor33b','src/gameplay/collisions.js?v=refactor34','src/presentation/win-cinematic.js?v=refactor35a','src/core/input.js?v=cutover2','src/core/game-loop.js?v=refactor37a','src/core/scene-init.js?v=refactor38'])
   if(!entryHtml.includes(token))fail("next entry missing runtime-core module "+token);
 for(const token of ["function startCharge(","function updBalls(","function startReplay(","function buildSpotDots(","function ballCollide(","function startWinCine(","function onDown(","function animate(","buildCourt();"])
   if(entryHtml.includes(token))fail("next entry still contains inline runtime core "+token);
-if(!(entryHtml.indexOf('src/core/input.js?v=cutover2')<entryHtml.indexOf('src/core/legacy-adapter.js?v=cutover1')))fail("input must load before legacy adapter");
-if(!(entryHtml.indexOf('src/core/scene-init.js?v=refactor38')<entryHtml.indexOf('src/core/legacy-adapter.js?v=cutover1')))fail("scene init must load before legacy adapter");
+if(!(entryHtml.indexOf('src/core/input.js?v=cutover2')<entryHtml.indexOf('src/core/legacy-adapter.js?v=cutover1a')))fail("input must load before legacy adapter");
+if(!(entryHtml.indexOf('src/core/scene-init.js?v=refactor38')<entryHtml.indexOf('src/core/legacy-adapter.js?v=cutover1a')))fail("scene init must load before legacy adapter");
 
 const sandbox={window:{}};
 vm.createContext(sandbox);

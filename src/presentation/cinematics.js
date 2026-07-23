@@ -392,7 +392,25 @@ function stopCelebrate(o){
   if(o.g)o.g.position.y=c.basePosY||0;
   o._celeb=null;
 }
-const VICTORY_CINE={on:false,t:0,dur:4.8,hero:null,foil:null,heroType:0,foilType:0,camSeed:0,nextState:"champion",cb:null,tag:"🏆 胜利庆祝"};
+const VICTORY_CINE={on:false,t:0,dur:4.8,hero:null,foil:null,heroType:0,foilType:0,camSeed:0,nextState:"champion",cb:null,tag:"🏆 胜利庆祝",phase:""};
+function setVictoryTag(v,phase,label){
+  if(v.phase===phase)return;
+  v.phase=phase;
+  const el=$("heroTag");if(!el)return;
+  if(typeof global.AIBASetIcon==="function")global.AIBASetIcon(el,"clapperboard",label);
+  else el.textContent=label;
+}
+function stopVictoryCine(){
+  const v=VICTORY_CINE;
+  v.on=false;v.t=0;v.phase="";
+  if(v.hero&&v.hero._celeb)stopCelebrate(v.hero);
+  if(v.foil&&v.foil._celeb)stopCelebrate(v.foil);
+  v.hero=null;v.foil=null;v.cb=null;
+  const top=$("lbT"),bottom=$("lbB"),tag=$("heroTag");
+  if(top)top.style.height="0";
+  if(bottom)bottom.style.height="0";
+  if(tag)tag.style.display="none";
+}
 function victoryFocus(hero,foil){
   const hp=(hero&&hero.g?hero.g.position:P.pos).clone();
   const fp=(foil&&foil.g?foil.g.position:hp.clone().add(V3(-1.8,0,-0.2))).clone();
@@ -402,6 +420,7 @@ function victoryFocus(hero,foil){
 }
 function startVictoryCine(opts){
   opts=opts||{};
+  stopVictoryCine();
   const v=VICTORY_CINE;
   v.on=true;v.t=0;v.dur=opts.dur||4.8;v.hero=opts.hero||player;v.foil=opts.foil||null;
   v.heroType=opts.heroType!=null?opts.heroType:((Math.random()*8)|0);
@@ -419,10 +438,11 @@ function startVictoryCine(opts){
   if(v.hero&&v.hero.g){stopCelebrate(v.hero);v.hero.g.visible=true;startCelebrate(v.hero,v.heroType);}
   if(v.foil&&v.foil.g){v.foil.g.visible=true;stopCelebrate(v.foil);}
   $("lbT").style.height="10vh";$("lbB").style.height="10vh";
-  $("heroTag").style.display="block";global.AIBASetIcon("heroTag","clapperboard",v.tag);
+  $("heroTag").style.display="block";setVictoryTag(v,"opening",v.tag);
 }
 function updVictoryCine(dt){
   const v=VICTORY_CINE;if(!v.on)return;
+  if(G.state!=="victorycine"){stopVictoryCine();return;}
   v.t+=dt;
   const {hp,fp,focus}=victoryFocus(v.hero,v.foil);
   if(v.hero)updateCelebrate(v.hero,dt);
@@ -436,35 +456,32 @@ function updVictoryCine(dt){
     const q=p/0.22;
     cp=hp.clone().addScaledVector(dir,2.15-0.25*q).addScaledVector(perp,side*(1.18+0.2*Math.sin(v.camSeed))).setY(1.62+q*0.24+hb);
     lk=hp.clone().setY(1.55);
-    global.AIBASetIcon("heroTag","clapperboard","顺利时刻");
+    setVictoryTag(v,"hero","顺利时刻");
   }else if(p<0.5){
     const q=(p-0.22)/0.28;
     cp=focus.clone().addScaledVector(dir,1.95-0.6*q).addScaledVector(perp,side*(2.5+0.7*Math.sin(v.camSeed*1.7))).setY(1.78+Math.sin(q*Math.PI)*0.12+hb);
     lk=hp.clone().lerp(fp,0.18).setY(1.6);
-    global.AIBASetIcon("heroTag","clapperboard","胜利庆祝");
+    setVictoryTag(v,"celebrate","胜利庆祝");
   }else if(p<0.78){
     const q=(p-0.5)/0.28;
     cp=focus.clone().addScaledVector(perp,side*(3.35+0.5*Math.cos(v.camSeed))).addScaledVector(dir,-0.45+q*0.35).setY(2.45+Math.sin(q*Math.PI)*0.22);
     lk=focus.clone().setY(1.95);
-    global.AIBASetIcon("heroTag","clapperboard","全场欢呼");
+    setVictoryTag(v,"crowd","全场欢呼");
   }else{
     const q=(p-0.78)/0.22;
     cp=hp.clone().addScaledVector(dir,1.68-0.52*q).addScaledVector(perp,side*(0.8+0.22*Math.sin(v.camSeed*1.2))).setY(2.0+Math.sin(q*Math.PI)*0.08+hb);
     lk=hp.clone().setY(1.55);
-    global.AIBASetIcon("heroTag","clapperboard","定格");
+    setVictoryTag(v,"freeze","定格");
   }
   cp.x=clamp(cp.x,-COURT.halfWidth+0.9,COURT.halfWidth-0.9);
   cp.z=clamp(cp.z,COURT.nearBaseline+0.9,COURT.playMaxZ-0.55);
   rig.pos.lerp(cp,Math.min(1,dt*4.6));
   rig.look.lerp(lk,Math.min(1,dt*7.8));
   if(v.t>=v.dur){
-    v.on=false;
-    if(v.hero)stopCelebrate(v.hero);
-    if(v.foil)stopCelebrate(v.foil);
-    $("lbT").style.height="0";$("lbB").style.height="0";$("heroTag").style.display="none";
-    G.state=v.nextState||"champion";
+    const nextState=v.nextState||"champion",cb=v.cb;
+    stopVictoryCine();
+    G.state=nextState;
     applyCamMode();
-    const cb=v.cb;v.cb=null;
     if(cb)cb();
   }
 }
@@ -472,5 +489,5 @@ function updVictoryCine(dt){
 window.AIBA.runtime.register("presentation:cinematics",Object.freeze({
   hero,show,VICTORY_CINE,startHero,endHero,updHero,startAIShow,updShow,updShowCam,finishShow,
   continueAfterShow,skipShow,tryCutAway,updCutAway,updTargetUI,battleCutaway,
-  startCelebrate,updateCelebrate,stopCelebrate,startVictoryCine,updVictoryCine
+  startCelebrate,updateCelebrate,stopCelebrate,startVictoryCine,stopVictoryCine,updVictoryCine
 }));
