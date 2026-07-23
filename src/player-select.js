@@ -115,6 +115,7 @@
     </div>`;
   }
   function setCardState(id){
+    const workbench=document.querySelector(".lockerWorkbench"),scrollTop=workbench?workbench.scrollTop:0;
     const cards=[...document.querySelectorAll(".lockerCard[data-aiba-player]")];
     cards.forEach(card=>{
       const on=card.getAttribute("data-aiba-player")===(id||"");
@@ -128,10 +129,17 @@
       if(current)current.innerHTML=currentMarkup(id||"");
     }
     hydrateAvatars();
+    if(workbench){
+      workbench.scrollTop=scrollTop;
+      requestAnimationFrame(()=>{workbench.scrollTop=scrollTop;});
+    }
   }
   function scrollCardIntoView(id){
     const card=[...document.querySelectorAll(".lockerCard[data-aiba-player]")].find(el=>el.getAttribute("data-aiba-player")===(id||""));
-    if(card&&card.scrollIntoView)card.scrollIntoView({behavior:"smooth",inline:"center",block:"nearest"});
+    const deck=card&&card.closest(".lockerDeck");if(!card||!deck)return;
+    const left=Math.max(0,card.offsetLeft-(deck.clientWidth-card.offsetWidth)*.5);
+    if(deck.scrollTo)deck.scrollTo({left,behavior:"smooth"});
+    else deck.scrollLeft=left;
   }
   function hydrateAvatars(){
     const root=document.querySelector(".playerLocker");

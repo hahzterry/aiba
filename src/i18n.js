@@ -126,6 +126,11 @@ const DICT={
 "半决赛出场顺序:":"Semifinal shooting order:","决赛出场顺序:":"Final shooting order:","你 (YOU)":"YOU",
 /* ---- 赛前 / 比赛 HUD ---- */
 "开战!":"Tip-off!",
+"常规点":"REGULAR","彩球点":"COLOR BALL","中场":"HALFCOURT","篮球可碰撞":"BALL COLLISION",
+"查看完整规则":"View full rules",
+"点击场上光圈切换投篮点;普通点和彩球点用完后需要恢复。":"Tap a court marker to switch spots; regular and color-ball spots recharge after use.",
+"前 70% 显示投篮条,最后 30% 靠手感。":"The shot meter shows for the first 70%; finish by feel.",
+"对手与你同场竞投,空中的篮球可能碰撞改变结果。":"You and the rival shoot together; mid-air ball collisions can change the result.",
 "净计时":"Game clock",
 "得分 PTS":"SCORE PTS",
 "🔥 中场待触发":"🔥 Halfcourt: armed",
@@ -956,6 +961,9 @@ const DICT={
 /* 参数化文案:整节点正则规则 */
 const RULES=[
 [/^aiBA·百分大战(.*)$/,m=>"aiBA · Percent Battle"+m[1]],
+[/^先到 ?(\d+) ?分获胜$/,m=>"First to "+m[1]+" wins"],
+[/^两人同时开投,率先达到 ?(\d+) ?分获胜。$/,m=>"Both players shoot live — first to "+m[1]+" wins."],
+[/^前 ?(\d+) ?球显示投篮条,之后靠手感出手。$/,m=>"Shot meter for the first "+m[1]+" attempts, then shoot by feel."],
 [/^(\d+\/\d+) 核心资源$/,m=>m[1]+" core assets"],
 [/^连中 x(.+)$/,m=>"Streak x"+m[1]],
 [/^· 命中率 ?(.+)$/,m=>"· FG% "+m[1]],

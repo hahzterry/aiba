@@ -32,13 +32,9 @@
                 <button class="quickInfo" onclick="ensureAudio(true,true);showModeInfo('battle')" aria-label="百分大战说明">i</button>
                 <button class="quickPlay" onclick="ensureAudio(true,true);goDiff('battle')"><small>02 / PERCENT</small><b>百分大战</b><span>先到 100</span></button>
               </div>
-              <div class="quickMode dna comingSoon">
-                <button class="quickInfo" onclick="ensureAudio(true,true);showModeInfo('nbadna')" aria-label="NBA DNA 说明">i</button>
-                <button class="quickPlay" disabled aria-disabled="true"><small>03 / DNA</small><b>NBA DNA</b><span>【即将上线】</span></button>
-              </div>
               <div class="quickMode">
                 <button class="quickInfo" onclick="ensureAudio(true,true);showModeInfo('contest')" aria-label="三分挑战说明">i</button>
-                <button class="quickPlay" onclick="ensureAudio(true,true);goDiff('contest')"><small>04 / CLASSIC</small><b>三分大赛</b><span>70 秒挑战</span></button>
+                <button class="quickPlay" onclick="ensureAudio(true,true);goDiff('contest')"><small>03 / CLASSIC</small><b>三分大赛</b><span>70 秒挑战</span></button>
               </div>
             </div>
           </div>${global.AIBALeaderboardHomeMarkup?global.AIBALeaderboardHomeMarkup():""}

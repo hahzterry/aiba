@@ -9,7 +9,7 @@ const childProcess=require("child_process");
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
 const legacyEntry="legacy.html";
-const snapshot="block-3pt-kingv2.03-modular.html";
+const snapshot="block-3pt-kingv2.04-modular.html";
 const requiredFiles=[
   entry,
   legacyEntry,
@@ -97,6 +97,7 @@ if(!entryHtml.includes('<meta name="aiba-entry" content="main">'))fail("entry ma
 if(!legacyHtml.includes("v1.96-full-en"))fail("legacy entry version token missing");
 if(legacyHtml.includes('location.replace("legacy.html"'))fail("legacy entry must not self-redirect");
 if(!entryHtml.includes("data-aiba-early-errors"))fail("next early error diagnostics missing");
+if(!entryHtml.includes('<script src="src/i18n.js?v=1.99-battle"></script>'))fail("i18n cache version missing");
 if(!entryHtml.includes('<script src="src/core/runtime.js?v=refactor7"></script>'))fail("next runtime bridge missing");
 if(entryHtml.includes("player-id-sandbox")||entryHtml.includes("leaderboard-sandbox"))fail("entry must not load sandbox identity/leaderboard");
 if(!entryHtml.includes('<script src="src/recorder.js?v=refactor10"></script>'))fail("next recorder cache version missing");
@@ -105,7 +106,7 @@ if(!entryHtml.includes('<script src="src/rendering/core.js?v=refactor16"></scrip
 for(const file of ["core/error-boundary","core/foundation","data/dialogue","core/state","services/audio-cues","ui/result-copy"]){
   if(!entryHtml.includes(`<script src="src/${file}.js?v=refactor39"></script>`))fail(`next shell module missing ${file}`);
 }
-if(!entryHtml.includes('<script src="src/data/game-config.js?v=refactor40b"></script>'))fail("next game config cache version missing");
+if(!entryHtml.includes('<script src="src/data/game-config.js?v=refactor40c"></script>'))fail("next game config cache version missing");
 
 if(entryHtml.indexOf('src/core/runtime.js')>entryHtml.indexOf('src/config.js'))fail("next runtime must load before config");
 if(entryHtml.indexOf('<script src="src/rendering/core.js?v=refactor16"></script>')>entryHtml.indexOf('<script src="src/core/scene-init.js?v=refactor38"></script>'))fail("rendering core must load before scene construction");
@@ -115,9 +116,9 @@ if(!entryHtml.includes('<script src="src/modes/contest.js?v=refactor5c"></script
 if(!entryHtml.includes('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("next practice module missing");
 if(!entryHtml.includes('<script src="src/ui/panels.js?v=refactor7"></script>'))fail("next panels module missing");
 if(!entryHtml.includes('<script src="src/ui/loading.js?v=refactor7"></script>'))fail("next loading module missing");
-if(!entryHtml.includes('<script src="src/ui/menu.js?v=cutover3"></script>'))fail("next menu module missing");
+if(!entryHtml.includes('<script src="src/ui/menu.js?v=cutover4"></script>'))fail("next menu module missing");
 if(!entryHtml.includes('<script src="src/ui/setup.js?v=refactor13"></script>'))fail("next setup module missing");
-if(!entryHtml.includes('<script src="src/ui/pregame.js?v=refactor15b"></script>'))fail("next pregame module missing");
+if(!entryHtml.includes('<script src="src/ui/pregame.js?v=refactor15c"></script>'))fail("next pregame module missing");
 if(!entryHtml.includes('<script src="src/ui/pause.js?v=1.98"></script>'))fail("next pause module missing");
 if(!entryHtml.includes('<script src="src/core/bootstrap-next.js?v=cutover1"></script>'))fail("next bootstrap module missing");
 for(const file of ["state","spots"]){
@@ -141,8 +142,8 @@ for(const token of ["const GAME_VERSION=","const G={","function triggerMakeRunVo
   if(entryHtml.includes(token))fail("next entry still contains inline shell ownership "+token);
 }
 if(entryHtml.includes("/* Renderer, camera, adaptive quality and base lights are owned"))fail("next entry still contains generated ownership placeholders");
-if(entryHtml.indexOf('src/core/foundation.js?v=refactor39')>entryHtml.indexOf('src/data/game-config.js?v=refactor40b'))fail("foundation must load before game config");
-if(entryHtml.indexOf('src/data/game-config.js?v=refactor40b')>entryHtml.indexOf('src/core/state.js?v=refactor39'))fail("game config must load before runtime state");
+if(entryHtml.indexOf('src/core/foundation.js?v=refactor39')>entryHtml.indexOf('src/data/game-config.js?v=refactor40c'))fail("foundation must load before game config");
+if(entryHtml.indexOf('src/data/game-config.js?v=refactor40c')>entryHtml.indexOf('src/core/state.js?v=refactor39'))fail("game config must load before runtime state");
 if(entryHtml.indexOf('src/core/state.js?v=refactor39')>entryHtml.indexOf('src/services/audio-cues.js?v=refactor39'))fail("runtime state must load before audio cues");
 if(entryHtml.indexOf('src/services/audio-cues.js?v=refactor39')>entryHtml.indexOf('src/audio.js?v=1.89'))fail("audio cues must load before audio engine");
 if(entryHtml.indexOf('<script src="src/core/legacy-adapter.js?v=cutover1"></script>')>entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5b"></script>'))fail("legacy adapter must load before Rack Rush module");
@@ -150,10 +151,10 @@ if(entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5b"></script
 if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5c"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("contest module must load before late hooks");
 if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5c"></script>')>entryHtml.indexOf('<script src="src/modes/practice.js?v=refactor5a"></script>'))fail("contest module must load before practice module");
 if(entryHtml.indexOf('<script src="src/ui/panels.js?v=refactor7"></script>')>entryHtml.indexOf('<script src="src/ui/loading.js?v=refactor7"></script>'))fail("panels must load before loading module");
-if(entryHtml.indexOf('<script src="src/ui/loading.js?v=refactor7"></script>')>entryHtml.indexOf('<script src="src/ui/menu.js?v=cutover3"></script>'))fail("loading must load before menu module");
-if(entryHtml.indexOf('<script src="src/ui/menu.js?v=cutover3"></script>')>entryHtml.indexOf('<script src="src/ui/setup.js?v=refactor13"></script>'))fail("menu must load before setup module");
-if(entryHtml.indexOf('<script src="src/ui/setup.js?v=refactor13"></script>')>entryHtml.indexOf('<script src="src/ui/pregame.js?v=refactor15b"></script>'))fail("setup must load before pregame module");
-if(entryHtml.indexOf('<script src="src/ui/pregame.js?v=refactor15b"></script>')>entryHtml.indexOf('<script src="src/ui/pause.js?v=1.98"></script>'))fail("pregame must load before pause module");
+if(entryHtml.indexOf('<script src="src/ui/loading.js?v=refactor7"></script>')>entryHtml.indexOf('<script src="src/ui/menu.js?v=cutover4"></script>'))fail("loading must load before menu module");
+if(entryHtml.indexOf('<script src="src/ui/menu.js?v=cutover4"></script>')>entryHtml.indexOf('<script src="src/ui/setup.js?v=refactor13"></script>'))fail("menu must load before setup module");
+if(entryHtml.indexOf('<script src="src/ui/setup.js?v=refactor13"></script>')>entryHtml.indexOf('<script src="src/ui/pregame.js?v=refactor15c"></script>'))fail("setup must load before pregame module");
+if(entryHtml.indexOf('<script src="src/ui/pregame.js?v=refactor15c"></script>')>entryHtml.indexOf('<script src="src/ui/pause.js?v=1.98"></script>'))fail("pregame must load before pause module");
 if(entryHtml.indexOf('<script src="src/ui/pause.js?v=1.98"></script>')>entryHtml.indexOf('<script src="src/core/bootstrap-next.js?v=cutover1"></script>'))fail("pause module must load before bootstrap");
 if(!entryHtml.includes('<script src="src/navigation.js?v=1.98"></script>'))fail("next navigation cache version missing");
 if(entryHtml.indexOf('<script src="src/core/bootstrap-next.js?v=refactor12"></script>')>entryHtml.indexOf('<script src="src/navigation.js?v=1.98"></script>'))fail("boot must begin before navigation rewires the loading gate");
@@ -163,25 +164,21 @@ for(const pair of [["state","spots"],["spots","opponent"],["opponent","results"]
 }
 if(entryHtml.indexOf('<script src="src/modes/percent-battle/index.js?v=refactor4"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Percent Battle module must load before late hooks");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v2.03 MODULAR","MODULAR / v2.03"])
+for(const token of ["v2.04 MODULAR","MODULAR / v2.04"])
   if(!entryHtml.includes(token))fail("visible version token missing "+token);
-if(!read("src/data/game-config.js").includes('const GAME_VERSION="v2.03";'))fail("GAME_VERSION must be v2.03");
-if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=2.10">'))fail("stylesheet link missing");
+if(!read("src/data/game-config.js").includes('const GAME_VERSION="v2.04";'))fail("GAME_VERSION must be v2.04");
+if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=2.11">'))fail("stylesheet link missing");
 const menuScript=read("src/ui/menu.js");
 const nbaDnaScript=read("src/nba-dna/NBADNA.js");
-for(const source of [menuScript]){
-  if(!source.includes('class="quickMode dna comingSoon"'))fail("NBA DNA coming-soon mode card missing");
-  if(!source.includes('class="quickPlay" disabled aria-disabled="true"'))fail("NBA DNA mode card is not disabled");
-  if(!source.includes("【即将上线】"))fail("NBA DNA coming-soon label missing");
-  if(/onclick="[^"]*startNBADNA\(\)/.test(source))fail("NBA DNA menu still exposes a launch action");
-}
+const homeMenuSource=menuScript.slice(menuScript.indexOf("function showMenu"),menuScript.indexOf("function showModeInfo"));
+if(/quickMode dna|NBA DNA|showModeInfo\('nbadna'\)/.test(homeMenuSource))fail("NBA DNA entry must stay hidden from home");
+if(!homeMenuSource.includes("grid")&&!read("styles.css").includes(".quickModes{display:grid;grid-template-columns:repeat(2"))fail("home quick modes should use two columns");
 for(const token of ["const NBA_DNA_ENABLED=false","if(!NBA_DNA_ENABLED)","return false"])
   if(!nbaDnaScript.includes(token))fail("NBA DNA runtime gate missing "+token);
 if(!entryHtml.includes('<script src="src/nba-dna/NBADNA.js?v=20260718-coming-soon"></script>'))fail("next NBA DNA gate cache version missing");
-if(!read("styles.css").includes(".quickMode.comingSoon"))fail("NBA DNA coming-soon style missing");
 if(!entryHtml.includes('<script src="src/assets-manifest.js?v=20260719-realnames"></script>'))fail("assets manifest script missing");
 if(!entryHtml.includes('<script src="src/config.js?v=1.93"></script>'))fail("config script missing");
-if(!entryHtml.includes('<script src="src/player-select.js?v=1.77"></script>'))fail("player select script missing");
+if(!entryHtml.includes('<script src="src/player-select.js?v=1.78"></script>'))fail("player select script missing");
 if(!entryHtml.includes('<script src="src/player-locker-preview.js?v=1.76"></script>'))fail("player locker preview script missing");
 if(!entryHtml.includes('<script src="src/player-id.js"></script>'))fail("player id script missing");
 if(!entryHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("leaderboard api script missing");
@@ -189,8 +186,8 @@ if(!entryHtml.includes('<script src="src/leaderboard-ui.js?v=1.94"></script>'))f
 if(!entryHtml.includes('<script src="src/share.js?v=2.01"></script>'))fail("share script missing");
 if(!entryHtml.includes('<script src="src/shot-physics.js?v=1.99"></script>'))fail("shot physics script missing");
 if(!entryHtml.includes('<script src="src/result-stats.js?v=1.78"></script>'))fail("result stats script missing");
-if(!entryHtml.includes('<script src="src/gear.js?v=1.82"></script>'))fail("gear script missing");
-if(!entryHtml.includes('<script src="src/avatar-customizer.js?v=1.79"></script>'))fail("avatar customizer script missing");
+if(!entryHtml.includes('<script src="src/gear.js?v=1.83"></script>'))fail("gear script missing");
+if(!entryHtml.includes('<script src="src/avatar-customizer.js?v=1.80"></script>'))fail("avatar customizer script missing");
 if(!entryHtml.includes('<script src="src/shot-motion.js?v=2.00"></script>'))fail("shot motion script missing");
 if(!entryHtml.includes('<script src="src/roster-style.js?v=1.79"></script>'))fail("roster style script missing");
 if(!entryHtml.includes('<script src="src/hero-moments.js?v=1.79"></script>'))fail("hero moments script missing");
@@ -278,16 +275,23 @@ for(const source of [gameConfigScript]){
 }
 try{new Function(playerSelectScript);}
 catch(e){fail("player select script syntax error: "+e.message);}
+if(playerSelectScript.includes("scrollIntoView"))fail("player selection must not vertically scroll the locker");
+for(const token of ['closest(".lockerDeck")',"workbench.scrollTop=scrollTop"])
+  if(!playerSelectScript.includes(token))fail("player locker scroll preservation missing "+token);
 try{new Function(playerLockerPreviewScript);}
 catch(e){fail("player locker preview script syntax error: "+e.message);}
 for(const token of ["appearanceKey","lockerStage","lockerWorkbench"])
   if(!(playerLockerPreviewScript+playerSelectScript+styles).includes(token))fail("fixed gear preview token missing "+token);
 try{new Function(avatarCustomizerScript);}
 catch(e){fail("avatar customizer script syntax error: "+e.message);}
+for(const token of ["Number.isFinite(opts.scrollTop)","open(null,{scrollTop,quiet:true})"])
+  if(!avatarCustomizerScript.includes(token))fail("customizer scroll preservation missing "+token);
 for(const key of ["AIBACustomizer","customStar","saveUse","applyCustomHead","customHead"])
   if(!avatarCustomizerScript.includes(key))fail("avatar customizer script missing "+key);
 for(const token of ["function applyVisual","function applyGearHead","appearanceKey","refreshGearPreview"])
   if(!gearScript.includes(token))fail("gear visual preview token missing "+token);
+for(const token of ['closest(".lockerWorkbench")',"workbench.scrollTop=scrollTop"])
+  if(!gearScript.includes(token))fail("gear scroll preservation missing "+token);
 try{new Function(playerIdScript);}
 catch(e){fail("player id script syntax error: "+e.message);}
 try{new Function(leaderboardApiScript);}
@@ -518,6 +522,10 @@ for(const token of ["function oppRepositionForPlayer","OPP.playerSpotSeen","cand
 const pregameModule=read("src/ui/pregame.js");
 for(const token of ['runtime.register("ui:pregame"',"dressGuy","AIBASelectedStar","showRackRushIntro","showBattleIntro"])
   if(!pregameModule.includes(token))fail("pregame module token missing "+token);
+for(const token of ['class="battleLineup"','class="battleMetrics"','data-locker-avatar','AIBALockerPreview.render(root)'])
+  if(!pregameModule.includes(token))fail("Percent Battle versus presentation missing "+token);
+for(const token of [".battleIntroBox",".battleLineup",".battleMetric",".battleRuleChips"])
+  if(!styles.includes(token))fail("Percent Battle versus styles missing "+token);
 if(!read("src/core/legacy-adapter.js").includes("dressGuy"))fail("legacy adapter must expose dressGuy to pregame");
 const renderingCore=read("src/rendering/core.js");
 for(const token of ['runtime.register("rendering:core"',"WebGLRenderer","RENDER_QUALITY","updateRenderQuality","dampRig","visualViewport","AmbientLight"])
@@ -557,6 +565,8 @@ for(const token of ["function buildStands(","function buildNearCourtCrowd(","fun
 const renderingProps=read("src/rendering/props.js");
 for(const token of ['runtime.register("rendering:props"',"function buildRacks","function resetRackBalls","function buildHands"])
   if(!renderingProps.includes(token))fail("rendering props token missing "+token);
+for(const token of ["rackStands=[]","deepStands=[]",'showRacks=G.mode!=="battle"',"halfCourtBall.visible=false"])
+  if(!renderingProps.includes(token))fail("Percent Battle rack hiding missing "+token);
 const renderingCharacters=read("src/rendering/characters.js");
 for(const token of ['runtime.register("rendering:characters"',"function voxelGuy","function applyStarStyle","function buildCharacters","function benchSetup"])
   if(!renderingCharacters.includes(token))fail("rendering characters token missing "+token);
@@ -568,7 +578,7 @@ for(const token of ['runtime.register("rendering:motion"',"function shotCurves",
   if(!renderingMotion.includes(token))fail("rendering motion token missing "+token);
 for(const token of ["SHOT_STANCE_YAW","function shotStanceBlend","function tuneGuideHandPose"])
   if(!renderingMotion.includes(token))fail("shared shot pose token missing "+token);
-for(const token of ['src/rendering/props.js?v=refactor23','src/rendering/characters.js?v=refactor24','src/rendering/camera.js?v=refactor25a','src/rendering/motion.js?v=refactor26a'])
+for(const token of ['src/rendering/props.js?v=refactor23a','src/rendering/characters.js?v=refactor24','src/rendering/camera.js?v=refactor25a','src/rendering/motion.js?v=refactor26a'])
   if(!entryHtml.includes(token))fail("next entry missing gameplay rendering module "+token);
 for(const token of ["function buildRacks(","function voxelGuy(","function autoFrameCam(","function shotCurves(","function updWalk("])
   if(entryHtml.includes(token))fail("next entry still contains inline gameplay rendering "+token);

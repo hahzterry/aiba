@@ -251,7 +251,13 @@
   }
   function refreshSection(){
     const el=document.getElementById("lockerGear");
-    if(el)el.outerHTML=sectionMarkup(lastStar);
+    if(!el)return;
+    const workbench=el.closest(".lockerWorkbench"),scrollTop=workbench?workbench.scrollTop:0;
+    el.outerHTML=sectionMarkup(lastStar);
+    if(workbench){
+      workbench.scrollTop=scrollTop;
+      requestAnimationFrame(()=>{workbench.scrollTop=scrollTop;});
+    }
   }
   function equip(slot,id){
     if(!CATALOG[slot])return;

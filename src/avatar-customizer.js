@@ -163,8 +163,9 @@
     return `<div class="customStats">${rows.map(r=>`<span><b>${r[0]}</b><i style="--v:${clamp(r[1]-40,8,96)}%"></i><em>${esc(r[1])} · ${esc(r[2])}</em></span>`).join("")}</div>`;
   }
 
-  function open(ev){
+  function open(ev,opts){
     if(ev&&ev.stopPropagation)ev.stopPropagation();
+    opts=opts||{};
     if(typeof global.showPanel!=="function")return;
     const star=customStar();
     global.showPanel(`<div class="avatarCustomizer">
@@ -189,16 +190,24 @@
     const box=document.getElementById("ovBox");
     if(box)box.classList.add("playerLockerBox","avatarCustomizerBox");
     hydratePreview();
-    if(typeof global.toast==="function")global.toast(`${star.n} 已载入工坊`,"#77e7ff");
+    if(Number.isFinite(opts.scrollTop)){
+      const form=document.querySelector(".customForm");
+      if(form){
+        form.scrollTop=opts.scrollTop;
+        requestAnimationFrame(()=>{form.scrollTop=opts.scrollTop;});
+      }
+    }
+    if(!opts.quiet&&typeof global.toast==="function")global.toast(`${star.n} 已载入工坊`,"#77e7ff");
   }
   function hydratePreview(){
     const root=document.querySelector(".avatarCustomizer");
     if(root&&global.AIBALockerPreview)global.AIBALockerPreview.render(root);
   }
   function pick(field,value){
+    const form=document.querySelector(".customForm"),scrollTop=form?form.scrollTop:0;
     state[field]=value;
     persist();
-    open();
+    open(null,{scrollTop,quiet:true});
   }
   function set(field,value){
     if(field==="num")value=String(value).replace(/[^\d]/g,"").slice(0,2);
@@ -213,9 +222,10 @@
     if(typeof global.toast==="function")global.toast("自建球员已锁定上场","#7CFC6B");
   }
   function reset(){
+    const form=document.querySelector(".customForm"),scrollTop=form?form.scrollTop:0;
     state={...defaults,updatedAt:Date.now()};
     persist();
-    open();
+    open(null,{scrollTop,quiet:true});
   }
 
   function clearCustomHead(guy){

@@ -1,5 +1,5 @@
 /* racks & rack balls */
-const rackBalls=[]; const deepBalls=[]; let halfCourtBall=null;
+const rackBalls=[]; const deepBalls=[]; const rackStands=[]; const deepStands=[]; let halfCourtBall=null;
 function buildRacks(){
   const standM=new THREE.MeshLambertMaterial({color:0x2255aa});
   RACKS.forEach((r,ri)=>{
@@ -7,7 +7,7 @@ function buildRacks(){
     const base=r.p.clone().addScaledVector(dir,-0.85);
     const stand=new THREE.Mesh(new THREE.BoxGeometry(1.5,0.55,0.5),standM);
     stand.position.set(base.x,0.45,base.z);
-    stand.rotation.y=Math.atan2(dir.x,dir.z);scene.add(stand);
+    stand.rotation.y=Math.atan2(dir.x,dir.z);scene.add(stand);rackStands[ri]=stand;
     const perp=V3(dir.z,0,-dir.x);
     rackBalls[ri]=[];
     for(let b=0;b<5;b++){
@@ -24,7 +24,7 @@ function buildRacks(){
       new THREE.MeshLambertMaterial({color:0x1f7a28}));
     const dir=HOOP.clone().sub(d.p);dir.y=0;dir.normalize();
     const base=d.p.clone().addScaledVector(dir,-0.8);
-    ped.position.set(base.x,0.45,base.z);scene.add(ped);
+    ped.position.set(base.x,0.45,base.z);scene.add(ped);deepStands[i]=ped;
     const m=new THREE.Mesh(ballGeo,matDeep);
     m.position.set(base.x,1.05,base.z);scene.add(m);
     deepBalls[i]=m;
@@ -39,9 +39,12 @@ function buildRacks(){
   halfCourtBall.ped=hped;
 }
 function resetRackBalls(){
-  rackBalls.forEach(r=>r.forEach(m=>m.visible=true));
-  deepBalls.forEach(m=>m.visible=true);
-  if(halfCourtBall){halfCourtBall.visible=G.mode==="battle";halfCourtBall.ped.visible=G.mode==="battle";}
+  const showRacks=G.mode!=="battle";
+  rackStands.forEach(stand=>{stand.visible=showRacks;});
+  deepStands.forEach(stand=>{stand.visible=showRacks;});
+  rackBalls.forEach(r=>r.forEach(m=>{m.visible=showRacks;}));
+  deepBalls.forEach(m=>{m.visible=showRacks;});
+  if(halfCourtBall){halfCourtBall.visible=false;halfCourtBall.ped.visible=false;}
 }
 
 /* first-person hands + held ball */
@@ -72,7 +75,6 @@ function buildHands(){
 
 window.AIBA.runtime.register("rendering:props",Object.freeze({
   buildRacks,resetRackBalls,buildHands,
-  getRackBalls:()=>({regular:rackBalls,deep:deepBalls,halfCourt:halfCourtBall}),
+  getRackBalls:()=>({regular:rackBalls,deep:deepBalls,regularStands:rackStands,deepStands,halfCourt:halfCourtBall}),
   getHands:()=>({group:hands,ball:handBall})
 }));
-
