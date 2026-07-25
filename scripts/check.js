@@ -103,15 +103,15 @@ if(!entryHtml.includes('<script src="src/i18n.js?v=2.00-home"></script>'))fail("
 if(!entryHtml.includes('<script src="src/core/runtime.js?v=refactor7"></script>'))fail("next runtime bridge missing");
 if(entryHtml.includes("player-id-sandbox")||entryHtml.includes("leaderboard-sandbox"))fail("entry must not load sandbox identity/leaderboard");
 if(!entryHtml.includes('<script src="src/recorder.js?v=refactor10"></script>'))fail("next recorder cache version missing");
-if(!entryHtml.includes('<script src="src/vision.js?v=2.01"></script>'))fail("next vision cache version missing");
-if(!entryHtml.includes('<script src="src/rendering/core.js?v=refactor16"></script>'))fail("next rendering core missing");
+if(!entryHtml.includes('<script src="src/vision.js?v=2.12"></script>'))fail("next vision cache version missing");
+if(!entryHtml.includes('<script src="src/rendering/core.js?v=2.12"></script>'))fail("next rendering core missing");
 for(const file of ["core/error-boundary","core/foundation","data/dialogue","core/state","services/audio-cues","ui/result-copy"]){
   if(!entryHtml.includes(`<script src="src/${file}.js?v=refactor39"></script>`))fail(`next shell module missing ${file}`);
 }
 if(!entryHtml.includes('<script src="src/data/game-config.js?v=refactor40g"></script>'))fail("next game config cache version missing");
 
 if(entryHtml.indexOf('src/core/runtime.js')>entryHtml.indexOf('src/config.js'))fail("next runtime must load before config");
-if(entryHtml.indexOf('<script src="src/rendering/core.js?v=refactor16"></script>')>entryHtml.indexOf('<script src="src/core/scene-init.js?v=refactor38"></script>'))fail("rendering core must load before scene construction");
+if(entryHtml.indexOf('<script src="src/rendering/core.js?v=2.12"></script>')>entryHtml.indexOf('<script src="src/core/scene-init.js?v=refactor38"></script>'))fail("rendering core must load before scene construction");
 if(!entryHtml.includes('<script src="src/core/legacy-adapter.js?v=cutover1a"></script>'))fail("next legacy adapter missing");
 if(!entryHtml.includes('<script src="src/modes/rack-rush.js?v=refactor5b"></script>'))fail("next Rack Rush module missing");
 if(!entryHtml.includes('<script src="src/modes/contest.js?v=refactor5c"></script>'))fail("next contest module missing");
@@ -146,7 +146,7 @@ if(entryHtml.includes("/* Renderer, camera, adaptive quality and base lights are
 if(entryHtml.indexOf('src/core/foundation.js?v=refactor39')>entryHtml.indexOf('src/data/game-config.js?v=refactor40g'))fail("foundation must load before game config");
 if(entryHtml.indexOf('src/data/game-config.js?v=refactor40g')>entryHtml.indexOf('src/core/state.js?v=refactor39'))fail("game config must load before runtime state");
 if(entryHtml.indexOf('src/core/state.js?v=refactor39')>entryHtml.indexOf('src/services/audio-cues.js?v=refactor39'))fail("runtime state must load before audio cues");
-if(entryHtml.indexOf('src/services/audio-cues.js?v=refactor39')>entryHtml.indexOf('src/audio.js?v=2.12'))fail("audio cues must load before audio engine");
+if(entryHtml.indexOf('src/services/audio-cues.js?v=refactor39')>entryHtml.indexOf('src/audio.js?v=2.12b'))fail("audio cues must load before audio engine");
 if(entryHtml.indexOf('<script src="src/core/legacy-adapter.js?v=cutover1a"></script>')>entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5b"></script>'))fail("legacy adapter must load before Rack Rush module");
 if(entryHtml.indexOf('<script src="src/modes/rack-rush.js?v=refactor5b"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Rack Rush module must load before late hooks");
 if(entryHtml.indexOf('<script src="src/modes/contest.js?v=refactor5c"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("contest module must load before late hooks");
@@ -216,8 +216,8 @@ if(!entryHtml.includes('<script src="src/perf-settings.js?v=1.93b"></script>'))f
 if(!entryHtml.includes('<script src="src/face-overlays.js?v=1.1-realnames"></script>'))fail("face overlays script missing");
 if(!entryHtml.includes('<script src="src/haptics.js?v=1.80"></script>'))fail("haptics script missing");
 if(!entryHtml.includes('<script src="src/visual-director.js?v=1.85"></script>'))fail("visual director script missing");
-if(!entryHtml.includes('<script src="src/audio.js?v=2.12"></script>'))fail("audio script missing");
-if(!entryHtml.includes('<script src="src/vision.js?v=2.01"></script>'))fail("vision script missing");
+if(!entryHtml.includes('<script src="src/audio.js?v=2.12b"></script>'))fail("audio script missing");
+if(!entryHtml.includes('<script src="src/vision.js?v=2.12"></script>'))fail("vision script missing");
 if(!entryHtml.includes('<script src="src/ui/icons.js?v=1"></script>'))fail("local SVG icon script missing");
 if(!entryHtml.includes('<script src="src/ui/interactive-tutorial.js?v=2.05"></script>'))fail("interactive tutorial script missing");
 if(!entryHtml.includes('<script src="src/navigation.js?v=1.98a"></script>'))fail("navigation script missing");
@@ -440,9 +440,12 @@ for(const key of ["crowdHeat","setCrowdHeat","AIBAAudio"])
   if(!audioScript.includes(key))fail("audio script missing crowd heat "+key);
 const voiceFiles=new Set([...audioScript.matchAll(/voiceUrl\("([^"]+\.wav)"\)/g)].map(m=>m[1]));
 if(!voiceFiles.size)fail("no voiceUrl wav references found in audio script");
+const voiceExt=(audioScript.match(/const VOICE_EXT="([^"]+)"/)||[])[1]||".wav";
+function voiceExists(name){
+  return exists(path.posix.join("assets/aiba-audio/voices",name.replace(/\.wav$/i,voiceExt)));
+}
 for(const file of voiceFiles){
-  const rel=path.posix.join("assets/aiba-audio/voices",file);
-  if(!exists(rel))fail("missing referenced voice clip "+rel);
+  if(!voiceExists(file))fail("missing referenced voice clip "+file+" (ext "+voiceExt+")");
 }
 const audioEventsBlock=(audioScript.match(/const AUDIO_EVENTS = \{([\s\S]*?)\n\};/)||[])[1]||"";
 const audioEvents=[...audioEventsBlock.matchAll(/\n\s*([A-Za-z0-9_]+):\s*\[([^\]]*)\]/g)].map(m=>({id:m[1],files:[...m[2].matchAll(/"([^"]+)"/g)].map(x=>x[1])}));
@@ -461,13 +464,11 @@ const allCode=walkSrc("src").map(read).join("\n");
 for(const ev of audioEvents){
   if(!new RegExp('playAudioEvent\\(\\s*["\\\']'+ev.id+'["\\\']').test(allCode))fail("AUDIO_EVENTS entry has no direct trigger "+ev.id);
   for(const name of ev.files){
-    const rel=path.posix.join("assets/aiba-audio/voices",name+".wav");
-    if(!exists(rel))fail("missing AUDIO_EVENTS clip "+rel);
+    if(!voiceExists(name+".wav"))fail("missing AUDIO_EVENTS clip "+name+voiceExt);
   }
 }
 for(const name of new Set([...allCode.matchAll(/playSFX\(\s*["']([^"']+)["']/g)].map(m=>m[1]))){
-  const rel=path.posix.join("assets/aiba-audio/voices",name+".wav");
-  if(!exists(rel))fail("missing SFX clip "+rel);
+  if(!voiceExists(name+".wav"))fail("missing SFX clip "+name+voiceExt);
 }
 const vision=read("src/vision.js");
 try{new Function(vision);}

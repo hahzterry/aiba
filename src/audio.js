@@ -1,6 +1,9 @@
 /* ====== 真人配音: 固定台词优先播放英文 wav, 动态台词走英文合成兜底 ====== */
 const VOICE_BASE=(typeof EXT_AUDIO!=="undefined"&&EXT_AUDIO&&EXT_AUDIO.voiceBase)||"assets/aiba-audio/voices/";
-const voiceUrl=name=>VOICE_BASE+name;
+/* 语音统一走这里换后缀:scripts/compress-voices.js --apply 把 WAV 转成 MP3 后
+   只需要改这一个常量,代码里写死的 ".wav" 会被自动映射过去。 */
+const VOICE_EXT=".wav";
+const voiceUrl=name=>VOICE_BASE+String(name).replace(/\.wav$/i,VOICE_EXT);
 const PREGAME_COUNTDOWN_CLIPS=Object.freeze([
   voiceUrl("pre_countdown_street_03.wav"),
   voiceUrl("pre_countdown_street_04.wav"),
@@ -337,15 +340,31 @@ function extInit(){
     }catch(e){}
   }
 }
+/* 一次性音效(篮网/篮筐等)的副本池:直接 cloneNode() 每响一次就要重新走一遍资源加载,
+   投篮密集时既浪费请求又容易赶不上出声。这里按 key 缓存少量副本循环复用。 */
+const extPool={};
+const EXT_POOL_MAX=4;
+function extOneShot(k,a){
+  const pool=extPool[k]||(extPool[k]=[]);
+  let el=pool.find(x=>x.paused||x.ended);
+  if(!el&&pool.length<EXT_POOL_MAX){
+    el=a.cloneNode();el.volume=a.volume;el.preload="auto";pool.push(el);
+  }
+  if(!el){el=pool[0];try{el.pause();}catch(e){}}
+  try{el.currentTime=0;}catch(e){}
+  return el;
+}
 function extPlay(k){
   const a=extA[k];if(!a||MUTED)return false;
   if(Date.now()<(mediaRetryAt[k]||0))return false;
+  /* 一次性音效还没缓冲好就交回合成音兜底,否则这一下会完全没声音 */
+  if(!a.loop&&k!=="gull"&&a.readyState<2)return false;
   try{
     routeExternalMediaElement(k,a);
     const playSafe=x=>{const p=x.play();if(p&&p.then)p.then(()=>{mediaRetryAt[k]=0;delete document.documentElement.dataset.audioIssue;syncAudioDebug();}).catch(e=>{mediaRetryAt[k]=Date.now()+2500;noteAudioIssue("media-play",e);syncAudioDebug();});};
     if(a.loop){if(a.paused)playSafe(a);}
     else if(k==="gull"){a.currentTime=0;playSafe(a);}
-    else{const c=a.cloneNode();c.volume=a.volume;routeExternalMediaElement(k,c);playSafe(c);}
+    else{const c=extOneShot(k,a);routeExternalMediaElement(k,c);playSafe(c);}
   }catch(e){return false}
   return true;
 }

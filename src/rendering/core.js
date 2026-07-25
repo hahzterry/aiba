@@ -1,5 +1,13 @@
 /* ---------------- three.js setup ---------------- */
-const renderer=new THREE.WebGLRenderer({canvas:$("c"),antialias:true,powerPreference:"high-performance"});
+/* 手机上关 MSAA:方块风格本来就没有多少斜边,抗锯齿收益很小,但多重采样是实打实的
+   填充率开销——体感模式还要和摄像头推理抢资源,这一项省得最划算。桌面端保持开启。 */
+const AA_COARSE_POINTER=(()=>{
+  try{
+    if(typeof matchMedia!=="function")return false;
+    return matchMedia("(pointer:coarse)").matches||Math.min(innerWidth,innerHeight)<700;
+  }catch(e){return false;}
+})();
+const renderer=new THREE.WebGLRenderer({canvas:$("c"),antialias:!AA_COARSE_POINTER,powerPreference:"high-performance"});
 renderer.setPixelRatio(1);
 if(THREE.sRGBEncoding)renderer.outputEncoding=THREE.sRGBEncoding;
 const scene=new THREE.Scene();

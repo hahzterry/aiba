@@ -53,6 +53,9 @@ const VISION={
 };
 const VISION_READY_HOLD_MS=120;
 const VISION_RELEASE_LOST_MS=140;
+/* “看不到你”语音提示:必须连续丢失这么久才播,避免出手瞬间手腕出画就被念一次 */
+const VISION_LOST_PROMPT_MS=2000;
+const VISION_LOST_COOLDOWN_MS=9000;
 const _visionDockPoint=typeof THREE!=="undefined"?new THREE.Vector3():null;
 function visionSyncFrameGeometry(video){
   if(!video)return VISION.frame;
@@ -535,19 +538,24 @@ function visionFrame(now){
   const step=canAdvance?visionGestureStep(VISION.machine,sample,now):{type:"none",phase:"idle",progress:0};
   handleVisionGesture(step);
   syncVisionOwnedPower(step);
-  if (VISION.enabled && sample) {
-    if (sample.ready && !VISION._lastReady) {
-      if (now - (VISION._lastReadyTime || 0) > 3000) {
-        if (typeof playAudioEvent === "function") playAudioEvent("pose_ready");
-        VISION._lastReadyTime = now;
+  /* 提示只看 sample.valid(真的追踪不到人),不能看 sample.ready —— 后者是“双手在
+     蓄力框内”,每次抬手出手都会变 false,会导致每投一球就被提示一次。
+     并且要求连续丢失 VISION_LOST_PROMPT_MS 才播,手腕短暂出画不打扰。 */
+  if(VISION.enabled&&sample){
+    if(sample.valid){
+      if(VISION._lostPrompted&&now-(VISION._lastReadyTime||0)>VISION_LOST_PROMPT_MS){
+        if(typeof playAudioEvent==="function")playAudioEvent("pose_ready");
+        VISION._lastReadyTime=now;
       }
-    } else if (!sample.ready && VISION._lastReady) {
-      if (now - (VISION._lastLostTime || 0) > 4000) {
-        if (typeof playAudioEvent === "function") playAudioEvent("pose_lost");
-        VISION._lastLostTime = now;
+      VISION._lostSince=0;VISION._lostPrompted=false;
+    }else{
+      if(!VISION._lostSince)VISION._lostSince=now;
+      if(!VISION._lostPrompted&&now-VISION._lostSince>=VISION_LOST_PROMPT_MS&&
+         now-(VISION._lastLostTime||0)>VISION_LOST_COOLDOWN_MS){
+        if(typeof playAudioEvent==="function")playAudioEvent("pose_lost");
+        VISION._lastLostTime=now;VISION._lostPrompted=true;
       }
     }
-    VISION._lastReady = sample.ready;
   }
   if(shouldDraw){
     VISION.lastDraw=now;
