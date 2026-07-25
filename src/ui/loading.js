@@ -11,13 +11,36 @@
     const percent=Math.round(clamp(done/Math.max(1,total),0,1)*100);
     $("bootBar").style.width=percent+"%";$("bootPercent").textContent=percent+"%";$("bootFile").textContent=finished+"/"+count+" 核心资源";
   }
+  /* 音频不能用 fetch() 预热:<audio> 元素走独立的媒体缓存,不会复用 fetch 的结果,
+     等于每个音轨下载两遍。改成直接等 extInit() 已创建的元素就绪。 */
+  function waitMediaReady(el,timeoutMs){
+    return new Promise(resolve=>{
+      if(!el)return resolve(false);
+      if(el.readyState>=3)return resolve(true);
+      let settled=false;
+      const finish=ok=>{
+        if(settled)return;settled=true;
+        ["canplaythrough","loadeddata","error","stalled"].forEach(type=>el.removeEventListener(type,onEvent));
+        clearTimeout(timer);resolve(ok);
+      };
+      const onEvent=event=>{if(event.type==="error"||event.type==="stalled")finish(false);else finish(true);};
+      ["canplaythrough","loadeddata","error","stalled"].forEach(type=>el.addEventListener(type,onEvent));
+      const timer=setTimeout(()=>finish(el.readyState>=2),timeoutMs||12000);
+      try{if(el.preload!=="auto"){el.preload="auto";el.load();}}catch(e){}
+    });
+  }
   async function preloadBootAsset(asset,total,state){
     let ok=true;
     try{
-      const controller=typeof AbortController!=="undefined"?new AbortController():null;
-      const timer=controller?setTimeout(()=>controller.abort(),12000):null;
-      const response=await fetch(asset.url,{cache:"force-cache",signal:controller?controller.signal:undefined});
-      if(timer)clearTimeout(timer);if(!response.ok)throw new Error("HTTP "+response.status);await response.arrayBuffer();
+      if(asset.media){
+        ok=await waitMediaReady((typeof extA!=="undefined"?extA:{})[asset.media]);
+        if(!ok)bootFailed++;
+      }else{
+        const controller=typeof AbortController!=="undefined"?new AbortController():null;
+        const timer=controller?setTimeout(()=>controller.abort(),12000):null;
+        const response=await fetch(asset.url,{cache:"force-cache",signal:controller?controller.signal:undefined});
+        if(timer)clearTimeout(timer);if(!response.ok)throw new Error("HTTP "+response.status);await response.arrayBuffer();
+      }
     }catch(error){ok=false;bootFailed++;}
     state.done+=asset.weight;state.finished++;setBootProgress(state.done,total,state.finished,state.count);return ok;
   }
@@ -30,8 +53,9 @@
     $("bootLoad").addEventListener("pointerdown",unlockBoot,{passive:false});global.showMenu();
     const assets=[
       {url:global.BOOT_COVER.cover,weight:100000},{url:"assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf",weight:38576},
-      {url:EXT_AUDIO.bgm,weight:807227},{url:EXT_AUDIO.crowd,weight:1119164},{url:EXT_AUDIO.crowdCheer,weight:300975},
-      {url:EXT_AUDIO.rain,weight:731204},{url:EXT_AUDIO.ocean,weight:32684},{url:EXT_AUDIO.gull,weight:32108}
+      {media:"bgm",url:EXT_AUDIO.bgm,weight:807227},{media:"crowd",url:EXT_AUDIO.crowd,weight:1119164},
+      {media:"crowdCheer",url:EXT_AUDIO.crowdCheer,weight:300975},{media:"rain",url:EXT_AUDIO.rain,weight:731204},
+      {media:"ocean",url:EXT_AUDIO.ocean,weight:32684},{media:"gull",url:EXT_AUDIO.gull,weight:32108}
     ];
     const usable=assets.filter(asset=>asset.url),total=usable.reduce((sum,asset)=>sum+asset.weight,0);
     const state={done:0,finished:0,count:usable.length};$("bootStatus").textContent="正在同步画面与球馆声音";

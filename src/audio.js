@@ -321,9 +321,15 @@ function extInit(){
   for(const k in EXT_AUDIO){
     const u=EXT_AUDIO[k];if(!u)continue;
     try{
-      const a=new Audio(u);a.crossOrigin="anonymous";
+      /* 先配好 crossOrigin/preload/loop 再赋 src:构造函数传 URL 会立刻开始下载,
+         之后改 crossOrigin 会切换 CORS 模式并重新发起请求(等于每个文件下载两次) */
+      /* 同源资源不需要 crossOrigin;带上会让 <audio> 走 CORS 模式,与启动进度条的
+         fetch() 不共享 HTTP 缓存,导致每个音频文件被下载两次 */
+      const a=new Audio();
       const looped=k==="bgm"||k==="crowd"||k==="crowdCheer"||k==="rain"||k==="ocean";
-      a.preload=looped?"auto":"metadata";a.loop=looped;
+      /* 全部 preload="auto":这几个都是启动进度条要等的资源,用 metadata 只会让
+         启动阶段再补一次完整下载 */
+      a.preload="auto";a.loop=looped;a.src=u;
       a.volume=EXT_DEFAULT_VOLUME[k]||0.85;
       a.onerror=()=>{delete extA[k];};
       extA[k]=a;
@@ -464,7 +470,7 @@ function playVoiceUrl(u,role,opt){
   if(!u||MUTED)return false;
   try{
     opt=opt||{};audioInit();
-    if(!playClip.cache[u]){const a=new Audio(u);a.crossOrigin="anonymous";a.preload="auto";a.load();playClip.cache[u]=a;}
+    if(!playClip.cache[u]){const a=new Audio();a.preload="auto";a.src=u;playClip.cache[u]=a;}
     const base=playClip.cache[u],a=base.paused&&base.currentTime===0?base:base.cloneNode();
     a.crossOrigin="anonymous";
     const routed=routeVoiceElement(a,role);
@@ -514,7 +520,7 @@ function preloadVoiceClips(){
   const urls=Object.values(VOICE_CLIPS).concat(VOICE_RULES.map(r=>r.url),PREGAME_COUNTDOWN_CLIPS,eventUrls,sfxUrls);
   urls.forEach(u=>{
     if(!u||playClip.cache[u])return;
-    try{const a=new Audio(u);a.preload="auto";a.load();playClip.cache[u]=a;}catch(e){}
+    try{const a=new Audio();a.preload="auto";a.src=u;playClip.cache[u]=a;}catch(e){}
   });
 }
 const rnd2=(a,b)=>a+Math.random()*(b-a);
@@ -1193,7 +1199,7 @@ function playSFX(name, vol){
   try {
     audioInit();
     if (!playClip.cache[u]) {
-      const a = new Audio(u); a.crossOrigin = "anonymous"; a.preload = "auto"; a.load();
+      const a = new Audio(); a.preload = "auto"; a.src = u;
       playClip.cache[u] = a;
     }
     const base = playClip.cache[u], a = base.paused && base.currentTime === 0 ? base : base.cloneNode();
