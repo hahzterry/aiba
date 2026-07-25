@@ -71,13 +71,13 @@ function updReplay(dt){
   if(photo){
     rig.pos.copy(rep.photoCam.p);rig.pos.y+=Math.sin(rep.t*8)*0.03;
     rig.look.copy(rep.photoCam.look);
-    global.AIBASetIcon("repCam","video","机位 0 · "+rep.photoCam.n);
+    window.AIBASetIcon("repCam","video","机位 0 · "+rep.photoCam.n);
   }else if(t<cut){
     rig.pos.copy(rep.camA.p);rig.pos.x+=Math.sin(rep.t*0.5)*0.5;rig.pos.y+=Math.sin(rep.t*0.7)*0.15;
-    global.AIBASetIcon("repCam","video","机位 1 · "+rep.camA.n);
+    window.AIBASetIcon("repCam","video","机位 1 · "+rep.camA.n);
   }else{
     rig.pos.copy(rep.camB.p);rig.pos.y+=Math.sin(rep.t*0.6)*0.12;
-    global.AIBASetIcon("repCam","video","机位 2 · "+rep.camB.n);
+    window.AIBASetIcon("repCam","video","机位 2 · "+rep.camB.n);
   }
   if(!photo)rig.look.copy(rep.ghost.position);
   if(!rep.scoredFx&&t>=h.tf*0.98){

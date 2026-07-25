@@ -9,7 +9,7 @@ const childProcess=require("child_process");
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
 const legacyEntry="legacy.html";
-const snapshot="block-3pt-kingv2.10-modular.html";
+const snapshot="block-3pt-kingv2.11-modular.html";
 const requiredFiles=[
   entry,
   legacyEntry,
@@ -165,9 +165,9 @@ for(const pair of [["state","spots"],["spots","opponent"],["opponent","results"]
 }
 if(entryHtml.indexOf('<script src="src/modes/percent-battle/index.js?v=refactor4"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Percent Battle module must load before late hooks");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v2.10 MODULAR","MODULAR / v2.10"])
+for(const token of ["v2.11 MODULAR","MODULAR / v2.11"])
   if(!entryHtml.includes(token))fail("visible version token missing "+token);
-if(!read("src/data/game-config.js").includes('const GAME_VERSION="v2.10";'))fail("GAME_VERSION must be v2.10");
+if(!read("src/data/game-config.js").includes('const GAME_VERSION="v2.11";'))fail("GAME_VERSION must be v2.11");
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=2.14">'))fail("stylesheet link missing");
 const menuScript=read("src/ui/menu.js");
 const nbaDnaScript=read("src/nba-dna/NBADNA.js");
@@ -499,8 +499,11 @@ try{new Function(navigation);}
 catch(e){fail("navigation script syntax error: "+e.message);}
 for(const token of ["homeBtn","requestHome","cleanup","removeEventListener(\"pointerdown\",global.unlockBoot)","addEventListener(\"pointerup\""])
   if(!navigation.includes(token))fail("navigation flow token missing "+token);
-for(const token of ["function cancel()",",cancel,resultMarkup"])
-  if(!recorderScript.includes(token))fail("recorder cancellation missing "+token);
+/* 导出顺序会随功能增删变化,只断言"定义了 + 导出了",不绑定相邻写法 */
+if(!recorderScript.includes("function cancel()"))fail("recorder cancellation missing function cancel()");
+const recorderExports=(recorderScript.match(/AIBARecorder=Object\.freeze\(\{([\s\S]*?)\}\)/)||[])[1]||"";
+for(const name of ["cancel","resultMarkup"])
+  if(!new RegExp("(^|[,{\\s])"+name+"\\s*[,:}]").test(recorderExports))fail("recorder must export "+name);
 const gameFlow=read("src/game-flow.js");
 try{new Function(gameFlow);}
 catch(e){fail("game flow script syntax error: "+e.message);}
@@ -515,6 +518,12 @@ const ownershipModuleFiles=["core","materials","court","arena","spectators","hoo
   .concat(["src/core/error-boundary.js","src/core/foundation.js","src/data/game-config.js","src/data/dialogue.js","src/core/state.js","src/services/audio-cues.js","src/ui/result-copy.js","src/gameplay/shots.js","src/gameplay/collisions.js","src/presentation/cinematics.js","src/presentation/pregame.js","src/presentation/battle.js","src/presentation/replay.js","src/presentation/win-cinematic.js","src/ui/battle-controls.js","src/core/input.js","src/core/game-loop.js","src/core/scene-init.js"]);
 try{new Function(ownershipModuleFiles.map(read).join("\n;\n"));}
 catch(e){fail("ownership modules have conflicting top-level declarations: "+e.message);}
+/* 顶层脚本(非 IIFE 包装)里不能出现 Node 风格的 global.*:浏览器里会直接 ReferenceError */
+for(const rel of walkSrc("src")){
+  const src=read(rel);
+  if(/function[A-Za-z ]*\(global\)/.test(src))continue;   // IIFE 包装过的模块可以用 global
+  if(/\bglobal\s*\./.test(src))fail(rel+" uses bare global.* but is not wrapped in an IIFE; use window.*");
+}
 const runtimeScript=read("src/core/runtime.js");
 for(const token of ["aiba_next_v1:","scopeLocalStorage","attachLegacy","service:registered"])
   if(!runtimeScript.includes(token))fail("runtime bridge token missing "+token);
@@ -622,7 +631,7 @@ for(const token of ['runtime.register("presentation:pregame"',"const PREGAME=","
 const presentationBattle=read("src/presentation/battle.js");
 for(const token of ['runtime.register("presentation:battle"',"function updBattleCut","function checkBattleOvertake","function battleScoreCallout"])
   if(!presentationBattle.includes(token))fail("presentation battle token missing "+token);
-for(const token of ['src/rendering/effects.js?v=refactor27','src/presentation/cinematics.js?v=refactor28d','src/presentation/pregame.js?v=refactor29','src/presentation/battle.js?v=refactor30'])
+for(const token of ['src/rendering/effects.js?v=refactor27','src/presentation/cinematics.js?v=2.11','src/presentation/pregame.js?v=refactor29','src/presentation/battle.js?v=refactor30'])
   if(!entryHtml.includes(token))fail("next entry missing presentation module "+token);
 for(const token of ["function startHero(","function startAIShow(","function startVictoryCine(","function startPreGameShow(","function battleScoreCallout(","function startConfetti("])
   if(entryHtml.includes(token))fail("next entry still contains inline presentation "+token);
@@ -655,7 +664,7 @@ if(!coreLoop.includes('if(VICTORY_CINE.on&&G.state!=="victorycine")stopVictoryCi
   fail("game loop must cancel a stale victory cinematic before camera dispatch");
 for(const token of ['runtime.register("core:scene-init"',"buildCourt();","buildCharacters();","applyScenePreset(currentScenePreset"])
   if(!sceneInit.includes(token))fail("scene init token missing "+token);
-for(const token of ['src/gameplay/shots.js?v=refactor31a','src/presentation/replay.js?v=refactor32a','src/ui/battle-controls.js?v=refactor33b','src/gameplay/collisions.js?v=refactor34','src/presentation/win-cinematic.js?v=refactor35a','src/core/input.js?v=cutover2','src/core/game-loop.js?v=refactor37a','src/core/scene-init.js?v=refactor38'])
+for(const token of ['src/gameplay/shots.js?v=refactor31a','src/presentation/replay.js?v=2.11','src/ui/battle-controls.js?v=refactor33b','src/gameplay/collisions.js?v=refactor34','src/presentation/win-cinematic.js?v=2.11','src/core/input.js?v=cutover2','src/core/game-loop.js?v=refactor37a','src/core/scene-init.js?v=refactor38'])
   if(!entryHtml.includes(token))fail("next entry missing runtime-core module "+token);
 for(const token of ["function startCharge(","function updBalls(","function startReplay(","function buildSpotDots(","function ballCollide(","function startWinCine(","function onDown(","function animate(","buildCourt();"])
   if(entryHtml.includes(token))fail("next entry still contains inline runtime core "+token);

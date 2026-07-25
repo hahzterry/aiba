@@ -397,7 +397,7 @@ function setVictoryTag(v,phase,label){
   if(v.phase===phase)return;
   v.phase=phase;
   const el=$("heroTag");if(!el)return;
-  if(typeof global.AIBASetIcon==="function")global.AIBASetIcon(el,"clapperboard",label);
+  if(typeof window.AIBASetIcon==="function")window.AIBASetIcon(el,"clapperboard",label);
   else el.textContent=label;
 }
 function stopVictoryCine(){

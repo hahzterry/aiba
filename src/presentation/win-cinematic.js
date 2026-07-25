@@ -52,7 +52,7 @@ function startWinCine(win,ball){
   w.ghost.position.copy(w.p0);w.gBlob.position.set(w.p0.x,0.02,w.p0.z);
   // 电影感:黑边 + 字幕
   $("lbT").style.height="11vh";$("lbB").style.height="11vh";
-  $("heroTag").style.display="block";global.AIBASetIcon("heroTag","clapperboard","英雄时刻");
+  $("heroTag").style.display="block";window.AIBASetIcon("heroTag","clapperboard","英雄时刻");
   broadcastSting(win?"score":"danger");
 }
 const _wcGhost=new THREE.Vector3();
@@ -122,7 +122,7 @@ function updWinCine(dt){
     rig.pos.set(cp.x,cp.y+hb,cp.z);
     const lk=w.sPos.clone().setY(1.85).lerp(w.p0,0.35);
     rig.look.set(lk.x,lk.y,lk.z);
-    global.AIBASetIcon("heroTag","clapperboard","出手特写");
+    window.AIBASetIcon("heroTag","clapperboard","出手特写");
   }else if(tt<WC_T1){
     // 飞行轨迹:侧后方跟拍篮球弧线
     const cp=ballPos.clone().addScaledVector(perp,side*3.2).addScaledVector(sdir,-0.6);
@@ -130,7 +130,7 @@ function updWinCine(dt){
     cp.x=clamp(cp.x,-12.5,12.5);
     rig.pos.set(cp.x,cp.y+hb,cp.z);
     rig.look.copy(ballPos);
-    global.AIBASetIcon("heroTag","clapperboard","空中轨迹");
+    window.AIBASetIcon("heroTag","clapperboard","空中轨迹");
   }else if(tt<WC_T2){
     // 顺利时刻:命中后先给投篮者一个庆祝段落
     if(!w.heroStarted){startCelebrate(w.shooter,w.heroType);w.heroStarted=true;}
@@ -146,7 +146,7 @@ function updWinCine(dt){
     const cp=(w.camSeed<Math.PI?heroFocus.clone().addScaledVector(sdir,2.0-camPhase*0.5).add(orbit):heroFocus.clone().addScaledVector(sdir,1.65-camPhase*0.3).addScaledVector(perp,side*(2.3+0.2*Math.cos(w.camSeed)))).setY(1.7+Math.sin(camPhase*Math.PI)*0.18+hb);
     rig.pos.set(cp.x,cp.y,cp.z);
     rig.look.set(heroFocus.x,1.55,heroFocus.z);
-    global.AIBASetIcon("heroTag","clapperboard",w.win?"顺利时刻":"成功瞬间");
+    window.AIBASetIcon("heroTag","clapperboard",w.win?"顺利时刻":"成功瞬间");
   }else if(tt<WC_T2+0.75){
     // 全场沸腾·观众视角:从篮筐后方看台俯视,人群在前景
     if(!w.fxCrowd){
@@ -157,7 +157,7 @@ function updWinCine(dt){
     const crowdCp=V3(side*4.5,5.6,HOOP.z-4.6);
     rig.pos.set(crowdCp.x+hb,crowdCp.y,crowdCp.z);
     rig.look.set(w.sPos.x*0.4,2.3,(HOOP.z+w.sPos.z)*0.5);
-    global.AIBASetIcon("heroTag","clapperboard",w.win?"全场沸腾":"对手率先破百");
+    window.AIBASetIcon("heroTag","clapperboard",w.win?"全场沸腾":"对手率先破百");
   }else{
     // 败方惊讶:贴近失败者的低机位推镜
     updateCelebrate(w.shooter,dt);
@@ -167,7 +167,7 @@ function updWinCine(dt){
     const loserCp=w.lPos.clone().addScaledVector(ldir,2.9-0.7*push).addScaledVector(lperp,side*1.25).setY(1.95);
     rig.pos.set(loserCp.x+hb,loserCp.y,loserCp.z);
     rig.look.set(w.lPos.x,1.55,w.lPos.z);
-    global.AIBASetIcon("heroTag","clapperboard","难以置信");
+    window.AIBASetIcon("heroTag","clapperboard","难以置信");
   }
 
   if(tt>=WC_T3){
