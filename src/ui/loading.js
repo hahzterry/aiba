@@ -11,37 +11,27 @@
     const percent=Math.round(clamp(done/Math.max(1,total),0,1)*100);
     $("bootBar").style.width=percent+"%";$("bootPercent").textContent=percent+"%";$("bootFile").textContent=finished+"/"+count+" 核心资源";
   }
-  /* 音频不能用 fetch() 预热:<audio> 元素走独立的媒体缓存,不会复用 fetch 的结果,
-     等于每个音轨下载两遍。改成直接等 extInit() 已创建的元素就绪。 */
-  function waitMediaReady(el,timeoutMs){
-    return new Promise(resolve=>{
-      if(!el)return resolve(false);
-      if(el.readyState>=3)return resolve(true);
-      let settled=false;
-      const finish=ok=>{
-        if(settled)return;settled=true;
-        ["canplaythrough","loadeddata","error","stalled"].forEach(type=>el.removeEventListener(type,onEvent));
-        clearTimeout(timer);resolve(ok);
-      };
-      const onEvent=event=>{if(event.type==="error"||event.type==="stalled")finish(false);else finish(true);};
-      ["canplaythrough","loadeddata","error","stalled"].forEach(type=>el.addEventListener(type,onEvent));
-      const timer=setTimeout(()=>finish(el.readyState>=2),timeoutMs||12000);
-      try{if(el.preload!=="auto"){el.preload="auto";el.load();}}catch(e){}
-    });
-  }
+  /* 音频同样用 fetch() 预热(移动端在用户交互前不会预加载 <audio>,等元素就绪会
+     一直卡到超时),但拿到的数据不能白扔:直接转成 object URL 喂给音轨,这样
+     <audio> 不会再为同一个文件发第二次请求。 */
   async function preloadBootAsset(asset,total,state){
     let ok=true;
     try{
-      if(asset.media){
-        ok=await waitMediaReady((typeof extA!=="undefined"?extA:{})[asset.media]);
-        if(!ok)bootFailed++;
+      const controller=typeof AbortController!=="undefined"?new AbortController():null;
+      const timer=controller?setTimeout(()=>controller.abort(),12000):null;
+      const response=await fetch(asset.url,{cache:"force-cache",signal:controller?controller.signal:undefined});
+      if(timer)clearTimeout(timer);if(!response.ok)throw new Error("HTTP "+response.status);
+      if(asset.media&&typeof extHydrate==="function"){
+        const blob=await response.blob();
+        if(!extHydrate(asset.media,URL.createObjectURL(blob)))throw new Error("hydrate failed");
       }else{
-        const controller=typeof AbortController!=="undefined"?new AbortController():null;
-        const timer=controller?setTimeout(()=>controller.abort(),12000):null;
-        const response=await fetch(asset.url,{cache:"force-cache",signal:controller?controller.signal:undefined});
-        if(timer)clearTimeout(timer);if(!response.ok)throw new Error("HTTP "+response.status);await response.arrayBuffer();
+        await response.arrayBuffer();
       }
-    }catch(error){ok=false;bootFailed++;}
+    }catch(error){
+      ok=false;bootFailed++;
+      // 预热失败时退回普通 URL,音频照常可用,只是少了进度条上的准确度
+      if(asset.media&&typeof extEnsureSrc==="function")extEnsureSrc(asset.media);
+    }
     state.done+=asset.weight;state.finished++;setBootProgress(state.done,total,state.finished,state.count);return ok;
   }
   async function ensureUIFontReady(){

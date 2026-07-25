@@ -319,20 +319,31 @@ function syncAudioDebug(){
     }
   }catch(e){}
 }
+/* 这几个音轨由启动加载器用 fetch() 拉取(进度条需要真实进度),拿到后把 blob 直接
+   喂给对应元素。要点有两条:
+   1. 这里不给它们赋 src,否则同一个文件会被 <audio> 和 fetch 各下载一遍;
+   2. 但也绝不能反过来改成"等 <audio> 自己加载完"——移动端在用户交互前根本不会
+      预加载媒体,那样启动会一直等到超时(v2.12 的启动变慢就是这么来的)。 */
+const EXT_BOOT_KEYS=["bgm","crowd","crowdCheer","rain","ocean","gull"];
+function extHydrate(k,objectUrl){
+  const a=extA[k];if(!a||!objectUrl)return false;
+  try{a.src=objectUrl;a.load();return true;}catch(e){return false;}
+}
+function extEnsureSrc(k){
+  const a=extA[k];if(!a||a.getAttribute("src"))return false;
+  try{a.src=EXT_AUDIO[k];a.load();return true;}catch(e){return false;}
+}
 function extInit(){
   if(Object.keys(extA).length)return;
   for(const k in EXT_AUDIO){
     const u=EXT_AUDIO[k];if(!u)continue;
     try{
-      /* 先配好 crossOrigin/preload/loop 再赋 src:构造函数传 URL 会立刻开始下载,
-         之后改 crossOrigin 会切换 CORS 模式并重新发起请求(等于每个文件下载两次) */
-      /* 同源资源不需要 crossOrigin;带上会让 <audio> 走 CORS 模式,与启动进度条的
-         fetch() 不共享 HTTP 缓存,导致每个音频文件被下载两次 */
+      /* 先配好 preload/loop 再赋 src:构造函数传 URL 会立刻开始下载。
+         同源资源不需要 crossOrigin,带上反而会让 <audio> 走 CORS 模式。 */
       const a=new Audio();
       const looped=k==="bgm"||k==="crowd"||k==="crowdCheer"||k==="rain"||k==="ocean";
-      /* 全部 preload="auto":这几个都是启动进度条要等的资源,用 metadata 只会让
-         启动阶段再补一次完整下载 */
-      a.preload="auto";a.loop=looped;a.src=u;
+      a.preload="auto";a.loop=looped;
+      if(EXT_BOOT_KEYS.indexOf(k)<0)a.src=u;   // 其余音效立刻带 src;启动音轨等 blob
       a.volume=EXT_DEFAULT_VOLUME[k]||0.85;
       a.onerror=()=>{delete extA[k];};
       extA[k]=a;
@@ -356,6 +367,7 @@ function extOneShot(k,a){
 }
 function extPlay(k){
   const a=extA[k];if(!a||MUTED)return false;
+  extEnsureSrc(k);   // 启动预热没跑到时的兜底:真要播了就直接用普通 URL
   if(Date.now()<(mediaRetryAt[k]||0))return false;
   /* 一次性音效还没缓冲好就交回合成音兜底,否则这一下会完全没声音 */
   if(!a.loop&&k!=="gull"&&a.readyState<2)return false;
