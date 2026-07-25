@@ -9,7 +9,7 @@ const childProcess=require("child_process");
 const root=path.resolve(__dirname,"..");
 const entry="index.html";
 const legacyEntry="legacy.html";
-const snapshot="block-3pt-kingv2.08-modular.html";
+const snapshot="block-3pt-kingv2.09-modular.html";
 const requiredFiles=[
   entry,
   legacyEntry,
@@ -165,9 +165,9 @@ for(const pair of [["state","spots"],["spots","opponent"],["opponent","results"]
 }
 if(entryHtml.indexOf('<script src="src/modes/percent-battle/index.js?v=refactor4"></script>')>entryHtml.indexOf('<script src="src/game-flow.js?v=1.93"></script>'))fail("Percent Battle module must load before late hooks");
 if(/^(<<<<<<<|=======|>>>>>>>)$/m.test(entryHtml))fail("conflict marker in html");
-for(const token of ["v2.08 MODULAR","MODULAR / v2.08"])
+for(const token of ["v2.09 MODULAR","MODULAR / v2.09"])
   if(!entryHtml.includes(token))fail("visible version token missing "+token);
-if(!read("src/data/game-config.js").includes('const GAME_VERSION="v2.08";'))fail("GAME_VERSION must be v2.08");
+if(!read("src/data/game-config.js").includes('const GAME_VERSION="v2.09";'))fail("GAME_VERSION must be v2.09");
 if(!entryHtml.includes('<link rel="stylesheet" href="styles.css?v=2.14">'))fail("stylesheet link missing");
 const menuScript=read("src/ui/menu.js");
 const nbaDnaScript=read("src/nba-dna/NBADNA.js");
@@ -579,7 +579,7 @@ const renderingEnvironments=read("src/rendering/environments.js");
 for(const token of ['runtime.register("rendering:environments"',"function buildOutdoorPark","function buildFlowerCourt","function buildBeachSunset","function applyScenePreset","function updateEnvironment"])
   if(!renderingEnvironments.includes(token))fail("rendering environments token missing "+token);
 if(renderingEnvironments.includes("const rackBalls="))fail("rendering environments must not own gameplay props");
-for(const token of ['src/rendering/arena.js?v=refactor19','src/rendering/spectators.js?v=refactor20','src/rendering/hoop.js?v=refactor21','src/rendering/environments.js?v=refactor22a'])
+for(const token of ['src/rendering/arena.js?v=bake1','src/rendering/spectators.js?v=bake1','src/rendering/hoop.js?v=refactor21','src/rendering/environments.js?v=refactor22a'])
   if(!entryHtml.includes(token))fail("next entry missing court element module "+token);
 for(const token of ["function buildStands(","function buildNearCourtCrowd(","function buildHoop(","function applyScenePreset("])
   if(entryHtml.includes(token))fail("next entry still contains inline court element "+token);
@@ -599,7 +599,7 @@ for(const token of ['runtime.register("rendering:motion"',"function shotCurves",
   if(!renderingMotion.includes(token))fail("rendering motion token missing "+token);
 for(const token of ["SHOT_STANCE_YAW","function shotStanceBlend","function tuneGuideHandPose"])
   if(!renderingMotion.includes(token))fail("shared shot pose token missing "+token);
-for(const token of ['src/rendering/props.js?v=refactor23a','src/rendering/characters.js?v=refactor24','src/rendering/camera.js?v=refactor25a','src/rendering/motion.js?v=refactor26a'])
+for(const token of ['src/rendering/props.js?v=refactor23a','src/rendering/characters.js?v=bake1','src/rendering/camera.js?v=refactor25a','src/rendering/motion.js?v=refactor26a'])
   if(!entryHtml.includes(token))fail("next entry missing gameplay rendering module "+token);
 for(const token of ["function buildRacks(","function voxelGuy(","function autoFrameCam(","function shotCurves(","function updWalk("])
   if(entryHtml.includes(token))fail("next entry still contains inline gameplay rendering "+token);

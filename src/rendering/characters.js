@@ -240,6 +240,44 @@ function buildCharacters(){
   }
   randomizeOutfit(player);randomizeOutfit(passer);
   dressGuy(passer,0x6a727c,0x333a42,"");
+  /* 递球员配色此后固定不变,按段烘焙掉上百次 draw call(玩家与对手保持全精度) */
+  bakeActorSegments(passer);
+}
+/* ---------------- 背景 NPC 降级:按铰接段就地烘焙 ----------------
+   方块球员由上百个纯色小方块拼成,每块一次 draw call。对于外观固定、永远不换配色的
+   背景角色(递球员),可以把同一个铰接段(髋/膝/踝/肩/肘/躯干…)内的纯色方块烘焙成
+   一个带顶点色的网格:段与段之间照常独立旋转,动画完全不受影响。
+   带贴图的球衣/脸、以及会被换色或切显隐的装备件(球鞋/护腕/护袖/头带)一律保持独立。 */
+function bakeActorSegments(guy){
+  if(!guy||!guy.g||guy.__segmentsBaked)return 0;
+  const keep=new Set();
+  [guy.shoes,guy.wrists,guy.sleeves].forEach(arr=>(arr||[]).forEach(m=>m&&keep.add(m)));
+  if(guy.headband)keep.add(guy.headband);
+  const segments=[];
+  (function collect(node){
+    segments.push(node);
+    node.children.forEach(child=>{if(!child.isMesh||child.children.length)collect(child);});
+  })(guy.g);
+  let removed=0;
+  segments.forEach(seg=>{
+    const parts=[],drop=[];
+    seg.children.forEach(child=>{
+      if(!child.isMesh||keep.has(child)||child.children.length)return;
+      const mat=child.material,gp=child.geometry&&child.geometry.parameters;
+      if(!mat||Array.isArray(mat)||mat.map||mat.transparent)return;   // 贴图/多材质/透明:保持独立
+      if(!gp||gp.width==null||gp.height==null||gp.depth==null)return; // 非 Box:跳过
+      child.updateMatrix();
+      const m=child.matrix.clone().multiply(new THREE.Matrix4().makeScale(gp.width,gp.height,gp.depth));
+      parts.push({color:mat.color,matrix:m});
+      drop.push(child);
+    });
+    if(parts.length<2)return;
+    drop.forEach(child=>seg.remove(child));
+    bakeVoxelMesh(seg,parts);
+    removed+=parts.length-1;
+  });
+  guy.__segmentsBaked=true;
+  return removed;
 }
 function rivalFor(o){const i=G.opponents.indexOf(o);return rivals[i>=0?i:0];}
 function benchSetup(){

@@ -13,13 +13,19 @@ function makeNearCourtPerson(parent,cube,cfg,mats){
   const shirt=cfg.kind==="cheer"?mats.cheer[cfg.shirt%mats.cheer.length]:mats.shirts[cfg.shirt%mats.shirts.length];
   const pants=cfg.kind==="cheer"?mats.cheerPants:mats.pants[cfg.pants%mats.pants.length],shoe=mats.shoes[cfg.shoe%mats.shoes.length];
   const hype=cfg.kind==="hype"||cfg.kind==="cheer",scale=cfg.scale||1;
-  const torso=showBox(g,cube,shirt,0,.9,0,.42,.72,.25);
-  const head=showBox(g,cube,skin,0,1.48,-.02,.31,.31,.28);
-  const cap=showBox(g,cube,hair,0,1.66,-.03,.34,.12,.3);
-  const legL=showBox(g,cube,pants,-.13,.38,0,.13,.64,.13);
-  const legR=showBox(g,cube,pants,.13,.38,0,.13,.64,.13);
-  showBox(g,cube,shoe,-.13,.08,-.04,.18,.11,.24);
-  showBox(g,cube,shoe,.13,.08,-.04,.18,.11,.24);
+  /* 躯干/头/帽/腿/鞋原本各自一个 Mesh(且只做 ±5° 的呼吸式微动),烘焙成单个带顶点色的
+     身体网格:整体前倾代替各部件微动,手臂与道具仍然独立驱动,观感几乎无差别。 */
+  const bodyParts=[
+    {color:shirt.color,pos:[0,.9,0],scale:[.42,.72,.25]},
+    {color:skin.color,pos:[0,1.48,-.02],scale:[.31,.31,.28]},
+    {color:hair.color,pos:[0,1.66,-.03],scale:[.34,.12,.3]},
+    {color:pants.color,pos:[-.13,.38,0],scale:[.13,.64,.13]},
+    {color:pants.color,pos:[.13,.38,0],scale:[.13,.64,.13]},
+    {color:shoe.color,pos:[-.13,.08,-.04],scale:[.18,.11,.24]},
+    {color:shoe.color,pos:[.13,.08,-.04],scale:[.18,.11,.24]}
+  ];
+  if(cfg.kind==="cheer")bodyParts.push({color:shirt.color,pos:[0,.58,0],scale:[.52,.18,.27]});
+  const body=bakeVoxelMesh(g,bodyParts);
   const armL=showBox(g,cube,skin,-.34,1.05,-.02,.1,.52,.11);
   const armR=showBox(g,cube,skin,.34,1.05,-.02,.1,.52,.11);
   armL.rotation.z=hype?-.45:-.08;armR.rotation.z=hype?.45:.08;
@@ -36,7 +42,6 @@ function makeNearCourtPerson(parent,cube,cfg,mats){
   }else if(cfg.kind==="cheer"){
     pomL=showBox(g,cube,mats.pomA,-.47,1.3,-.02,.22,.22,.22);
     pomR=showBox(g,cube,mats.pomB,.47,1.3,-.02,.22,.22,.22);
-    showBox(g,cube,shirt,0,.58,0,.52,.18,.27);
   }else if(cfg.kind==="distract"){
     prop=showBox(g,cube,mats.towel,.45,1.32,-.04,.12,.62,.08);
     armR.rotation.z=.58;armR.rotation.x=-.28;
@@ -46,7 +51,7 @@ function makeNearCourtPerson(parent,cube,cfg,mats){
   }
   g.position.set(cfg.x,0,cfg.z);g.rotation.y=cfg.rot;g.scale.setScalar(scale);
   parent.add(g);
-  nearCourtCrowd.people.push({g,torso,head,arms:[armL,armR],legs:[legL,legR],phone,sign,prop,poms:[pomL,pomR],
+  nearCourtCrowd.people.push({g,body,arms:[armL,armR],phone,sign,prop,poms:[pomL,pomR],
     kind:cfg.kind,base:V3(cfg.x,0,cfg.z),baseRot:cfg.rot,axis:cfg.axis||V3(0,0,0),move:cfg.move||0,
     phase:cfg.phase,amp:cfg.amp||1});
 }
@@ -137,10 +142,8 @@ function updNearCourtCrowd(t,dt){
       p.arms[0].rotation.x=-.18*cheer+.12*taunt;
       p.arms[1].rotation.x=-.18*cheer+.12*taunt;
     }
-    p.head.rotation.x=-.03*cheer+.12*taunt;
-    p.torso.rotation.x=-.02*cheer+.08*taunt;
-    p.legs[0].rotation.x=Math.sin(t*4+p.phase)*(.035+.08*base);
-    p.legs[1].rotation.x=-Math.sin(t*4+p.phase)*(.035+.08*base);
+    /* 身体已烘焙成整块:以脚为轴做等效的轻微前倾/后仰(系数减半补偿更长的力臂) */
+    if(p.body)p.body.rotation.x=-.012*cheer+.05*taunt;
   });
   nearCourtCrowd.reaction=Math.max(0,nearCourtCrowd.reaction-dt*1.25);
   nearCourtCrowd.miss=Math.max(0,nearCourtCrowd.miss-dt*1.15);

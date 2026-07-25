@@ -11,14 +11,14 @@ function buildStands(){
   const stepGeo=new THREE.BoxGeometry(1,1,1);
   const stepMat=new THREE.MeshLambertMaterial({color:0x2b2b38});
   const seats=[];
+  /* 看台层级是纯静态同色长条,先收集再一次性烘焙成单个网格(原本每层一次 draw call) */
+  const stepParts=[];
   function side(cx,cz,len,axis,inward,rows){
     for(let r=0;r<rows;r++){
       const off=(r*1.25+0.6);
-      const m=new THREE.Mesh(stepGeo,stepMat);
       const h=0.85*(r+1);
-      if(axis==="x"){m.scale.set(len,h,1.25);m.position.set(cx,h/2,cz-inward*off);}
-      else{m.scale.set(1.25,h,len);m.position.set(cx-inward*off,h/2,cz);}
-      indoorRoot.add(m);
+      if(axis==="x")stepParts.push({color:stepMat.color,pos:[cx,h/2,cz-inward*off],scale:[len,h,1.25]});
+      else stepParts.push({color:stepMat.color,pos:[cx-inward*off,h/2,cz],scale:[1.25,h,len]});
       const n=Math.floor(len/1.15);
       for(let s=0;s<n;s++){
         if(Math.random()<0.1)continue;
@@ -33,6 +33,7 @@ function buildStands(){
   side(0,COURT.farBaseline+2,26,"x",-1,4);       // far end
   side(-13.4,COURT.midZ,COURT.length+4,"z",1,5); // left sideline
   side(13.4,COURT.midZ,COURT.length+4,"z",-1,5); // right sideline
+  if(stepParts.length)bakeVoxelMesh(indoorRoot,stepParts);
   // banner walls
   const banners=[["aiBA PERCENT BATTLE","#13213f","#ffd23f"],["MINE-DEW 深远三分区","#0c3a14","#9dff8d"],["像素之夜 PIXEL NIGHT","#3a1240","#ff9df1"]];
   const wallDefs=[
@@ -56,6 +57,58 @@ function showBox(parent,geo,mat,x,y,z,sx,sy,sz){
   const m=new THREE.Mesh(geo,mat);
   m.position.set(x,y,z);m.scale.set(sx,sy,sz);parent.add(m);
   return m;
+}
+/* ---------------- voxel baking: 把一组固定方块烘焙成单个带顶点色的网格 ----------------
+   方块风格的角色/道具由几十个纯色 Box 组成,每个都是一次 draw call。凡是彼此不再独立
+   运动的部件,都可以在构建期烘焙进同一个几何体,用顶点色保留各自颜色,材质统一为白色
+   Lambert(shader 里 diffuse *= vColor,结果与原来逐块着色一致)。
+   只接受"位置+缩放"的轴对齐盒子,和 showBox 的语义保持一致。 */
+const VOXEL_UNIT_BOX=new THREE.BoxGeometry(1,1,1).toNonIndexed();
+const VOXEL_BAKED_MATERIALS=new Map();
+function bakedVoxelMaterial(key,opts){
+  const id=key||"basic";
+  if(VOXEL_BAKED_MATERIALS.has(id))return VOXEL_BAKED_MATERIALS.get(id);
+  const m=new THREE.MeshLambertMaterial(Object.assign({color:0xffffff,vertexColors:true},opts||{}));
+  VOXEL_BAKED_MATERIALS.set(id,m);
+  return m;
+}
+/* parts: [{color:THREE.Color|number, pos:[x,y,z], scale:[sx,sy,sz]}] 或 [{color, matrix:Matrix4}] */
+function bakeVoxelGeometry(parts){
+  const src=VOXEL_UNIT_BOX,srcPos=src.getAttribute("position"),srcNorm=src.getAttribute("normal");
+  const per=srcPos.count,total=per*parts.length;
+  const pos=new Float32Array(total*3),norm=new Float32Array(total*3),col=new Float32Array(total*3);
+  const m=new THREE.Matrix4(),nm=new THREE.Matrix3(),v=new THREE.Vector3(),c=new THREE.Color();
+  let off=0;
+  for(const part of parts){
+    if(part.matrix)m.copy(part.matrix);
+    else{
+      const s=part.scale||[1,1,1],p=part.pos||[0,0,0];
+      m.makeScale(s[0],s[1],s[2]);m.setPosition(p[0],p[1],p[2]);
+    }
+    nm.getNormalMatrix(m);
+    if(part.color&&part.color.isColor)c.copy(part.color);else c.set(part.color==null?0xffffff:part.color);
+    for(let i=0;i<per;i++){
+      const o=(off+i)*3;
+      v.fromBufferAttribute(srcPos,i).applyMatrix4(m);
+      pos[o]=v.x;pos[o+1]=v.y;pos[o+2]=v.z;
+      v.fromBufferAttribute(srcNorm,i).applyMatrix3(nm).normalize();
+      norm[o]=v.x;norm[o+1]=v.y;norm[o+2]=v.z;
+      col[o]=c.r;col[o+1]=c.g;col[o+2]=c.b;
+    }
+    off+=per;
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute("position",new THREE.BufferAttribute(pos,3));
+  geo.setAttribute("normal",new THREE.BufferAttribute(norm,3));
+  geo.setAttribute("color",new THREE.BufferAttribute(col,3));
+  geo.computeBoundingSphere();
+  return geo;
+}
+/* 便捷封装:烘焙并挂到 parent 上,返回单个 Mesh */
+function bakeVoxelMesh(parent,parts,opts){
+  const mesh=new THREE.Mesh(bakeVoxelGeometry(parts),bakedVoxelMaterial((opts&&opts.materialKey)||"basic",opts&&opts.material));
+  if(parent)parent.add(mesh);
+  return mesh;
 }
 function makeAdBoard(txt,bg,fg,x,z,rot,w=2.7){
   const m=new THREE.Mesh(new THREE.PlaneGeometry(w,0.72),
