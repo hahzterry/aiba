@@ -172,18 +172,22 @@ function makeStreetPerson(parent,cube,cfg,materials){
   const shoe=materials.shoes[cfg.shoe%materials.shoes.length],phone=materials.phone,ballMat=materials.ball;
   const seated=cfg.kind==="bench",scale=cfg.scale||1;
   const bodyY=seated?.76:.92,headY=seated?1.22:1.48;
-  const torso=showBox(g,cube,shirt,0,bodyY,0,.42,seated?.55:.72,.25);
-  const head=showBox(g,cube,skin,0,headY,-.02,.31,.31,.28);
-  const cap=showBox(g,cube,hair,0,headY+.18,-.03,.34,.12,.3);
-  const legY=seated?.34:.38,legZ=seated?-.2:0;
-  const legL=showBox(g,cube,pants,-.13,legY,legZ,.13,seated?.42:.64,.13);
-  const legR=showBox(g,cube,pants,.13,legY,legZ,.13,seated?.42:.64,.13);
-  const footL=showBox(g,cube,shoe,-.13,.08,seated?-.44:-.04,.18,.11,.24);
-  const footR=showBox(g,cube,shoe,.13,.08,seated?-.44:-.04,.18,.11,.24);
-  if(seated){
-    legL.rotation.x=1.15;legR.rotation.x=1.15;
-    footL.rotation.x=.25;footR.rotation.x=.25;
-  }
+  /* 与近场观众同样处理:躯干/头/帽/腿/脚烘焙成单块身体,坐姿的腿脚固定角度直接烘进
+     几何体;原本 ±5° 的呼吸式微动改为整体轻微前倾。手臂/手机/球仍独立驱动。 */
+  const legY=seated?.34:.38,legZ=seated?-.2:0,legH=seated?.42:.64;
+  const bodyMat=(pos,scale,rotX)=>new THREE.Matrix4().compose(
+    new THREE.Vector3(pos[0],pos[1],pos[2]),
+    new THREE.Quaternion().setFromEuler(new THREE.Euler(rotX||0,0,0)),
+    new THREE.Vector3(scale[0],scale[1],scale[2]));
+  const body=bakeVoxelMesh(g,[
+    {color:shirt.color,matrix:bodyMat([0,bodyY,0],[.42,seated?.55:.72,.25])},
+    {color:skin.color,matrix:bodyMat([0,headY,-.02],[.31,.31,.28])},
+    {color:hair.color,matrix:bodyMat([0,headY+.18,-.03],[.34,.12,.3])},
+    {color:pants.color,matrix:bodyMat([-.13,legY,legZ],[.13,legH,.13],seated?1.15:0)},
+    {color:pants.color,matrix:bodyMat([.13,legY,legZ],[.13,legH,.13],seated?1.15:0)},
+    {color:shoe.color,matrix:bodyMat([-.13,.08,seated?-.44:-.04],[.18,.11,.24],seated?.25:0)},
+    {color:shoe.color,matrix:bodyMat([.13,.08,seated?-.44:-.04],[.18,.11,.24],seated?.25:0)}
+  ]);
   const armL=showBox(g,cube,skin,-.34,1.02,-.02,.1,.48,.11);
   const armR=showBox(g,cube,skin,.34,1.02,-.02,.1,.48,.11);
   armL.rotation.z=seated?-.22:-.08;armR.rotation.z=seated?.22:.08;
@@ -197,7 +201,7 @@ function makeStreetPerson(parent,cube,cfg,materials){
   }
   g.position.set(cfg.x,0,cfg.z);g.rotation.y=cfg.rot;g.scale.setScalar(scale);
   parent.add(g);
-  streetCrowd.people.push({g,torso,head,arms:[armL,armR],legs:[legL,legR],phone:phoneMesh,ball,kind:cfg.kind,
+  streetCrowd.people.push({g,body,arms:[armL,armR],phone:phoneMesh,ball,kind:cfg.kind,
     baseY:g.position.y,baseRot:cfg.rot,phase:cfg.phase,amp:cfg.amp||1});
 }
 function buildStreetCrowd(opts){
@@ -262,13 +266,8 @@ function updStreetCrowd(t,dt){
       p.arms[0].rotation.x=-.25*cheer+.18*missPose;
       p.arms[1].rotation.x=-.25*cheer+.18*missPose;
     }
-    if(p.kind==="bench"){
-      p.torso.rotation.x=-.06-.1*cheer+.12*missPose;
-      p.head.rotation.x=-.04-.08*cheer+.18*missPose;
-    }else{
-      p.legs[0].rotation.x=Math.sin(t*4+p.phase)*.08*base;
-      p.legs[1].rotation.x=-Math.sin(t*4+p.phase)*.08*base;
-    }
+    /* 身体已烘焙成整块:以脚为轴做等效的轻微前倾(系数减半补偿更长的力臂) */
+    if(p.body)p.body.rotation.x=p.kind==="bench"?(-.03-.05*cheer+.06*missPose):0;
   });
   streetCrowd.reaction=Math.max(0,streetCrowd.reaction-dt*1.35);
   streetCrowd.miss=Math.max(0,streetCrowd.miss-dt*1.2);
