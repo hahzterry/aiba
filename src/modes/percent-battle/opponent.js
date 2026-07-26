@@ -6,8 +6,8 @@
   const {
     G,BATTLE_TARGET,BATTLE_SPOTS,OPP_SPOT_EMPTY_WAIT,COURT,HOOP,P,V3,clamp,faceTo,rivals,
     matGold,matDeep,matBall,shotProfileFor,DIFFS,aiProb,rnd,shotFlightTime,ballGeo,scene,blobGeo,blobMat,
-    balls,triggerStreetCrowdReaction,bloomOnScore,beginFinalAudioWindow,broadcastSting,toast,boo,gameDjSay,
-    sSwish,battleScoreCallout,updJumbo,checkBattleOvertake,shotCurves,poseGuy,poseBallPos,checkBallCollisions
+    balls,oppPasser,oppPasserBall,triggerStreetCrowdReaction,bloomOnScore,beginFinalAudioWindow,broadcastSting,toast,boo,gameDjSay,
+    sBounce,sSwish,battleScoreCallout,updJumbo,checkBattleOvertake,shotCurves,poseGuy,poseBallPos,checkBallCollisions
   }=ctx;
   const OPP=battle.OPP;
   const OPP_MIN_SEP=1.58;
@@ -51,11 +51,26 @@
     if(candidates[0])pos.copy(candidates[0]);
     return pos;
   }
+  function resetOppPasserPose(){
+    if(!oppPasser)return;
+    oppPasser.arms.forEach(arm=>arm.rotation.x=0);
+    oppPasser.elbows.forEach(elbow=>elbow.rotation.x=0);
+    oppPasser.g.rotation.x=0;
+  }
+  function cancelOppPass(hidePasser){
+    if(OPP.ballOut&&OPP.ballOut.mesh)scene.remove(OPP.ballOut.mesh);
+    OPP.ballOut=null;OPP.possessionSuperChanceId=0;
+    if(OPP.guy&&OPP.guy.ball)OPP.guy.ball.visible=false;
+    if(oppPasserBall)oppPasserBall.visible=true;
+    resetOppPasserPose();
+    if(oppPasser)oppPasser.g.visible=!hidePasser&&G.mode==="battle"&&!G.battleOver;
+  }
   function oppRepositionForPlayer(){
     if(!OPP.on||!OPP.pos||G.mode!=="battle"||G.battleOver)return false;
     OPP.playerSpotSeen=G.battleSpot||0;
     const safe=oppSpotPos(OPP.spotIdx);
     if(OPP.pos.distanceTo(safe)<0.08)return false;
+    cancelOppPass(false);
     OPP.fired=false;OPP.from=OPP.pos.clone();OPP.to=safe;OPP.phase="walk";OPP.t=0;
     return true;
   }
@@ -93,11 +108,28 @@
   function oppSpotReady(index){return !OPP.coolUntil||G.tNow>=(OPP.coolUntil[index]||0);}
   function oppMarkSpotUse(){
     OPP.spotShots=(OPP.spotShots||0)+1;OPP.forceMove=false;
-    if(OPP.spotIdx===7)G.superStock=Math.max(0,(G.superStock||0)-1);
     if(OPP.spotShots>=oppSpotQuota(OPP.spotIdx)){
       if(!OPP.coolUntil)OPP.coolUntil=Array(BATTLE_SPOTS.length).fill(0);
       OPP.coolUntil[OPP.spotIdx]=G.tNow+oppSpotCooldown(OPP.spotIdx);OPP.forceMove=true;
     }
+  }
+  function oppBeginPass(){
+    const spot=BATTLE_SPOTS[OPP.spotIdx],guy=OPP.guy;
+    if(!spot||!guy)return;
+    if(spot.super&&(G.superStock||0)<=0){OPP.forceMove=true;oppPickSpot();return;}
+    cancelOppPass(false);
+    OPP.possessionSuperChanceId=spot.super?(G.superChanceId||0):0;
+    guy.ball.visible=false;oppPasser.g.visible=true;
+    oppPasser.g.rotation.y=faceTo(oppPasser.g.position,OPP.pos);
+    oppPasserBall.visible=false;
+    const from=V3(oppPasser.g.position.x,1.25,oppPasser.g.position.z);
+    const to=OPP.pos.clone();to.y=1.38;
+    const mesh=new global.THREE.Mesh(ballGeo,spot.super?matGold:(spot.deep!=null?matDeep:matBall));
+    mesh.position.copy(from);scene.add(mesh);
+    OPP.ballOut={mesh,from,to,t:0,dur:clamp(.3+from.distanceTo(to)*.045,.42,.78)};
+    OPP.phase="receive";OPP.t=0;OPP.fired=false;
+    oppPasser.arms.forEach(arm=>arm.rotation.x=-1.5);
+    oppPasser.elbows.forEach(elbow=>elbow.rotation.x=-.9);
   }
   function oppBeginLoad(){
     const spot=BATTLE_SPOTS[OPP.spotIdx],guy=OPP.guy;
@@ -113,7 +145,7 @@
     const start=oppSpotPos(OPP.spotIdx);
     OPP.guy.g.position.copy(start);OPP.guy.g.rotation.y=faceTo(start,HOOP);
     OPP.pos=start.clone();OPP.from=start.clone();OPP.to=start.clone();
-    OPP.guy.ball.visible=true;OPP.guy.ball.material=matBall;ctx.refreshBench();
+    OPP.guy.ball.visible=false;OPP.guy.ball.material=matBall;oppPasser.g.visible=true;oppPasserBall.visible=true;ctx.refreshBench();
   }
   function oppPickSpot(){
     const current=OPP.spotIdx,needsBig=G.battleOppScore+10>=BATTLE_TARGET||G.battleOppScore+15<G.score;
@@ -128,6 +160,7 @@
     const superOpen=candidates.find(candidate=>candidate.i===7);
     let index=(needsBig&&superOpen&&Math.random()<0.36)?7:candidates[0].i;
     if(index!==7&&candidates[1]&&Math.random()<0.16)index=candidates[1].i;
+    cancelOppPass(false);
     OPP.spotIdx=index;OPP.spotShots=0;OPP.forceMove=false;
     OPP.from=OPP.pos.clone();OPP.to=oppSpotPos(index);OPP.phase="walk";OPP.t=0;
   }
@@ -150,10 +183,11 @@
     const blob=new global.THREE.Mesh(blobGeo,blobMat.clone());blob.rotation.x=-Math.PI/2;blob.position.set(start.x,0.02,start.z);scene.add(blob);
     balls.push({mesh,blob,p0:start.clone(),v0:velocity,tf:flightTime,t:0,phase:"fly",outcome:made?"swish":"rimout",
       vel:new global.THREE.Vector3(),val:spot.val,money:false,deep:spot.deep!=null,super:!!spot.super,made:false,life:1.6,bounces:0,
-      rec:[],timeLeft:0,hot:false,startPos:start.clone(),silent:true,opp:true,sp:spot,collided:false});
+      rec:[],timeLeft:0,hot:false,startPos:start.clone(),silent:true,opp:true,sp:spot,collided:false,superChanceId:OPP.possessionSuperChanceId||0});
     OPP.guy.ball.visible=false;
   }
   function oppScore(ball){
+    if(ball.super)battle.battleConsumeSuperChance(ball);
     const previousMe=G.score,previousOpponent=G.battleOppScore;
     G.battleOppScore+=ball.val;triggerStreetCrowdReaction("oppMake",ball.val);bloomOnScore(ball.val);
     const ending=G.battleOppScore>=BATTLE_TARGET;if(ending)beginFinalAudioWindow();
@@ -177,7 +211,19 @@
       guy.knees[0].rotation.x=Math.max(0,-swing*0.4+0.2);guy.knees[1].rotation.x=Math.max(0,swing*0.4+0.2);
       guy.ankles[0].rotation.x=-swing*0.2;guy.ankles[1].rotation.x=swing*0.2;
       if(progress>=1){
-        guy.legs.forEach(leg=>leg.rotation.x=0);guy.knees.forEach(knee=>knee.rotation.x=0);guy.ankles.forEach(ankle=>ankle.rotation.x=0);oppBeginLoad();
+        guy.legs.forEach(leg=>leg.rotation.x=0);guy.knees.forEach(knee=>knee.rotation.x=0);guy.ankles.forEach(ankle=>ankle.rotation.x=0);oppBeginPass();
+      }
+    }else if(OPP.phase==="receive"){
+      const pass=OPP.ballOut;
+      if(!pass){oppBeginLoad();return;}
+      pass.t+=dt;const k=Math.min(1,pass.t/pass.dur);
+      pass.mesh.position.lerpVectors(pass.from,pass.to,k);
+      pass.mesh.position.y+=Math.sin(k*Math.PI)*.65;pass.mesh.rotation.x-=dt*10;
+      oppPasser.arms.forEach(arm=>arm.rotation.x=-1.5+k*1.15);
+      oppPasser.elbows.forEach(elbow=>elbow.rotation.x=-.9+k*.8);
+      if(k>=1){
+        scene.remove(pass.mesh);OPP.ballOut=null;oppPasserBall.visible=true;resetOppPasserPose();
+        sBounce();oppBeginLoad();
       }
     }else if(OPP.phase==="load"){
       const phase=Math.min(1.05,OPP.t/OPP.shootDur*1.05),curve=shotCurves(phase);
@@ -189,7 +235,7 @@
         const baseCool=clamp(0.5-(OPP.o.r-85)*0.01,0.25,0.55)+rnd(0,0.2);OPP.coolDur=OPP.forceMove?Math.max(0.2,baseCool*0.55):baseCool;
       }
     }else if(OPP.phase==="cool"&&OPP.t>=OPP.coolDur){
-      if(!OPP.forceMove&&oppSpotReady(OPP.spotIdx)&&OPP.spotShots<oppSpotQuota(OPP.spotIdx))oppBeginLoad();
+      if(!OPP.forceMove&&oppSpotReady(OPP.spotIdx)&&OPP.spotShots<oppSpotQuota(OPP.spotIdx))oppBeginPass();
       else oppPickSpot();
     }
   }
@@ -203,5 +249,5 @@
     let jumboAcc=ctx.getJumboAcc()+dt;if(jumboAcc>0.5){jumboAcc=0;updJumbo();}ctx.setJumboAcc(jumboAcc);
   }
 
-  Object.assign(battle,{mirrorSpot,battlePlayerPos,avoidPlayerOverlap,oppSpotPos,oppRepositionForPlayer,oppSpotQuota,oppSpotCooldown,oppSpotReady,oppMarkSpotUse,oppBeginLoad,startOppShooter,oppPickSpot,oppFireBall,oppScore,updOppShooter,updBattle});
+  Object.assign(battle,{mirrorSpot,battlePlayerPos,avoidPlayerOverlap,oppSpotPos,oppRepositionForPlayer,oppSpotQuota,oppSpotCooldown,oppSpotReady,oppMarkSpotUse,cancelOppPass,oppBeginPass,oppBeginLoad,startOppShooter,oppPickSpot,oppFireBall,oppScore,updOppShooter,updBattle});
 })(window);

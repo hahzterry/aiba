@@ -7,7 +7,7 @@
 
   const {
     $,G,DIFFS,BATTLE_TARGET,BATTLE_SPOTS,BATTLE_NORMAL_STOCK,VISION,GAME_VERSION,GAME_SEED,
-    COURT_ATTACK_DIR,HOOP,scene,balls,rivals,player,passer,handBall,pBall,hands,CAM,P,rig,
+    COURT_ATTACK_DIR,HOOP,scene,balls,rivals,player,passer,oppPasser,oppPasserBall,handBall,pBall,hands,CAM,P,rig,
     camTarget,playerShotProfile,resetFinalRun,resetAudioCueMemory,resetRackBalls,stopCelebrate,
     ensureAudio,hidePanel,music,resetProgressiveSceneForRun,benchSetup,enterArenaAudio,
     curShot,shotBase,faceTo,applyCamMode,autoFrameCam,glideTo,startPreGameShow,stopVictoryCine,
@@ -64,12 +64,14 @@
     G.shots=[];G.canShoot=false;G.blindToasted=false;G.cutQ=[];G.cutAway=null;G.missRun=0;G.posted=[];
     G.battleSpot=2;G.battleOppScore=0;G.battleNext=1.15;G.battleOver=false;
     G.battleStock=[5,5,5,5,5,1,1,0];G.battleReadyAt=Array(BATTLE_SPOTS.length).fill(0);
-    G.superStock=0;G.superSeenMe=0;G.superSeenOpp=0;G._battleUiAcc=0;
+    G.superStock=0;G.superSeenMe=0;G.superSeenOpp=0;G.superChanceId=0;G.superResolvedId=0;G.battleChargeSuperChanceId=0;G._battleUiAcc=0;
     G.battleCalls={};G.battleScoreEvents=0;G.battleCutCount=0;G.battleLastCutAt=-1e9;G.battleLastCutEvent=-1e9;G.battleCutLockUntil=0;
     G.battleClock=null;G.battleResultRecord=null;G.battleControl=VISION.enabled?"vision":"touch";
     G.stats={best:0,moneyM:0,moneyT:0,deepM:0,deepT:0};
     balls.slice().forEach(ball=>{scene.remove(ball.mesh);scene.remove(ball.blob);});balls.length=0;
+    if(typeof battle.cancelOppPass==="function")battle.cancelOppPass();
     OPP.on=false;OPP.fired=false;OPP.spotShots=0;OPP.coolUntil=null;OPP.forceMove=false;G.battleCut=null;
+    oppPasser.g.visible=false;oppPasserBall.visible=true;
     if(player._celeb)stopCelebrate(player);resetRackBalls();
   }
   function startBattle(){
@@ -81,7 +83,7 @@
     $("hud").dataset.mode="battle";$("hud").style.display="block";$("battleControls").style.display="flex";battle.updBattleUI();
     const first=curShot(),base=shotBase(first);
     P.pos.copy(base);P.face=faceTo(base,HOOP);P.walking=false;P.jump=0;P.eyeDip=0;
-    player.g.visible=true;passer.g.visible=true;hands.visible=false;G.state="cinematic";
+    player.g.visible=true;passer.g.visible=true;oppPasser.g.visible=true;oppPasserBall.visible=true;hands.visible=false;G.state="cinematic";
     rig.pos.set(0,11,7);rig.look.copy(HOOP);paSay("百分大战开始!先到一百分获胜!",true);
     autoFrameCam(camTarget,P.pos,0,COURT_ATTACK_DIR,{marginX:1.48,marginY:1.36,minDist:5.8,maxDist:32});
     glideTo(camTarget.pos.clone(),camTarget.look.clone(),1.4,()=>startPreGameShow({mode:"battle"},()=>countdownBattle(3)));

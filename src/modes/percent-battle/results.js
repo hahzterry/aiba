@@ -15,7 +15,7 @@
     startWinCine(win,ball);
   }
   function showBattleResult(win){
-    leaveArenaAudio();G.state="battleend";OPP.on=false;
+    leaveArenaAudio();G.state="battleend";OPP.on=false;if(typeof battle.cancelOppPass==="function")battle.cancelOppPass(true);
     balls.slice().forEach(ball=>{scene.remove(ball.mesh);scene.remove(ball.blob);});balls.length=0;
     $("spotDots").style.display="none";$("edgeArrows").style.display="none";
     $("battleScore").style.display="none";$("midBtn").style.display="none";

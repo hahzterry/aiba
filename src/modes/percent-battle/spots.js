@@ -17,7 +17,7 @@
   function battleRefreshAll(){for(let i=0;i<BATTLE_SPOTS.length;i++)battleRefreshSpot(i);}
   function battleSpotStatus(index){
     battleRefreshSpot(index);const spot=BATTLE_SPOTS[index];
-    if(spot.super)return {ok:(G.superStock||0)>0,label:(G.superStock||0)>0?"可投1次":"待10分节点",short:(G.superStock||0)>0?"1":"--"};
+    if(spot.super)return {ok:(G.superStock||0)>0,label:(G.superStock||0)>0?"开放 · 命中后关闭":"待10分节点",short:(G.superStock||0)>0?"∞":"--"};
     if(index<5){
       const left=G.battleStock?G.battleStock[index]:BATTLE_NORMAL_STOCK;
       const wait=Math.max(0,((G.battleReadyAt&&G.battleReadyAt[index])||0)-G.tNow);
@@ -30,7 +30,7 @@
   function battleUseSpot(index){
     if(G.mode!=="battle"||!G.battleStock||!G.battleReadyAt)return;
     const spot=BATTLE_SPOTS[index];
-    if(spot.super){G.superStock=Math.max(0,(G.superStock||0)-1);return;}
+    if(spot.super)return; // Logo 机会在命中时消耗,出手或打铁不关闭
     if(index<5){
       G.battleStock[index]=Math.max(0,G.battleStock[index]-1);
       if(G.battleStock[index]<=0)G.battleReadyAt[index]=G.tNow+BATTLE_NORMAL_RELOAD;
@@ -38,10 +38,19 @@
     }
     G.battleReadyAt[index]=G.tNow+BATTLE_DEEP_RELOAD;
   }
+  function battleConsumeSuperChance(ball){
+    if(G.mode!=="battle"||!ball||!ball.super)return false;
+    const chanceId=Number(ball.superChanceId)||Number(G.superChanceId)||0;
+    if(!chanceId||chanceId!==G.superChanceId||(G.superStock||0)<=0||G.superResolvedId===chanceId)return false;
+    G.superStock=0;G.superResolvedId=chanceId;
+    battle.updBattleUI();updDotsUI();
+    return true;
+  }
   function battleAddSuperChance(who){
     if(G.mode!=="battle"||G.battleOver)return;
     if((G.superStock||0)<1){
-      G.superStock=1;broadcastSting("danger");gameDjSay("中场十分机会出现!","normal",2.2,true);
+      G.superChanceId=(G.superChanceId||0)+1;G.superStock=1;
+      broadcastSting("danger");gameDjSay("中场十分机会出现!","normal",2.2,true);
       toast((who==="opp"?"对手":"你")+"触发中场10分机会!","#ffd23f");battle.updBattleUI();updDotsUI();
     }
   }
@@ -81,7 +90,7 @@
     $("bsMeNum").textContent=me;$("bsOppNum").textContent=opponentScore;
     $("bsRaceMe").style.width=(me/BATTLE_TARGET*100)+"%";$("bsRaceOpp").style.width=(opponentScore/BATTLE_TARGET*100)+"%";
     $("bsMe").classList.toggle("lead",me>=opponentScore);$("bsOpp").classList.toggle("lead",opponentScore>me);$("hudTarget").textContent="";
-    $("midBtn").classList.toggle("cur",G.battleSpot===7);$("midBtn").textContent=(G.superStock||0)>0?"🔥 中场10分":"🔥 中场待触发";$("midBtn").style.opacity=(G.superStock||0)>0?"1":".55";
+    $("midBtn").classList.toggle("cur",G.battleSpot===7);$("midBtn").textContent=(G.superStock||0)>0?"🔥 中场开放":"🔥 中场待触发";$("midBtn").style.opacity=(G.superStock||0)>0?"1":".55";
   }
   function battleSetSpot(index){
     if(G.mode!=="battle"||G.state!=="battle"||G.battleOver)return;
@@ -96,5 +105,5 @@
     updBattleUI();updDotsUI();walkTo(curShot(),()=>readyBall());
   }
 
-  Object.assign(battle,{battleRefreshSpot,battleRefreshAll,battleSpotStatus,battleSpotAvailable,battleUseSpot,battleAddSuperChance,battleCheckSuperMilestones,battleNearestAvailable,battleAutoMoveIfNeeded,updBattleUI,battleSetSpot});
+  Object.assign(battle,{battleRefreshSpot,battleRefreshAll,battleSpotStatus,battleSpotAvailable,battleUseSpot,battleConsumeSuperChance,battleAddSuperChance,battleCheckSuperMilestones,battleNearestAvailable,battleAutoMoveIfNeeded,updBattleUI,battleSetSpot});
 })(window);
