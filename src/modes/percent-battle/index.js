@@ -4,8 +4,8 @@
   const runtime=global.AIBA&&global.AIBA.runtime,battle=global.AIBABattle;
   if(!runtime||!battle)throw new Error("Percent Battle module requires AIBA runtime and submodules");
   const required=[
-    "startBattle","countdownBattle","battleElapsedMs","formatBattleTime","battleSetSpot","battleUseSpot",
-    "startOppShooter","oppScore","updBattle","finishBattle","showBattleResult"
+    "startBattle","countdownBattle","battleElapsedMs","formatBattleTime","battleSetSpot","battleUseSpot","battleConsumeSuperChance",
+    "startOppShooter","oppBeginPass","cancelOppPass","oppScore","updBattle","finishBattle","showBattleResult"
   ];
   const missing=required.filter(name=>typeof battle[name]!=="function");
   if(missing.length)throw new Error("Percent Battle module incomplete: "+missing.join(", "));
@@ -20,7 +20,7 @@
     exit(){
       const ctx=runtime.service("legacy"),G=ctx&&ctx.G;
       if(!G)return;
-      G.running=false;G.canShoot=false;battle.pauseBattleClock();battle.OPP.on=false;
+      G.running=false;G.canShoot=false;battle.pauseBattleClock();battle.OPP.on=false;battle.cancelOppPass(true);
     },
     api:battle
   });

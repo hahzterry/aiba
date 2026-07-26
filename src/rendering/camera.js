@@ -11,6 +11,7 @@ function applyCamMode(){
   hands.visible=CAM.mode===0&&inPlay;
   player.g.visible=CAM.mode!==0&&inPlay;
   passer.g.visible=inPlay;
+  oppPasser.g.visible=inPlay&&G.mode==="battle";
   $("camBtn").style.display=inPlay?"block":"none";
   camSnap=true; // 切换机位时下一帧硬切,避免跨场平滑造成大幅扫镜
   benchVis();

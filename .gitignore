@@ -9,6 +9,7 @@ assets/aiba-covers/*.MOV
 assets/aiba-covers/MJ24.mp4
 assets/aiba-covers/tmac1.mp4
 assets/aiba-audio/*-source.mp3
+assets/aiba-audio/bkyx/
 assets/aiba-audio/voices/*
 !assets/aiba-audio/voices/
 !assets/aiba-audio/voices/p_*_en.wav

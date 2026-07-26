@@ -224,7 +224,7 @@ function randomizeOutfit(o){
   setBeard(o, Math.random()<0.3, hc);
 }
 const BENCH=[V3(-9.3,0,-5),V3(-9.3,0,-2.5),V3(-9.3,0,0)];
-let player,pBall,passer,passerBall,rivals=[];
+let player,pBall,passer,passerBall,oppPasser,oppPasserBall,rivals=[];
 function buildCharacters(){
   player=voxelGuy();
   player.g.visible=false;scene.add(player.g);
@@ -233,15 +233,21 @@ function buildCharacters(){
   passer.g.position.set(1.75,0,-6.85);passer.g.visible=false;scene.add(passer.g);
   passerBall=new THREE.Mesh(ballGeo,matBall);
   passerBall.position.set(0,1.12,0.32);passer.g.add(passerBall);
+  oppPasser=voxelGuy();
+  oppPasser.g.position.set(-1.75,0,-6.85);oppPasser.g.visible=false;scene.add(oppPasser.g);
+  oppPasserBall=new THREE.Mesh(ballGeo,matBall);
+  oppPasserBall.position.set(0,1.12,0.32);oppPasser.g.add(oppPasserBall);
   for(let i=0;i<3;i++){
     const rv=voxelGuy();rv.g.visible=false;rv.active=false;scene.add(rv.g);
     rv.ball=new THREE.Mesh(ballGeo,matBall);rv.ball.visible=false;rv.g.add(rv.ball);
     rivals.push(rv);
   }
-  randomizeOutfit(player);randomizeOutfit(passer);
+  randomizeOutfit(player);randomizeOutfit(passer);randomizeOutfit(oppPasser);
   dressGuy(passer,0x6a727c,0x333a42,"");
+  dressGuy(oppPasser,0x44546b,0x18202d,"");
   /* 递球员配色此后固定不变,按段烘焙掉上百次 draw call(玩家与对手保持全精度) */
   bakeActorSegments(passer);
+  bakeActorSegments(oppPasser);
 }
 /* ---------------- 背景 NPC 降级:按铰接段就地烘焙 ----------------
    方块球员由上百个纯色小方块拼成,每块一次 draw call。对于外观固定、永远不换配色的
@@ -307,6 +313,6 @@ function benchVis(){
 window.AIBA.runtime.register("rendering:characters",Object.freeze({
   voxelGuy,setHair,setBeard,faceTex,jerseyTex,dressGuy,applyStarStyle,randomizeOutfit,
   buildCharacters,rivalFor,benchSetup,benchVis,
-  getActors:()=>({player,playerBall:pBall,passer,passerBall,rivals})
+  getActors:()=>({player,playerBall:pBall,passer,passerBall,oppPasser,oppPasserBall,rivals})
 }));
 

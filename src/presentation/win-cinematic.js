@@ -19,6 +19,7 @@ function startWinCine(win,ball){
   w.on=true;w.win=win;w.t=0;w.fxCrowd=false;w.heroStarted=false;w.ballHitFx=false;w.camSeed=Math.random()*Math.PI*2;w.heroType=(Math.random()*8)|0;if(window.AIBARecorder)AIBARecorder.mark(win?"百分大战制胜球":"对手破百瞬间",{postMs:(WC_T3+1.2)*1000});
   G.battleResultRecord=saveBattleRecord(makeBattleRecord(win,stopBattleClock()));
   G.battleOver=true;G.running=false;G.canShoot=false;G.charging=false;
+  if(typeof cancelOppPass==="function")cancelOppPass(true);
   G.cutAway=null;G.battleCut=null;G.glideCam=false;G.state="wincine";
   endHero();
   // 隐藏比赛 HUD/控件,但保留比分牌与角色
@@ -73,7 +74,7 @@ function updWinCine(dt){
   const perp=V3(sdir.z,0,-sdir.x);
   const side=w.sPos.x>0?-1:1; // 取靠场内一侧,避免镜头穿到看台外
   // 角色始终可见(此刻 applyCamMode 视为非比赛态会隐藏,故每帧强制)
-  hands.visible=false;passer.g.visible=false;
+  hands.visible=false;passer.g.visible=false;if(typeof oppPasser!=="undefined")oppPasser.g.visible=false;
   if(w.shooter)w.shooter.g.visible=true;
   if(w.loser)w.loser.g.visible=true;
 

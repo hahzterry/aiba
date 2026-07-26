@@ -82,6 +82,15 @@ function visionInferenceSource(video){
 }
 function visionOrientationInvalid(){return visionPointerCoarse()&&innerWidth>innerHeight;}
 window.AIBAVisionFrame=Object.freeze({descriptor:()=>({width:VISION.frame.width,height:VISION.frame.height,aspect:VISION.frame.aspect,sourcePortrait:VISION.frame.sourcePortrait,displayAspect:VISION.frame.displayAspect,portrait:VISION.frame.portrait,cropPortrait:VISION.frame.cropPortrait,requestedPortrait:VISION.frame.requestedPortrait,mirrored:true,inferWidth:VISION.frame.inferWidth,inferHeight:VISION.frame.inferHeight})});
+function visionLostPromptActive(){
+  if(typeof PAUSE!=="undefined"&&PAUSE.on)return false;
+  if(G.cutAway||G.battleCut)return false;
+  if(G.state==="round")return !G.practice&&G.running&&!G.buzzed;
+  if(G.state==="tiebreak")return !G.buzzed&&(G.canShoot||G.charging||G.shotIdx>0);
+  if(G.state==="battle")return G.running&&!G.battleOver;
+  if(G.state==="rackrush")return G.running&&!G.buzzed;
+  return false;
+}
 function visionGameActive(){return (G.state==="round"||G.state==="tiebreak"||G.state==="battle"||G.state==="rackrush")&&G.canShoot&&!G.cutAway&&!G.battleCut;}
 function resetVisionGesture(sm){
   sm.phase="idle";sm.holdStart=0;sm.chargeStart=0;sm.lastSeen=0;sm.cooldownUntil=0;sm.releaseFlashUntil=0;
@@ -477,7 +486,6 @@ function handleVisionGesture(step){
       sm.cooldownUntil=0;sm.releaseFlashUntil=0;
       return;
     }
-    if (typeof playAudioEvent === "function") playAudioEvent("pose_release");
     VISION.ownsCharge=false;doRelease();
   }
   else if(step.type==="cancel")cancelVisionOwnedCharge();
@@ -540,8 +548,18 @@ function visionFrame(now){
   syncVisionOwnedPower(step);
   /* 提示只看 sample.valid(真的追踪不到人),不能看 sample.ready —— 后者是“双手在
      蓄力框内”,每次抬手出手都会变 false,会导致每投一球就被提示一次。
-     并且要求连续丢失 VISION_LOST_PROMPT_MS 才播,手腕短暂出画不打扰。 */
-  if(VISION.enabled&&sample){
+     并且只在正式比赛 GO 之后到结束之前启用。模式选择、赛前倒计时、练习教学、
+     暂停和比赛结束阶段都只做识别预热,不播人体丢失提示。 */
+  const lostPromptActive=visionLostPromptActive();
+  if(!lostPromptActive){
+    VISION._lostPromptWindow=false;
+    VISION._lostSince=0;
+    VISION._lostPrompted=false;
+  }else if(VISION.enabled&&sample){
+    if(!VISION._lostPromptWindow){
+      VISION._lostPromptWindow=true;VISION._lostSince=sample.valid?0:now;
+      VISION._lostPrompted=false;VISION._lastLostTime=0;
+    }
     if(sample.valid){
       if(VISION._lostPrompted&&now-(VISION._lastReadyTime||0)>VISION_LOST_PROMPT_MS){
         if(typeof playAudioEvent==="function")playAudioEvent("pose_ready");

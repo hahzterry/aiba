@@ -1,7 +1,8 @@
 const balls=[];
 function battleShot(){
   const sp=BATTLE_SPOTS[G.battleSpot||0];
-  return {rack:sp.rack,deep:sp.deep,super:sp.super,money:false,val:sp.val,ball:G.shotIdx%5,label:sp.n,p:sp.p,battle:true,spotIdx:G.battleSpot||0};
+  return {rack:sp.rack,deep:sp.deep,super:sp.super,money:false,val:sp.val,ball:G.shotIdx%5,label:sp.n,p:sp.p,battle:true,spotIdx:G.battleSpot||0,
+    superChanceId:sp.super?(G.battleChargeSuperChanceId||G.superChanceId||0):0};
 }
 function curShot(){return G.mode==="battle"?battleShot():(G.mode==="rackrush"?rackRushShot():G.seq[G.shotIdx]);}
 function shotBase(shot){
@@ -103,7 +104,9 @@ function startCharge(){
     return false;
   }
   G.charging=true;G.power=0;G.apexed=false;
-  shoeSqueak(false);
+  const chargeShot=curShot();
+  G.battleChargeSuperChanceId=G.mode==="battle"&&chargeShot&&chargeShot.super?(G.superChanceId||0):0;
+  if(Math.random()<0.35)shoeSqueak(true);
   if(!G.practice&&G.seq&&G.shotIdx===G.seq.length-1&&G.mode==="contest")playAudioEvent("final_shot");else if(Math.random()<0.28)playerEffort("load");
   return true;
 }
@@ -116,7 +119,6 @@ function doRelease(){
   const power=G.power;$("pFill").style.height="0%";
   hidePlayerPowerUI();
   const shot=curShot(); if(!shot){return;}
-  shotReleaseSound(power,shot);
   releaseShot(power,shot);
 }
 function releaseShot(power,shot){
@@ -170,7 +172,7 @@ function releaseShot(power,shot){
   const hot=G.streak>=3;
   const B={mesh,blob,p0:p0.clone(),v0,tf,t:0,phase:"fly",outcome,vel:new THREE.Vector3(),
     val:shot.val,baseVal:shot.baseVal||shot.val,bonus:shot.bonus||0,money:shot.money,deep:isDeep,super:!!shot.super,rush:isRush,made:false,life:3,bounces:0,
-    rec:[],timeLeft:G.timer,hot,startPos:p0.clone(),shooterPos:P.pos.clone(),shooterFace:P.face};
+    rec:[],timeLeft:G.timer,hot,startPos:p0.clone(),shooterPos:P.pos.clone(),shooterFace:P.face,superChanceId:shot.superChanceId||0};
   B.resultClutch=noteResultAttempt(shot);balls.push(B);
   G.lastErr=err;
   // stats
@@ -181,6 +183,7 @@ function releaseShot(power,shot){
   if(isBattle){
     if(shot.super)G.stats.deepT++;
     battleUseSpot(shot.spotIdx);
+    G.battleChargeSuperChanceId=0;
     G.shotIdx++;G.canShoot=false;
     setTimeout(()=>{
       if(G.state!=="battle"||G.battleOver)return;
@@ -216,11 +219,23 @@ function readyBall(){
   updDotsUI();
   startPass();
 }
+function playRimImpactSound(b,made){
+  if(!b||b.rimSoundPlayed)return false;
+  b.rimSoundPlayed=true;
+  if(made)sRimMake();else sClank();
+  document.documentElement.dataset.lastRimSound=made?"make":"miss";
+  return true;
+}
+function madeShotSound(b){
+  if(b&&b.outcome==="rattle")return; // rim-make clip already played at first contact
+  if(b&&b.outcome==="bank"){sRimMake();return;}
+  sSwish();
+}
 function madeBall(b){
   b.made=true;
   triggerStreetCrowdReaction("make",b.val);
   if(G.practice){
-    netPulse=1;sSwish();cheerSound(false);G.cheer=Math.min(1,G.cheer+0.4);
+    netPulse=1;madeShotSound(b);cheerSound(false);G.cheer=Math.min(1,G.cheer+0.4);
     if(navigator.vibrate)navigator.vibrate(18);
     popScore("✔ 命中","#7CFC6B");toast(CHEERS[(Math.random()*CHEERS.length)|0]);
     return;
@@ -229,7 +244,7 @@ function madeBall(b){
     if(!G.rush||G.state!=="rackrush")return;
     const rush=G.rush,cfg=RACK_RUSH_LEVELS[rush.level],target=isRackRushSpeed(rush)?RACK_RUSH_SPEED_TARGET:rackRushTarget(rush.level);
     const prevTotal=rush.total;rush.levelScore+=b.val;rush.total+=b.val;rush.makes++;rush.levelMakes++;if(isRackRushSpeed(rush)){if(prevTotal<25&&rush.total>=25)playAudioEvent("speed100_25");else if(prevTotal<50&&rush.total>=50)playAudioEvent("speed100_50");else if(prevTotal<75&&rush.total>=75)playAudioEvent("speed100_75");else if(prevTotal<90&&rush.total>=90)playAudioEvent("speed100_90");}G.score=rush.total;G.streak++;G.missRun=0;rush.bestStreak=Math.max(rush.bestStreak,G.streak);
-    bloomOnScore(b.val);netPulse=1;sSwish();
+    bloomOnScore(b.val);netPulse=1;madeShotSound(b);
     const big=b.money||b.bonus||G.streak>=5;
     cheerSound(big);G.cheer=Math.min(1,G.cheer+(big ? .8 : .45));
     if(navigator.vibrate)navigator.vibrate(big?[16,24,16]:12);
@@ -246,13 +261,14 @@ function madeBall(b){
   }
   if(G.mode==="battle"){
     if(G.state!=="battle"||G.battleOver)return;
+    if(b.super)battleConsumeSuperChance(b);
     const _pm=G.score,_po=G.battleOppScore;
     G.score+=b.val;G.streak++;G.missRun=0;
     bloomOnScore(b.val);
     G.stats.best=Math.max(G.stats.best,G.streak);
     if(b.super)G.stats.deepM++;
     $("scoreNum").textContent=Math.min(G.score,BATTLE_TARGET);
-    netPulse=1;sSwish();
+    netPulse=1;madeShotSound(b);
     const special=b.deep&&!b.super;
     const big=b.super||special||G.streak>=5;
     if(big)broadcastSting((b.super||special)?"danger":"score");
@@ -286,7 +302,7 @@ function madeBall(b){
     });
   }
   updTargetUI();
-  netPulse=1;sSwish();
+  netPulse=1;madeShotSound(b);
   const big=b.deep||b.val>=2||G.streak>=5;
   if(big)broadcastSting(b.deep?"danger":"score");
   cheerSound(big);G.cheer=Math.min(1,G.cheer+(big?1:0.6));
@@ -359,11 +375,11 @@ function updBalls(dt){
           sBoard();b.phase="bankdrop";b.bt=0;
           b.bFrom=b.mesh.position.clone();
         }else if(b.outcome==="rattle"||b.outcome==="rattleout"){
-          playerRimHaptic(b);sClank();b.phase="rattle";b.rt=0;b.rin=b.outcome==="rattle";
+          playerRimHaptic(b);b.rin=b.outcome==="rattle";playRimImpactSound(b,b.rin);b.phase="rattle";b.rt=0;
           b.ra=Math.atan2(b.mesh.position.z-HOOP.z,b.mesh.position.x-HOOP.x);
           b.rdir=Math.random()<.5?1:-1;
         }else if(b.outcome==="rimout"){
-          playerRimHaptic(b);sClank();if(b.opp)triggerStreetCrowdReaction("oppMiss",0);else if(b.silent){if(typeof announceAIShowResult==="function")announceAIShowResult(b,false);}else missBall();b.phase="free";
+          playerRimHaptic(b);playRimImpactSound(b,false);if(b.opp)triggerStreetCrowdReaction("oppMiss",0);else if(b.silent){if(typeof announceAIShowResult==="function")announceAIShowResult(b,false);}else missBall();b.phase="free";
           const d=V3(b.mesh.position.x-HOOP.x,0,b.mesh.position.z-HOOP.z).normalize();
           b.vel.set(d.x*rnd(1.2,2.2)+rnd(-.6,.6),rnd(2.4,3.6),d.z*rnd(1.2,2.2)+rnd(-.6,.6));
         }else{
@@ -380,7 +396,7 @@ function updBalls(dt){
       if(k>=1){
         if(b.rin){madeBall(b);b.phase="fall";b.vel.set(0,-1.6,0);}
         else{
-          playerRimHaptic(b);sClank();missBall();toast("😱 涮筐而出!","#ff8d7a");b.phase="free";
+          playerRimHaptic(b);playRimImpactSound(b,false);missBall();toast("😱 涮筐而出!","#ff8d7a");b.phase="free";
           const d=V3(Math.cos(b.ra+b.rt*9*b.rdir),0,Math.sin(b.ra+b.rt*9*b.rdir)).normalize();
           b.vel.set(d.x*rnd(1.4,2.4),rnd(2.0,3.0),d.z*rnd(1.4,2.4));
         }
@@ -405,7 +421,11 @@ function updBalls(dt){
       // floor
       if(p.y<0.16&&b.vel.y<0){
         p.y=0.16;b.vel.y*=-0.42;b.vel.x*=0.72;b.vel.z*=0.72;b.bounces++;
-        if(Math.abs(b.vel.y)>0.6)sBounce();
+        if(Math.abs(b.vel.y)>0.6){
+          if(b.bounces===1&&!b.made&&Math.random()<0.25){
+            sBounce("sequence");b.longBounceSfx=true;
+          }else if(!b.longBounceSfx)sBounce();
+        }
       }
       b.life-=dt;
       if(b.life<=0||(b.bounces>3&&Math.abs(b.vel.y)<0.4)){
@@ -424,5 +444,5 @@ function updBalls(dt){
 
 window.AIBA.runtime.register("gameplay:shots",Object.freeze({
   balls,battleShot,curShot,shotBase,shotMat,shotIdeal,isSameShotSpot,buildSeq,setHandBall,
-  updPowerUI,updDotsUI,startCharge,doRelease,releaseShot,readyBall,madeBall,missBall,updBalls
+  updPowerUI,updDotsUI,startCharge,doRelease,releaseShot,readyBall,playRimImpactSound,madeBall,missBall,updBalls
 }));
