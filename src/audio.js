@@ -348,13 +348,71 @@ function extEnsureSrc(k){
   try{a.src=EXT_AUDIO[k];a.load();return true;}catch(e){return false;}
 }
 const GAMEPLAY_SFX_KEYS=["startWhistle","buzzer","shoeSqueak","bounce","bounce2","bounceSequence","swish","swish2","swish3","clank","clank2","rimMake","applause","boo"];
+const decodedGameplaySfx=Object.create(null),decodedGameplaySfxLoads=Object.create(null);
+function syncGameplaySfxDebug(){
+  try{
+    const root=document.documentElement;
+    root.dataset.audioSfxExpected=String(GAMEPLAY_SFX_KEYS.length);
+    root.dataset.audioSfxRequested=String(Object.keys(decodedGameplaySfxLoads).length);
+    root.dataset.audioSfxDecoded=String(Object.keys(decodedGameplaySfx).length);
+  }catch(e){}
+}
+function decodeGameplaySfx(k){
+  if(!AC||!EXT_AUDIO[k]||GAMEPLAY_SFX_KEYS.indexOf(k)<0)return null;
+  if(decodedGameplaySfx[k])return Promise.resolve(decodedGameplaySfx[k]);
+  if(decodedGameplaySfxLoads[k])return decodedGameplaySfxLoads[k];
+  decodedGameplaySfxLoads[k]=fetch(EXT_AUDIO[k],{cache:"force-cache"})
+    .then(response=>{if(!response.ok)throw new Error("HTTP "+response.status);return response.arrayBuffer();})
+    .then(data=>new Promise((resolve,reject)=>{
+      let settled=false;
+      const done=buffer=>{if(settled)return;settled=true;resolve(buffer);};
+      const fail=error=>{if(settled)return;settled=true;reject(error);};
+      try{
+        const result=AC.decodeAudioData(data,done,fail);
+        if(result&&result.then)result.then(done,fail);
+      }catch(error){fail(error);}
+    }))
+    .then(buffer=>{decodedGameplaySfx[k]=buffer;syncGameplaySfxDebug();return buffer;})
+    .catch(error=>{noteAudioIssue("sfx-decode-"+k,error);syncGameplaySfxDebug();return null;});
+  syncGameplaySfxDebug();
+  return decodedGameplaySfxLoads[k];
+}
+function playDecodedGameplaySfx(k,maxMs){
+  const buffer=decodedGameplaySfx[k];
+  if(!buffer||!AC||AC.state!=="running"||MUTED)return false;
+  try{
+    const source=AC.createBufferSource(),gain=AC.createGain();
+    source.buffer=buffer;
+    gain.gain.value=(EXT_DEFAULT_VOLUME[k]||.85)*(EXT_MEDIA_GAIN[k]||1);
+    source.connect(gain);gain.connect(mediaBusForKey(k));
+    source.start();
+    if(maxMs>0)source.stop(AC.currentTime+Math.min(buffer.duration,maxMs/1000));
+    try{
+      const root=document.documentElement;
+      root.dataset.audioSfxLast=k;
+      root.dataset.audioSfxPlays=String((Number(root.dataset.audioSfxPlays)||0)+1);
+    }catch(e){}
+    return true;
+  }catch(error){noteAudioIssue("sfx-buffer-"+k,error);return false;}
+}
 function prewarmGameplaySfx(){
+  syncGameplaySfxDebug();
   for(const k of GAMEPLAY_SFX_KEYS){
+    decodeGameplaySfx(k);
     const a=extA[k];if(!a)continue;
     extEnsureSrc(k);
     if(a.readyState<2)try{a.load();}catch(e){}
   }
 }
+try{
+  window.__aibaGameplaySfxState=()=>({
+    expected:GAMEPLAY_SFX_KEYS.length,
+    decoded:Object.keys(decodedGameplaySfx).length,
+    requested:Object.keys(decodedGameplaySfxLoads).length,
+    context:AC?AC.state:"none",
+    issue:document.documentElement.dataset.audioIssue||""
+  });
+}catch(e){}
 function extInit(){
   if(Object.keys(extA).length)return;
   for(const k in EXT_AUDIO){
@@ -388,7 +446,10 @@ function extOneShot(k,a){
   return el;
 }
 function extPlay(k,maxMs){
-  const a=extA[k];if(!a||MUTED)return false;
+  if(MUTED)return false;
+  if(playDecodedGameplaySfx(k,maxMs))return true;
+  if(decodedGameplaySfxLoads[k]&&!decodedGameplaySfx[k])return false;
+  const a=extA[k];if(!a)return false;
   extEnsureSrc(k);   // 启动预热没跑到时的兜底:真要播了就直接用普通 URL
   if(Date.now()<(mediaRetryAt[k]||0))return false;
   /* 一次性音效还没缓冲好就交回合成音兜底,否则这一下会完全没声音 */
@@ -686,6 +747,7 @@ function ensureAudio(menuMusic,forcePrime){
   if(menuMusic&&extA.bgm&&extA.bgm.paused)extPlay("bgm");
   audioInit();
   if(!AC)return false;
+  prewarmGameplaySfx();
   primeAudio(!!forcePrime);
   const startMenu=()=>{
     AUDIO_READY=AC&&AC.state==="running";
@@ -721,7 +783,7 @@ try{window.AIBAAudio=Object.assign(window.AIBAAudio||{},{setCrowdHeat,crowdSwell
 /* ---- 掌声:几十个去相关的真实拍手颗粒 ---- */
 function applause(vol,dur,n){
   if(!AC||MUTED)return;
-  if(extA.applause&&vol>0.4){extPlay("applause");return;}
+  if(extA.applause&&vol>0.4&&extPlay("applause"))return;
   dur=dur||2.4;n=n||Math.floor(dur*38);
   const t0=AC.currentTime;
   for(let i=0;i<n;i++){
@@ -774,7 +836,7 @@ function crowdRoar(big){ // 多人齐喊
 }
 function boo(dur){ // 起哄嘘声
   if(!AC||MUTED)return;
-  if(extA.boo){extPlay("boo",Math.max(900,(dur||2)*1000));return;}
+  if(extA.boo&&extPlay("boo",Math.max(900,(dur||2)*1000)))return;
   const t=AC.currentTime;dur=dur||2.0;
   for(let i=0;i<8;i++){
     const f0=rnd2(95,150);
@@ -967,8 +1029,8 @@ function shoeSqueak(strong){
   if(!AC||MUTED)return;
   if(extA.shoeSqueak){
     const now=Date.now(),cooldown=strong?900:1700;
-    if(now-shoeSqueakAt>=cooldown&&extPlay("shoeSqueak",strong?1100:1900))shoeSqueakAt=now;
-    return;
+    if(now-shoeSqueakAt<cooldown)return;
+    if(extPlay("shoeSqueak",strong?1100:1900)){shoeSqueakAt=now;return;}
   }
   const t=AC.currentTime;
   const o=AC.createOscillator();o.type="sine";
