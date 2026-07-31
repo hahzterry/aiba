@@ -203,11 +203,11 @@ if(!entryHtml.includes('<script src="src/player-id.js"></script>'))fail("player 
 if(!entryHtml.includes('<script src="src/leaderboard-api.js"></script>'))fail("leaderboard api script missing");
 if(!entryHtml.includes('<script src="src/leaderboard-ui.js?v=1.94"></script>'))fail("leaderboard ui script missing");
 if(!entryHtml.includes('<script src="src/share.js?v=2.01"></script>'))fail("share script missing");
-if(!entryHtml.includes('<script src="src/shot-physics.js?v=1.99"></script>'))fail("shot physics script missing");
+if(!entryHtml.includes('<script src="src/shot-physics.js?v=2.01"></script>'))fail("shot physics script missing");
 if(!entryHtml.includes('<script src="src/result-stats.js?v=1.78"></script>'))fail("result stats script missing");
 if(!entryHtml.includes('<script src="src/gear.js?v=1.83"></script>'))fail("gear script missing");
 if(!entryHtml.includes('<script src="src/avatar-customizer.js?v=1.80"></script>'))fail("avatar customizer script missing");
-if(!entryHtml.includes('<script src="src/shot-motion.js?v=2.00"></script>'))fail("shot motion script missing");
+if(!entryHtml.includes('<script src="src/shot-motion.js?v=2.01"></script>'))fail("shot motion script missing");
 if(!entryHtml.includes('<script src="src/roster-style.js?v=1.79"></script>'))fail("roster style script missing");
 if(!entryHtml.includes('<script src="src/hero-moments.js?v=1.80"></script>'))fail("hero moments script missing");
 if(!entryHtml.includes('<script src="src/hot-hand.js?v=1.81"></script>'))fail("hot hand script missing");
@@ -346,11 +346,26 @@ try{
   const heldAt=held.t;
   for(let i=0;i<20;i++)held=physics.update({charging:true,paused:true,dt:.08,ideal:74,rate:95,curve:{jmp:1}});
   if(held.t!==heldAt||held.autoRelease)fail("shot physics tutorial pause must freeze time and auto release");
+  physics.reset();
+  let charged;
+  for(let i=0;i<12;i++)charged=physics.update({charging:true,dt:.08,ideal:74,rate:95,curve:{jmp:1}});
+  const released=physics.update({charging:false,dt:.016,ideal:74,rate:95,curve:{jmp:0}});
+  if(!released.airborne||released.jump<.35||!physics.isAirborne())fail("shot release must preserve airborne height");
+  const releaseOver=released.curve.over;
+  let landed=false;
+  for(let i=0;i<50;i++){
+    const frame=physics.update({charging:false,dt:.016,ideal:74,rate:95,curve:{jmp:0}});
+    if(frame.curve.over>releaseOver+.001)fail("late-release penalty must freeze after the ball leaves the hand");
+    if(frame.justLanded){landed=true;break;}
+  }
+  if(!landed||physics.isAirborne())fail("shot physics must finish with a grounded landing");
 }catch(e){fail("shot physics pause check failed: "+e.message);}
 try{new Function(shotMotionScript);}
 catch(e){fail("shot motion script syntax error: "+e.message);}
 for(const key of ["AIBAMotion","restoreLegacy","installMotionHooks","boardHit","attachBall","STANCE_YAW","tuneGuideHand"])
   if(!shotMotionScript.includes(key))fail("shot motion script missing "+key);
+if(!read("src/gameplay/shots.js").includes("afterPlayerLands"))fail("shot lifecycle must wait for landing before the next possession");
+if(!read("src/modes/percent-battle/opponent.js").includes('OPP.phase==="land"'))fail("opponent shot must include a landing phase");
 const rosterStyleScript=read("src/roster-style.js");
 try{new Function(rosterStyleScript);}
 catch(e){fail("roster style script syntax error: "+e.message);}

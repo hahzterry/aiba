@@ -80,16 +80,22 @@ function updPose(dt){
   const s=curShot();
   const ideal=s?weatherAdjustedIdeal(s,false):IDEAL;
   poseK=G.charging?G.power/ideal:Math.max(0,poseK-dt*4.5);
-  const c=shotCurves(poseK);
+  const base=shotCurves(poseK);
+  const phys=globalThis.AIBAShotPhysics
+    ?AIBAShotPhysics.update({charging:G.charging,dt,ideal,rate:playerChargeRate(),curve:base})
+    :null;
+  const c=phys?phys.curve:base;
   // apex cue: tiny vibration + faint tick at the top of the jump
-  if(G.charging&&!G.apexed&&poseK>=1){
+  if(G.charging&&!G.apexed&&(phys?phys.apexCue:poseK>=1)){
     G.apexed=true;
     if(navigator.vibrate)navigator.vibrate(12);
     blip(960,0.03,"square",0.045);
   }
+  if(phys&&phys.autoRelease&&G.charging)doRelease();
+  if(phys&&phys.justLanded)landT=0.3;
   if(landT>0)landT-=dt;
   const lk=landT>0?Math.sin((0.3-landT)/0.3*Math.PI):0;
-  P.jump=Math.max(-0.06,c.jmp*0.55-c.over*0.55);
+  P.jump=phys&&phys.airborne?Math.max(0,c.jmp*0.55):Math.max(-0.06,c.jmp*0.55-c.over*0.55);
   P.eyeDip=-0.26*c.dip-0.09*lk;
   // first-person: right-hand shot pocket, ball rises past the face to overhead
   hands.position.x=-0.05*c.lift;

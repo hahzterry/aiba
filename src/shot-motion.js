@@ -116,10 +116,11 @@
       blip(960,0.03,"square",0.045);
     }
     if(phys.autoRelease&&G.charging){doRelease();}
+    if(phys.justLanded)landT=0.3;
     if(landT>0)landT-=dt;
     const lk=landT>0?Math.sin((0.3-landT)/0.3*Math.PI):0;
     if(followT>0)followT=Math.max(0,followT-dt);
-    P.jump=Math.max(-0.06,c.jmp*0.55-c.over*0.28);
+    P.jump=phys.airborne?Math.max(0,c.jmp*0.55):Math.max(-0.06,c.jmp*0.55-c.over*0.28);
     P.eyeDip=-0.26*c.dip-0.09*lk;
     // 第一人称手组整体运动沿用原公式,腕部动作由 rig 叠加
     hands.position.x=-0.05*c.lift;
