@@ -1,5 +1,5 @@
 const PREGAME={
-  on:false,t:0,idx:0,dur:0,shots:[],actors:[],snaps:[],prevState:null,cb:null,chalk:null
+  on:false,t:0,idx:0,dur:0,shots:[],actors:[],snaps:[],prevState:null,cb:null,chalk:null,poseCache:new Map()
 };
 const PREGAME_ACTIONS=["shoot","stretch","dunk","chalk","hang","finger","huddle","wave","pump"];
 const PREGAME_CAMS=["orbit","push","low","overhead","freeze","follow","pan","pull"];
@@ -39,6 +39,41 @@ function pregameNeutral(guy){
   guy.knees.forEach(k=>k.rotation.set(0,0,0));
   guy.ankles.forEach(a=>a.rotation.set(0,0,0));
   guy.shoes.forEach(s=>s.rotation.set(0,0,0));
+}
+function pregamePoseSnapshot(guy){
+  return {
+    pos:guy.g.position.clone(),rot:guy.g.rotation.clone(),
+    arms:pregameRotSnap(guy.arms),elbows:pregameRotSnap(guy.elbows),legs:pregameRotSnap(guy.legs),
+    knees:pregameRotSnap(guy.knees),ankles:pregameRotSnap(guy.ankles),shoes:pregameRotSnap(guy.shoes)
+  };
+}
+function pregameAngleLerp(a,b,k){
+  let d=b-a;
+  while(d>Math.PI)d-=Math.PI*2;
+  while(d<-Math.PI)d+=Math.PI*2;
+  return a+d*k;
+}
+function pregameBlendRotations(list,from,k){
+  list.forEach((part,i)=>{
+    const prev=from[i];if(!prev)return;
+    part.rotation.x=prev.x+(part.rotation.x-prev.x)*k;
+    part.rotation.y=prev.y+(part.rotation.y-prev.y)*k;
+    part.rotation.z=prev.z+(part.rotation.z-prev.z)*k;
+  });
+}
+function pregameSmoothPose(guy,dt){
+  if(!guy||!guy.g||!guy.g.position||!guy.g.rotation)return;
+  const target=pregamePoseSnapshot(guy),prev=PREGAME.poseCache.get(guy);
+  if(!prev){PREGAME.poseCache.set(guy,target);return;}
+  const k=1-Math.exp(-Math.max(0,dt)*18);
+  guy.g.position.lerpVectors(prev.pos,target.pos,k);
+  guy.g.rotation.x=prev.rot.x+(target.rot.x-prev.rot.x)*k;
+  guy.g.rotation.y=pregameAngleLerp(prev.rot.y,target.rot.y,k);
+  guy.g.rotation.z=prev.rot.z+(target.rot.z-prev.rot.z)*k;
+  pregameBlendRotations(guy.arms,prev.arms,k);pregameBlendRotations(guy.elbows,prev.elbows,k);
+  pregameBlendRotations(guy.legs,prev.legs,k);pregameBlendRotations(guy.knees,prev.knees,k);
+  pregameBlendRotations(guy.ankles,prev.ankles,k);pregameBlendRotations(guy.shoes,prev.shoes,k);
+  PREGAME.poseCache.set(guy,pregamePoseSnapshot(guy));
 }
 function pregameClampPos(v){
   v.x=clamp(v.x,-COURT.halfWidth+0.9,COURT.halfWidth-0.9);
@@ -110,7 +145,8 @@ function pregameActionBase(actor,action,u){
   }
   if(action==="dunk"||action==="hang"){
     const rimSpot=V3(action==="hang"?0:(actor.role==="opponent"?0.16:-0.16),0,HOOP.z+(action==="hang"?0.34:0.52));
-    base.lerp(rimSpot,ease01(clamp(u/(action==="hang"?0.3:0.42),0,1)));
+    const approachEnd=action==="hang"?.34:.44;
+    base.lerp(rimSpot,ease01(clamp(u/approachEnd,0,1)));
   }
   return pregameClampPos(base);
 }
@@ -143,13 +179,19 @@ function pregameAnimate(actor,action,u,seg){
     guy.elbows.forEach(e=>e.rotation.x=-0.18);
     guy.legs.forEach(l=>l.rotation.x=-0.15);guy.knees.forEach(k=>k.rotation.x=0.44);
   }else if(action==="dunk"||action==="hang"){
-    const take=ease01(clamp((u-0.08)/0.38,0,1)),land=1-ease01(clamp((u-0.72)/0.28,0,1));
-    const hang=action==="hang"?smoothRange(.18,.36,u)*(1-smoothRange(.86,1,u)):Math.sin(clamp(u,0,1)*Math.PI);
+    // 扣篮用连续抛物线,挂框只保留很短的接触,避免在篮筐处硬停。
+    const dunkArc=Math.sin(ease01(clamp((u-.06)/.78,0,1))*Math.PI);
+    const hangRise=smoothRange(.1,.32,u),hangRelease=smoothRange(.48,.7,u);
+    const hang=hangRise*(1-hangRelease),air=action==="hang"?hang:dunkArc;
     const gripRise=Math.max(0.98,HOOP.y-2.01+0.015);
-    guy.g.position.y=0.08+Math.max(take*land,hang)*gripRise;
-    guy.arms.forEach(a=>a.rotation.x=action==="hang"?-Math.PI:-2.82);guy.elbows.forEach(e=>e.rotation.x=action==="hang"?0:-0.75);
-    guy.legs[0].rotation.x=-0.42;guy.legs[1].rotation.x=0.34;guy.knees.forEach(k=>k.rotation.x=0.72);
-    if(ball){ball.visible=action==="dunk"?u<0.64:false;ball.material=matBall;ball.position.set(-0.12,1.58,0.18);}
+    guy.g.position.y=0.08+air*gripRise;
+    const reach=action==="hang"?hangRise*(1-hangRelease*.8):dunkArc*(1-hangRelease*.35);
+    const armReach=action==="hang"?2.72:2.38;
+    guy.arms.forEach(a=>a.rotation.x=-0.42-armReach*reach);
+    guy.elbows.forEach(e=>e.rotation.x=-0.3-0.48*reach);
+    guy.legs[0].rotation.x=-0.12-0.3*air;guy.legs[1].rotation.x=0.1+0.24*air;
+    guy.knees.forEach(k=>k.rotation.x=0.18+0.54*air);
+    if(ball){ball.visible=action==="dunk"?u<.54:false;ball.material=matBall;ball.position.set(-0.12,1.52+0.08*reach,0.18);}
   }else if(action==="chalk"){
     const toss=smoothRange(.42,.72,u),rub=Math.sin(t*16)*(1-toss);
     guy.arms[0].rotation.x=-0.9-toss*1.65+rub*0.08;guy.arms[1].rotation.x=-0.9-toss*1.65-rub*0.08;
@@ -213,6 +255,7 @@ function pregameUpdateCamera(seg,u,dt){
 function startPreGameShow(opts,done){
   opts=opts||{};
   PREGAME.prevState=G.state;PREGAME.cb=done;PREGAME.t=0;PREGAME.idx=0;PREGAME.on=true;
+  PREGAME.poseCache.clear();
   PREGAME.actors=pregameBuildActors(opts);
   const seen=new Set();
   PREGAME.snaps=PREGAME.actors.filter(a=>{if(seen.has(a.guy))return false;seen.add(a.guy);return true;}).map(a=>pregameSnapGuy(a.guy));
@@ -239,7 +282,7 @@ function pregameReadyCameraTarget(){
 function finishPreGameShow(){
   const cb=PREGAME.cb,prev=PREGAME.prevState;
   PREGAME.snaps.forEach(pregameRestoreGuy);
-  PREGAME.on=false;PREGAME.t=0;PREGAME.idx=0;PREGAME.shots=[];PREGAME.actors=[];PREGAME.snaps=[];PREGAME.cb=null;hidePregameChalk();
+  PREGAME.on=false;PREGAME.t=0;PREGAME.idx=0;PREGAME.shots=[];PREGAME.actors=[];PREGAME.snaps=[];PREGAME.cb=null;PREGAME.poseCache.clear();hidePregameChalk();
   $("vsBanner").style.display="none";
   P.jump=0;P.eyeDip=0;P.walking=false;G.state=prev;G.moving=false;G.glideCam=false;
   const ready=pregameReadyCameraTarget();
@@ -255,11 +298,14 @@ function updPreGameShow(dt){
   const seg=PREGAME.shots[PREGAME.idx];if(!seg)return;
   const u=clamp((PREGAME.t-seg.start)/seg.dur,0,1);
   hidePregameChalk();
-  PREGAME.actors.forEach(a=>{if(seg.group||a===seg.actor)pregameAnimate(a,seg.action,u,seg);else pregameIdle(a,PREGAME.t);});
+  PREGAME.actors.forEach(a=>{
+    if(seg.group||a===seg.actor)pregameAnimate(a,seg.action,u,seg);
+    else pregameIdle(a,PREGAME.t);
+    pregameSmoothPose(a.guy,dt);
+  });
   pregameUpdateCamera(seg,u,dt);
 }
 
 window.AIBA.runtime.register("presentation:pregame",Object.freeze({
   PREGAME,startPreGameShow,pregameReadyCameraTarget,finishPreGameShow,updPreGameShow
 }));
-

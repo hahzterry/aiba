@@ -11,7 +11,6 @@
   }=ctx;
   const OPP=battle.OPP;
   const OPP_MIN_SEP=1.58;
-  const smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
 
   function mirrorSpot(p){
     if(Math.abs(p.x)<0.6)return V3(p.x+1.9,p.y,p.z);
@@ -138,6 +137,15 @@
     OPP.phase="load";OPP.t=0;OPP.fired=false;
     OPP.shootDur=clamp((0.9-(OPP.o.r-85)*0.012-DIFFS[G.diff].ai*0.5)/shotProfileFor(OPP.o).speed,0.5,1.08);
   }
+  function oppFollowThroughPose(guy,k){
+    if(!guy||!guy.arms||!guy.elbows||k<=0)return;
+    const hold=clamp(k,0,1);
+    const shoot=guy.arms[0],guide=guy.arms[1],shootEl=guy.elbows[0],guideEl=guy.elbows[1];
+    if(shoot){shoot.rotation.x=Math.min(shoot.rotation.x,-2.25-0.22*hold);shoot.rotation.z-=0.06*hold;}
+    if(shootEl)shootEl.rotation.x=Math.min(shootEl.rotation.x,-0.8-0.22*hold);
+    if(guide){guide.rotation.x=Math.min(guide.rotation.x,-1.28-0.14*hold);guide.rotation.z+=0.1*hold;}
+    if(guideEl)guideEl.rotation.x=Math.min(guideEl.rotation.x,-0.66-0.14*hold);
+  }
   function startOppShooter(){
     OPP.on=true;OPP.o=G.battleOpp;OPP.guy=rivals[0];OPP.guy.active=true;
     OPP.spotIdx=4;OPP.phase="walk";OPP.t=0;OPP.spotShots=0;
@@ -228,17 +236,18 @@
       }
     }else if(OPP.phase==="load"){
       const phase=Math.min(1.05,OPP.t/OPP.shootDur*1.05),curve=shotCurves(phase);
-      poseGuy(guy,curve,0);guy.g.position.set(OPP.pos.x,-0.24*curve.dip+Math.max(0,curve.jmp*0.55-curve.over*0.55),OPP.pos.z);poseBallPos(guy.ball.position,curve);
-      if(phase>=1.02&&!OPP.fired){
-        OPP.fired=true;oppFireBall();OPP.phase="land";OPP.t=0;
-      }
+      const groundLift=poseGuy(guy,curve,0);
+      guy.g.position.set(OPP.pos.x,groundLift+Math.max(0,curve.jmp*0.55-curve.over*0.55),OPP.pos.z);poseBallPos(guy.ball.position,curve);
+      if(phase>=1.02&&!OPP.fired){OPP.fired=true;oppFireBall();OPP.phase="land";OPP.t=0;}
     }else if(OPP.phase==="land"){
-      const progress=Math.min(1,OPP.t/.46),settle=smooth(progress);
+      const progress=Math.min(1,OPP.t/.36),settle=progress*progress;
       const curve=shotCurves(1.02*(1-settle));
       const landing=progress>.72?Math.sin((progress-.72)/.28*Math.PI)*.12:0;
       const poseY=poseGuy(guy,curve,landing);
       guy.g.position.set(OPP.pos.x,poseY+.55*(1-settle),OPP.pos.z);
       poseBallPos(guy.ball.position,curve);
+      const follow=progress<.55?1:clamp(1-(progress-.55)/.45,0,1);
+      oppFollowThroughPose(guy,follow);
       if(progress>=1){
         OPP.fired=false;poseGuy(guy,shotCurves(0),0);guy.g.position.set(OPP.pos.x,0,OPP.pos.z);guy.g.rotation.x=0;
         oppMarkSpotUse();OPP.phase="cool";OPP.t=0;
