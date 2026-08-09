@@ -1,4 +1,4 @@
-/* ---------------- motion-shot controller ---------------- */
+/* ---------------- Motion-Shot Controller ---------------- */
 const VISION_CONTROL_STORAGE="aiba_shot_control_v1";
 const VISION_INFERENCE_MAX_PIXELS=288*512;
 function visionPointerCoarse(){
@@ -53,7 +53,8 @@ const VISION={
 };
 const VISION_READY_HOLD_MS=120;
 const VISION_RELEASE_LOST_MS=140;
-/* “看不到你”语音提示:必须连续丢失这么久才播,避免出手瞬间手腕出画就被念一次 */
+/* "Can't see you" voice prompt: must be lost consecutively for this long before playing. 
+   Prevents triggering on momentary wrist movements out of frame during release. */
 const VISION_LOST_PROMPT_MS=2000;
 const VISION_LOST_COOLDOWN_MS=9000;
 const _visionDockPoint=typeof THREE!=="undefined"?new THREE.Vector3():null;
@@ -396,18 +397,18 @@ function visionSetUI(phase,label,progress){
   if(state)state.textContent=label;if(fill)fill.style.height=(clamp(progress||0,0,1)*100)+"%";
 }
 function visionPhaseLabel(step,sample){
-  if(sample&&sample.body&&!sample.body.ready)return"身体标定中";
-  if(step.phase==="armed")return"双手锁定 "+Math.round(step.progress*100)+"%";
+  if(sample&&sample.body&&!sample.body.ready)return"Calibrating body";
+  if(step.phase==="armed")return"Hands locked "+Math.round(step.progress*100)+"%";
   if(step.phase==="charging"){
     const blind=VISION.liveControl&&typeof curShot==="function"&&barHiddenFor(curShot());
     const p=Math.round((VISION.liveControl&&G.charging?G.power:(step.power||step.progress*100)));
-    return blind?"任一手越过上方出手线":"蓄力 · "+p+"%";
+    return blind?"Pass either hand past the upper release line":"Charging · "+p+"%";
   }
-  if(step.phase==="release")return"越线触发 · 出手";
-  if(step.phase==="cooldown")return"动作复位";
-  if(sample&&!sample.hasHands&&sample.lostMs>2000)return"回到画面中";
-  if(sample&&sample.handCount>0)return"双手放入下方蓄力框";
-  return"双手放入下方蓄力框";
+  if(step.phase==="release")return"Crossed release line · Shoot";
+  if(step.phase==="cooldown")return"Resetting";
+  if(sample&&!sample.hasHands&&sample.lostMs>2000)return"Return to frame";
+  if(sample&&sample.handCount>0)return"Place both hands in the lower charge zone";
+  return"Place both hands in the lower charge zone";
 }
 function visionRoundedRect(g,x,y,w,h,r){
   g.beginPath();g.moveTo(x+r,y);g.lineTo(x+w-r,y);g.quadraticCurveTo(x+w,y,x+w,y+r);
@@ -525,7 +526,7 @@ function visionFrame(now){
   const video=$("visionVideo");if(!video||video.readyState<2||video.currentTime===VISION.lastVideoTime)return;
   if(visionOrientationInvalid()){
     if(!VISION.orientationBlocked){VISION.orientationBlocked=true;resetVisionGesture(VISION.machine);cancelVisionOwnedCharge();visionResetTracking(true);}
-    if(now-(VISION.lastDraw||0)>240){VISION.lastDraw=now;drawVisionPose(VISION.lastPose,[],VISION.lastSample,"idle");visionSetUI("align","请保持手机竖屏",0);}
+    if(now-(VISION.lastDraw||0)>240){VISION.lastDraw=now;drawVisionPose(VISION.lastPose,[],VISION.lastSample,"idle");visionSetUI("align","Please keep your phone in portrait mode",0);}
     return;
   }
   if(VISION.orientationBlocked){VISION.orientationBlocked=false;VISION.lastVideoTime=-1;visionResetTracking(true);resetVisionGesture(VISION.machine);}
@@ -539,17 +540,19 @@ function visionFrame(now){
     }
     if(task)noteVisionInference(started);
   }
-  catch(e){visionSetUI("error","识别暂时中断",0);return;}
+  catch(e){visionSetUI("error","Recognition temporarily interrupted",0);return;}
   const sample=visionLandmarkSample(VISION.lastPose,VISION.lastHands,now);
   const canAdvance=G.state==="diff"||G.state==="menu"||visionGameActive();
   if(!canAdvance){resetVisionGesture(VISION.machine);cancelVisionOwnedCharge();}
   const step=canAdvance?visionGestureStep(VISION.machine,sample,now):{type:"none",phase:"idle",progress:0};
   handleVisionGesture(step);
   syncVisionOwnedPower(step);
-  /* 提示只看 sample.valid(真的追踪不到人),不能看 sample.ready —— 后者是“双手在
-     蓄力框内”,每次抬手出手都会变 false,会导致每投一球就被提示一次。
-     并且只在正式比赛 GO 之后到结束之前启用。模式选择、赛前倒计时、练习教学、
-     暂停和比赛结束阶段都只做识别预热,不播人体丢失提示。 */
+  /* Prompt only checks sample.valid (truly can't track the person), not sample.ready — 
+     the latter means "hands are inside the charge box" and becomes false every time 
+     you lift your hands to shoot, which would cause a prompt after every shot. 
+     Only enabled after the actual match GO and before the match ends. Mode selection, 
+     pre-game countdown, practice/tutorials, pause, and post-match phases only do 
+     recognition warmup, no "person lost" voice prompts. */
   const lostPromptActive=visionLostPromptActive();
   if(!lostPromptActive){
     VISION._lostPromptWindow=false;
@@ -584,7 +587,7 @@ function visionFrame(now){
     visionSetUI(step.phase,visionPhaseLabel(step,sample),blindCharge?0:step.progress);
     if(visionGameActive()){
       const hint=$("hint");
-      if(hint)hint.textContent=step.phase==="armed"?"双手保持在髋线下方":(step.phase==="charging"?"任一只手快速越过上方出手线":(step.phase==="release"?"出手!":"双手进入下方蓄力区 0.12 秒"));
+      if(hint)hint.textContent=step.phase==="armed"?"Keep hands below hips":(step.phase==="charging"?"Raise either hand past the release line":(step.phase==="release"?"Release!":"Place both hands in the lower charge zone for 0.12s"));
     }
     document.documentElement.dataset.visionPhase=step.phase;
     document.documentElement.dataset.visionReady=sample.ready?"1":"0";
@@ -594,24 +597,24 @@ function visionFrame(now){
 }
 async function enableVisionControl(event){
   if(event){event.stopPropagation();event.preventDefault();}
-  if(!VISION.supported){toast("此浏览器不支持体感控制","#ff8d7a");return;}
+  if(!VISION.supported){toast("Motion control not supported on this browser","#ff8d7a");return;}
   if(VISION.loading||VISION.enabled)return;
   saveVisionControlPreference("vision");
-  VISION.desired=true;VISION.loading=true;visionSyncPreviewVisibility($("visionPreview"));visionSetUI("align","正在启动本地识别",.08);
+  VISION.desired=true;VISION.loading=true;visionSyncPreviewVisibility($("visionPreview"));visionSetUI("align","Starting local recognition",.08);
   try{
     const modelPromise=loadVisionModel();
     VISION.frame.requestedPortrait=visionWantsPortrait();document.documentElement.dataset.visionRequested=VISION.frame.requestedPortrait?"portrait":"landscape";
     const streamPromise=navigator.mediaDevices.getUserMedia({audio:false,video:visionCaptureConstraints()});
     const results=await Promise.all([modelPromise,streamPromise]);VISION.stream=results[1];visionRecordCaptureSettings(VISION.stream);
     const video=$("visionVideo");video.srcObject=VISION.stream;await video.play();visionSyncFrameGeometry(video);
-    VISION.enabled=true;VISION.lastSample=null;VISION.lastPose=null;VISION.lastHands=[];VISION.lastPoseAt=0;VISION.lastHandAt=0;VISION.lastDraw=0;VISION.lastVideoTime=-1;VISION.inferAvg=0;visionResetTracking(true);resetVisionGesture(VISION.machine);visionSetUI("idle","双手放入下方蓄力框",0);
+    VISION.enabled=true;VISION.lastSample=null;VISION.lastPose=null;VISION.lastHands=[];VISION.lastPoseAt=0;VISION.lastHandAt=0;VISION.lastDraw=0;VISION.lastVideoTime=-1;VISION.inferAvg=0;visionResetTracking(true);resetVisionGesture(VISION.machine);visionSetUI("idle","Place both hands in the lower charge zone",0);
     cancelAnimationFrame(VISION.raf);VISION.raf=requestAnimationFrame(visionFrame);
     document.documentElement.dataset.visionControl="ready";
     if(G.state==="diff")goDiff(G.mode,true);
   }catch(e){
     VISION.desired=false;VISION.enabled=false;if(VISION.stream)VISION.stream.getTracks().forEach(t=>t.stop());VISION.stream=null;
-    visionSyncPreviewVisibility($("visionPreview"));visionSetUI("error",e&&e.name==="NotAllowedError"?"摄像头权限未开启":"体感识别启动失败",0);
-    document.documentElement.dataset.visionControl="error";toast("体感控制未启动 · 已保留触屏控制","#ff8d7a");
+    visionSyncPreviewVisibility($("visionPreview"));visionSetUI("error",e&&e.name==="NotAllowedError"?"Camera permission denied":"Motion control startup failed",0);
+    document.documentElement.dataset.visionControl="error";toast("Motion control not started · Touch control retained","#ff8d7a");
   }finally{VISION.loading=false;}
 }
 function disableVisionControl(event){
@@ -629,9 +632,9 @@ function suspendVisionControl(){
 function visionModeMarkup(){
   const active=VISION.desired||VISION.enabled;
   restoreVisionControlPreference();
-  return `<div class="visionMode"><span class="visionModeLabel"><small>CONTROL MODE</small><b>操作模式</b></span>
-    <button class="${active?"":"active"}" onclick="disableVisionControl(event)"><span>触屏控制</span></button>
-    <button class="${active?"active":""}" onclick="enableVisionControl(event)" ${VISION.supported?"":"disabled"}><span>体感控制</span><em class="controlRecommend">推荐</em></button></div>`;
+  return `<div class="visionMode"><span class="visionModeLabel"><small>CONTROL MODE</small><b>Control Mode</b></span>
+    <button class="${active?"":"active"}" onclick="disableVisionControl(event)"><span>Touch Control</span></button>
+    <button class="${active?"active":""}" onclick="enableVisionControl(event)" ${VISION.supported?"":"disabled"}><span>Motion Control</span><em class="controlRecommend">Recommended</em></button></div>`;
 }
 addEventListener("pagehide",()=>{if(VISION.stream)VISION.stream.getTracks().forEach(t=>t.stop());});
 addEventListener("orientationchange",()=>{if(!VISION.enabled)return;setTimeout(()=>{VISION.lastVideoTime=-1;visionResetTracking(true);resetVisionGesture(VISION.machine);visionSyncFrameGeometry($("visionVideo"));},220);});

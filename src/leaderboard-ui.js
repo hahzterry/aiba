@@ -254,7 +254,7 @@
   }
   function resultBadgeMarkup(record){
     if(!record)return"";
-    const m=metricsFor(record),tier=tierFor(m.score),p=profile(),name=displayName(p)||"aiBA PLAYER";
+    const m=metricsFor(record),tier=tierFor(m.score),p=profile(),name=displayName(p)||"3BALLR";
     return `<section class="resultHeroCard resultTier-${tier.cls} ${tier.cls}"><i class="resultCorner tl"></i><i class="resultCorner tr"></i><i class="resultCorner bl"></i><i class="resultCorner br"></i><div class="resultIdentity"><small>POSTGAME TITLE</small><b>${esc(tier.title)}</b><span>${esc(name)} · ${m.score} DNA</span><em>${esc(tier.line)}</em></div><div class="resultRadarWrap">${radarMarkup(m)}</div><div class="resultStatGrid">${statMarkup(record,m)}</div></section>`;
   }
   function resultHeaderMarkup(record,opts){

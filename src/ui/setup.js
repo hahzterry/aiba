@@ -7,8 +7,8 @@
 
   function sceneSelectMarkup(){
     const key=getScenePreset(),preset=SCENE_PRESETS[key]||SCENE_PRESETS.indoor;
-    return `<button class="sceneSelect" onclick="showScenePicker()" aria-label="选择赛场,当前${preset.name}">
-      <span class="sceneSwatch ${key}"></span><span><small>赛场 COURT</small><strong>${preset.name}</strong></span><span class="sceneSelectMark">›</span></button>`;
+    return `<button class="sceneSelect" onclick="showScenePicker()" aria-label="Select arena, currently ${preset.name}">
+      <span class="sceneSwatch ${key}"></span><span><small>ARENA</small><strong>${preset.name}</strong></span><span class="sceneSelectMark">›</span></button>`;
   }
 
   function showScenePicker(){
@@ -16,10 +16,10 @@
     const rows=Object.keys(SCENE_PRESETS).map(key=>{
       const preset=SCENE_PRESETS[key],active=key===selected;
       return `<button class="sceneOption ${active?"selected":""}" onclick="chooseScenePreset('${key}')" aria-pressed="${active}">
-        <span class="sceneSwatch ${key}"></span><span><b>${preset.name}</b><small>${preset.desc}</small></span><em>${active?"当前":"选择"}</em></button>`;
+        <span class="sceneSwatch ${key}"></span><span><b>${preset.name}</b><small>${preset.desc}</small></span><em>${active?"Current":"Select"}</em></button>`;
     }).join("");
-    global.showPanel(`<h1 class="title" style="font-size:24px">选择赛场</h1><div class="note">场景只改变环境与灯光，不改变投篮和计分。</div>
-      <div class="sceneList">${rows}</div><button class="btn sm" onclick="returnToDifficulty()">返回难度</button>`);
+    global.showPanel(`<h1 class="title" style="font-size:24px">Select Arena</h1><div class="note">The scene only changes the environment and lighting, not shooting or scoring.</div>
+      <div class="sceneList">${rows}</div><button class="btn sm" onclick="returnToDifficulty()">Back to Difficulty</button>`);
   }
 
   function returnToDifficulty(){goDiff(G.mode,true);}
@@ -35,15 +35,15 @@
     if(!quiet){
       airhorn();
       const preset=SCENE_PRESETS[getScenePreset()]||SCENE_PRESETS.indoor;
-      paSay("欢迎来到 aiBA "+preset.name+"。灯光就位,比赛开始倒计时。",true);
+      paSay("Welcome to aiBA " + preset.name + ". Lights are ready, countdown to tip-off.", true);
     }
     let html=(global.AIBAModeLeaderboardMarkup?global.AIBAModeLeaderboardMarkup(G.mode):"")+
-      '<h1 class="title" style="font-size:24px">选择难度</h1>'+
+      '<h1 class="title" style="font-size:24px">Select Difficulty</h1>'+
       (global.AIBAPlayerSelectMarkup?global.AIBAPlayerSelectMarkup(LEGENDS,G.mode):"");
     html+=sceneSelectMarkup();
     html+=global.visionModeMarkup();
-    if(G.mode==="battle")html+='<div class="note">百分大战中,难度会影响你的甜区宽度和对手命中节奏。</div>';
-    if(G.mode==="rackrush")html+='<div class="note">难度决定每关晋级目标与投篮甜区，供球速度按关卡逐步加快。</div>';
+    if(G.mode==="battle")html+='<div class="note">In Percent Battle, difficulty affects your sweet spot size and opponent scoring tempo.</div>';
+    if(G.mode==="rackrush")html+='<div class="note">Difficulty determines stage targets and shot sweet spot. Feed speed increases progressively.</div>';
     for(const key in DIFFS){
       const diff=DIFFS[key];
       html+=`<button class="btn ${key==="easy"?"green":key==="hard"?"red":""}" style="display:block;width:88%;margin:10px auto"
