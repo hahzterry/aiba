@@ -21,21 +21,21 @@
             <source srcset="assets/aiba-brand/aiba-percent-battle-logo-v3.webp" type="image/webp">
             <img class="coverTitleLogo" src="assets/aiba-brand/aiba-percent-battle-logo-v3.png" width="768" height="425" alt="3BALL.fun">
           </picture>
-          <div class="coverSub">对着空气时出手，对着篮筐时杀手</div>
+          <div class="coverSub">Shoot at air? Nah. Shoot at the rim? Kill mode.</div>
           ${global.AIBAProfileBarMarkup?global.AIBAProfileBarMarkup():""}
           <div class="coverActions schemeA">
             <div class="modeTile rush featured">
-              <div class="modeCopy"><div class="modeEyebrow">街机闯关</div><div class="modeName">投篮机挑战</div><div class="modeDesc">连续供球，逐关达标，冲击最高总分。</div></div>
-              <div class="modeBtns"><button class="modeInfo" onclick="ensureAudio(true,true);showModeInfo('rackrush')">i</button><button class="modePlay" onclick="ensureAudio(true,true);goDiff('rackrush')"><small>RACK RUSH</small>开始闯关 »</button></div>
+              <div class="modeCopy"><div class="modeEyebrow">Arcade run</div><div class="modeName">RACK RUSH</div><div class="modeDesc">Nonstop feeds — clear stages, stack the score.</div></div>
+              <div class="modeBtns"><button class="modeInfo" onclick="ensureAudio(true,true);showModeInfo('rackrush')">i</button><button class="modePlay" onclick="ensureAudio(true,true);goDiff('rackrush')"><small>RACK RUSH</small>RUN IT »</button></div>
             </div>
-            <div class="quickModes" aria-label="其他模式">
+            <div class="quickModes" aria-label="Other modes">
               <div class="quickMode primary">
-                <button class="quickInfo" onclick="ensureAudio(true,true);showModeInfo('battle')" aria-label="百分大战说明">i</button>
-                <button class="quickPlay" onclick="ensureAudio(true,true);goDiff('battle')"><small>02 / PERCENT</small><b>百分大战</b><span>先到 100</span></button>
+                <button class="quickInfo" onclick="ensureAudio(true,true);showModeInfo('battle')" aria-label="Percent Battle rules">i</button>
+                <button class="quickPlay" onclick="ensureAudio(true,true);goDiff('battle')"><small>02 / PERCENT</small><b>Percent Battle</b><span>First to 💯</span></button>
               </div>
               <div class="quickMode">
-                <button class="quickInfo" onclick="ensureAudio(true,true);showModeInfo('contest')" aria-label="三分挑战说明">i</button>
-                <button class="quickPlay" onclick="ensureAudio(true,true);goDiff('contest')"><small>03 / CLASSIC</small><b>三分大赛</b><span>70 秒挑战</span></button>
+                <button class="quickInfo" onclick="ensureAudio(true,true);showModeInfo('contest')" aria-label="3PT Challenge rules">i</button>
+                <button class="quickPlay" onclick="ensureAudio(true,true);goDiff('contest')"><small>03 / CLASSIC</small><b>3PT Contest</b><span>70‑sec challenge</span></button>
               </div>
             </div>
           </div>${global.AIBALeaderboardHomeMarkup?global.AIBALeaderboardHomeMarkup():""}
@@ -48,32 +48,32 @@
 
   function showModeInfo(mode){
     if(mode==="battle"){
-      global.showPanel(`<h1 class="title" style="font-size:22px">百分大战 100</h1>
-        <div class="card">两人同时开投,先到 <b>100</b> 分获胜。五个常规点每球 <b>3 分</b>,两个彩球点每球 <b>5 分</b>,中场命中 <b>10 分</b>。</div>
-        <div class="card">新秀难度在比赛前 <b>70%</b> 显示投篮条；更高难度只保留前 <b>${BATTLE_BAR_VISIBLE_SHOTS}</b> 球。后程靠出手手感完成比赛。</div>
-        <button class="btn green" onclick="ensureAudio(true,true);goDiff('battle')">开始百分大战</button>
-        <button class="btn sm" onclick="showMenu()">返回封面</button>`);
+      global.showPanel(`<h1 class="title" style="font-size:22px">Percent Battle 100</h1>
+        <div class="card">Both shoot live — first to <b>100</b> wins. Each regular‑spot make is <b>3 pts</b>, color‑ball spots are <b>5 pts</b>, halfcourt makes are <b>10 pts</b>.</div>
+        <div class="card">Rookie shows the meter for the first <b>70%</b>; higher difficulties only keep it for the first <b>${BATTLE_BAR_VISIBLE_SHOTS}</b> balls. After that, it's all feel.</div>
+        <button class="btn green" onclick="ensureAudio(true,true);goDiff('battle')">Start Percent Battle</button>
+        <button class="btn sm" onclick="showMenu()">Back to home</button>`);
       return;
     }
     if(mode==="rackrush"){
-      global.showPanel(`<h1 class="title" style="font-size:22px">RACK RUSH · 投篮机挑战</h1>
-        <div class="card">进入后先选难度，再选择子模式：<b>闯关挑战</b> 或 <b>百分竞速</b>。</div>
-        <div class="card">闯关挑战是逐关达标刷总分；百分竞速是普通球 <b>3 分</b>、彩球 <b>4 分</b>，达成 <b>${RACK_RUSH_SPEED_TARGET}</b> 分立刻停表，比谁更快。</div>
-        <button class="btn gold" onclick="ensureAudio(true,true);goDiff('rackrush')">选择投篮机玩法</button>
-        <button class="btn sm" onclick="showMenu()">返回封面</button>`);
+      global.showPanel(`<h1 class="title" style="font-size:22px">RACK RUSH · Shooting Machine</h1>
+        <div class="card">Pick a difficulty first, then a sub‑mode: <b>Level Run</b> or <b>Speed 100</b>.</div>
+        <div class="card">Level Run clears stage goals for total score; in Speed 100 normal balls are <b>3 pts</b>, color balls <b>4 pts</b>, hit <b>${RACK_RUSH_SPEED_TARGET}</b> and the clock stops. Fastest time wins.</div>
+        <button class="btn gold" onclick="ensureAudio(true,true);goDiff('rackrush')">Choose your machine mode</button>
+        <button class="btn sm" onclick="showMenu()">Back to home</button>`);
       return;
     }
     if(mode==="nbadna"){
       global.showPanel(`<h1 class="title" style="font-size:22px">NBA DNA</h1>
-        <div class="card"><b>【即将上线】</b><br>投篮姿势分析与 NBA 球星风格匹配正在完善中，当前测试版暂不开放。</div>
-        <button class="btn sm" onclick="showMenu()">返回封面</button>`);
+        <div class="card"><b>[Coming soon]</b><br>Shot‑pose analysis and NBA star style matching are still in the works — not open in this build yet.</div>
+        <button class="btn sm" onclick="showMenu()">Back to home</button>`);
       return;
     }
-    global.showPanel(`<h1 class="title" style="font-size:22px">三分挑战</h1>
-      <div class="card">经典三分赛规则: <b>70 秒</b>, 5 个普通球架,外加 2 个深远点。花球和深远球更值钱。</div>
-      <div class="card">按住蓄力,松开出手。新秀难度最后 30% 也会隐藏投篮条，更高难度更早进入手感投篮。</div>
-      <button class="btn gold" onclick="ensureAudio(true,true);goDiff('contest')">开始三分挑战</button>
-      <button class="btn sm" onclick="showMenu()">返回封面</button>`);
+    global.showPanel(`<h1 class="title" style="font-size:22px">3PT Challenge</h1>
+      <div class="card">Classic 3PT contest rules: <b>70 seconds</b>, 5 regular racks plus 2 deep spots. Money balls & deep balls are worth more.</div>
+      <div class="card">Hold to charge, release to shoot. Rookie hides the meter for the last 30%; higher difficulties go by feel even earlier.</div>
+      <button class="btn gold" onclick="ensureAudio(true,true);goDiff('contest')">Start 3PT Challenge</button>
+      <button class="btn sm" onclick="showMenu()">Back to home</button>`);
   }
 
   const api=Object.freeze({showMenu,showModeInfo});

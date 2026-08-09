@@ -19,25 +19,25 @@
   }
   function rowName(row){
     const name=String(row&&row.display_name||"").trim();
-    return name&&!isDefaultName(name)?name:"未命名球员";
+    return name&&!isDefaultName(name)?name:"Unnamed player";
   }
   function labelControl(v){
-    return v==="vision"?"体感控制":"触屏控制";
+    return v==="vision"?"Motion":"Touch";
   }
   function diffName(k){
     try{return DIFFS[k]&&DIFFS[k].n||k||"";}catch(e){return k||"";}
   }
   function modeTitle(record){
-    if(!record)return"全球排行榜";
-    if(record.mode==="percent-battle")return"百分大战耗时榜";
-    if(record.variant==="speed100"||record.mode==="rack-rush-speed100")return"百分竞速榜";
-    if(record.mode==="rack-rush")return"投篮机总分榜";
-    return"全球排行榜";
+    if(!record)return"Global leaderboard";
+    if(record.mode==="percent-battle")return"Percent Battle time board";
+    if(record.variant==="speed100"||record.mode==="rack-rush-speed100")return"Speed 100 board";
+    if(record.mode==="rack-rush")return"Machine total board";
+    return"Global leaderboard";
   }
   function scopeText(record){
-    if(!record)return"全球榜";
+    if(!record)return"Worldwide";
     const parts=[diffName(record.difficulty),labelControl(record.control)].filter(Boolean);
-    return parts.length?parts.join(" · "):"全球榜";
+    return parts.length?parts.join(" · "):"Worldwide";
   }
   function timeText(ms){
     try{
@@ -70,33 +70,33 @@
   function profileMarkup(){
     const p=profile(),name=displayName(p);
     if(name)return "";
-    return `<div class="playerProfile playerProfileOnboard" id="playerProfileBox"><div><small>PLAYER</small><b>取个球场名</b></div><label><span>昵称</span><input id="playerNameInput" maxlength="18" autocomplete="nickname" placeholder="比如 TigerBro" value="" onchange="savePlayerNameFromInput(this.value)" onblur="savePlayerNameFromInput(this.value)"></label><button type="button" onclick="savePlayerNameFromInput(document.getElementById('playerNameInput').value)">上场</button></div>`;
+    return `<div class="playerProfile playerProfileOnboard" id="playerProfileBox"><div><small>PLAYER</small><b>Drop your court name</b></div><label><span>Nickname</span><input id="playerNameInput" maxlength="18" autocomplete="nickname" placeholder="e.g. Wizard of Hahz" value="" onchange="savePlayerNameFromInput(this.value)" onblur="savePlayerNameFromInput(this.value)"></label><button type="button" onclick="savePlayerNameFromInput(document.getElementById('playerNameInput').value)">GO</button></div>`;
   }
   function miniMarkup(){
     const p=profile(),name=displayName(p);
-    if(!name)return `<div class="playerProfile mini needName" id="playerProfileMini"><span>PLAYER</span><b>先取个名</b><button type="button" onclick="showNicknameEditor()">取名</button></div>`;
-    return `<div class="playerProfile mini readyName" id="playerProfileMini"><span>PLAYER</span><b>${esc(name)}</b><button type="button" onclick="showNicknameEditor()">改名</button></div>`;
+    if(!name)return `<div class="playerProfile mini needName" id="playerProfileMini"><span>PLAYER</span><b>Pick a name first</b><button type="button" onclick="showNicknameEditor()">Name</button></div>`;
+    return `<div class="playerProfile mini readyName" id="playerProfileMini"><span>PLAYER</span><b>${esc(name)}</b><button type="button" onclick="showNicknameEditor()">Rename</button></div>`;
   }
   function homeMarkup(){
-    return `<div class="leaderboardDock" aria-label="排行榜入口">
-      <button type="button" onclick="showLeaderboardHub('all')"><small>GLOBAL</small><b>全球排行榜</b><span>›</span></button>
+    return `<div class="leaderboardDock" aria-label="Leaderboards">
+      <button type="button" onclick="showLeaderboardHub('all')"><small>GLOBAL</small><b>Global leaderboard</b><span>›</span></button>
     </div>`;
   }
   function modeMarkup(mode){
     const focus=mode==="battle"?"battle":(mode==="rackrush"?"rackrush":(mode==="contest"?"contest":""));
     if(!focus)return "";
-    return `<nav class="modeUtilityBar" aria-label="模式辅助入口">
-      <button type="button" onclick="showModeUtility('${focus}')">排行榜</button>
-      <button type="button" onclick="AIBAPerfSettings.open()">游戏设置</button>
+    return `<nav class="modeUtilityBar" aria-label="Mode shortcuts">
+      <button type="button" onclick="showModeUtility('${focus}')">Leaderboard</button>
+      <button type="button" onclick="AIBAPerfSettings.open()">Game settings</button>
     </nav>`;
   }
   function showModeUtility(focus){
     focus=focus==="battle"||focus==="rackrush"||focus==="contest"?focus:"speed100";
-    const label=focus==="battle"?"百分大战":(focus==="rackrush"?"投篮机":"三分挑战");
+    const label=focus==="battle"?"Percent Battle":(focus==="rackrush"?"Rack Rush":"3PT Contest");
     if(typeof showPanel!=="function")return;
-    showPanel(`<h1 class="title" style="font-size:22px">排行榜</h1><div class="note">${esc(label)} · 全球记录</div>
-      <div class="modeUtilityMenu"><button class="btn gold" type="button" onclick="showLeaderboardHub('all','${focus}')">全球总榜</button><button class="btn sm" type="button" onclick="showLeaderboardHub('today','${focus}')">今日榜</button></div>
-      <button class="btn sm" type="button" onclick="goDiff(G.mode,true)">返回难度</button>`);
+    showPanel(`<h1 class="title" style="font-size:22px">Leaderboards</h1><div class="note">${esc(label)} · Global records</div>
+      <div class="modeUtilityMenu"><button class="btn gold" type="button" onclick="showLeaderboardHub('all','${focus}')">All-time</button><button class="btn sm" type="button" onclick="showLeaderboardHub('today','${focus}')">Today</button></div>
+      <button class="btn sm" type="button" onclick="goDiff(G.mode,true)">Back to difficulty</button>`);
   }
   function refreshProfileUI(){
     const p=profile();
@@ -118,17 +118,17 @@
       if(global.AIBAIdentity&&global.AIBAIdentity.updateName){
         await global.AIBAIdentity.updateName(clean);
         refreshProfileUI();
-        if(typeof toast==="function")toast(clean?"昵称已记住":"下次可再取名","#7CFC6B");
+        if(typeof toast==="function")toast(clean?"Nickname saved":"You can rename later","#7CFC6B");
       }
     }catch(e){
-      if(typeof toast==="function")toast("昵称已保存在本机,稍后同步","#ffd23f");
+      if(typeof toast==="function")toast("Saved locally — will sync later","#ffd23f");
     }
   }
   function showNicknameEditor(returnTo){
     const p=profile(),name=displayName(p);
     if(typeof showPanel!=="function")return;
     const back=returnTo==="settings"?"AIBAPerfSettings.open()":"goDiff(G.mode||'rackrush')";
-    showPanel(`<h1 class="title" style="font-size:22px">取个球场名</h1><div class="note">用于成绩单、精彩视频和全球排行榜。下次打开会自动记住。</div><div class="playerNameEditor"><input id="playerNameInput" maxlength="18" autocomplete="nickname" placeholder="输入你的昵称" value="${esc(name)}"><button class="btn gold" onclick="savePlayerNameFromInput(document.getElementById('playerNameInput').value)">保存昵称</button></div><button class="btn sm" onclick="${back}">返回</button>`);
+    showPanel(`<h1 class="title" style="font-size:22px">Drop your court name</h1><div class="note">Used on result cards, highlight videos & the global board. Remembered next time.</div><div class="playerNameEditor"><input id="playerNameInput" maxlength="18" autocomplete="nickname" placeholder="Enter your nickname" value="${esc(name)}"><button class="btn gold" onclick="savePlayerNameFromInput(document.getElementById('playerNameInput').value)">Save nickname</button></div><button class="btn sm" onclick="${back}">Back</button>`);
     setTimeout(()=>{const el=document.getElementById("playerNameInput");if(el)el.focus();},0);
   }
   function clamp(v,min,max){
@@ -231,26 +231,26 @@
     return {accuracy,rawAccuracy:rate*100,stability,pace,clutch,diff,score,attempts,makes,total,elapsed};
   }
   function tierFor(score){
-    if(score>=92)return {cls:"legend",title:"传奇手感",stamp:"LEGENDARY / 传奇",line:"这一局已经有点像球馆传说。"};
-    if(score>=84)return {cls:"silver",title:"精英射手",stamp:"SILVER / 精英",line:"手感够硬,已经能让排行榜紧张。"};
-    if(score>=74)return {cls:"bronze",title:"稳定火力",stamp:"BRONZE / 稳定",line:"节奏能带起来,下一局可以冲更狠。"};
-    if(score>=64)return {cls:"copper",title:"有点东西",stamp:"COPPER / 热手",line:"不是路人,这手感值得再来一把。"};
-    if(score>=52)return {cls:"steel",title:"新兵上路",stamp:"STEEL / 新兵",line:"姿势已经上路,先把节奏稳住。"};
-    if(score>=38)return {cls:"slate",title:"板凳沉思",stamp:"SLATE / 加练",line:"别慌,球馆也需要一点喜剧效果。"};
-    return {cls:"ash",title:"灰阶手感",stamp:"灰色地带",line:"先别急着发朋友圈,回去加练两组。"};
+    if(score>=92)return {cls:"legend",title:"Legendary touch",stamp:"LEGENDARY",line:"That run belongs in arena folklore."};
+    if(score>=84)return {cls:"silver",title:"Elite shooter",stamp:"SILVER / Elite",line:"Touch solid enough to make the leaderboard nervous."};
+    if(score>=74)return {cls:"bronze",title:"Steady firepower",stamp:"BRONZE / Steady",line:"The rhythm is there — push harder next run."};
+    if(score>=64)return {cls:"copper",title:"Got something",stamp:"COPPER / Warm",line:"Not a random — that touch deserves another run."};
+    if(score>=52)return {cls:"steel",title:"Rookie on the road",stamp:"STEEL / Rookie",line:"The form is coming — lock in the rhythm first."};
+    if(score>=38)return {cls:"slate",title:"Bench thoughts",stamp:"SLATE / Extra reps",line:"No panic — every arena needs some comedy."};
+    return {cls:"ash",title:"Grayscale touch",stamp:"Gray zone",line:"Maybe don't post this one — two more practice sets first."};
   }
   function radarMarkup(m){
-    const vals=[["命中",m.accuracy],["稳定",m.stability],["节奏",m.pace],["关键",m.clutch],["难度",m.diff]];
+    const vals=[["FG%",m.accuracy],["Stability",m.stability],["Rhythm",m.pace],["Clutch",m.clutch],["Difficulty",m.diff]];
     const cx=62,cy=62,r=42;
     const pts=vals.map((x,i)=>{const a=-Math.PI/2+i*Math.PI*2/5,rr=r*clamp(x[1],0,100)/100;return [cx+Math.cos(a)*rr,cy+Math.sin(a)*rr];}).map(p=>p.map(n=>n.toFixed(1)).join(",")).join(" ");
     const grid=[.33,.66,1].map(k=>vals.map((x,i)=>{const a=-Math.PI/2+i*Math.PI*2/5,rr=r*k;return [cx+Math.cos(a)*rr,cy+Math.sin(a)*rr].map(n=>n.toFixed(1)).join(",");}).join(" ")).map(p=>`<polygon points="${p}"></polygon>`).join("");
     const labels=vals.map((x,i)=>{const a=-Math.PI/2+i*Math.PI*2/5,rr=r+14;return `<text x="${(cx+Math.cos(a)*rr).toFixed(1)}" y="${(cy+Math.sin(a)*rr+4).toFixed(1)}">${esc(x[0])}</text>`;}).join("");
-    return `<svg class="resultRadar" viewBox="0 0 124 124" aria-label="表现雷达图"><g class="grid">${grid}</g><polygon class="shape" points="${pts}"></polygon><g class="labels">${labels}</g></svg>`;
+    return `<svg class="resultRadar" viewBox="0 0 124 124" aria-label="Performance radar"><g class="grid">${grid}</g><polygon class="shape" points="${pts}"></polygon><g class="labels">${labels}</g></svg>`;
   }
   function statMarkup(record,m){
-    if(record&&record.mode==="percent-battle")return `<span><b>${record.score||0}:${record.opponentScore||0}</b><small>最终比分</small></span><span><b>${timeText(m.elapsed)}</b><small>百分耗时</small></span><span><b>${record.deepMakes||0}/${record.deepAttempts||0}</b><small>中场球</small></span>`;
-    if(record&&(record.variant==="speed100"||record.mode==="rack-rush-speed100"))return `<span><b>${timeText(m.elapsed)}</b><small>冲线时间</small></span><span><b>${m.makes}/${m.attempts}</b><small>命中</small></span><span><b>${Math.round(m.rawAccuracy)}%</b><small>命中率</small></span>`;
-    return `<span><b>${m.total}</b><small>总分</small></span><span><b>${m.makes}/${m.attempts}</b><small>命中</small></span><span><b>x${record&&record.bestStreak||0}</b><small>最高连中</small></span>`;
+    if(record&&record.mode==="percent-battle")return `<span><b>${record.score||0}:${record.opponentScore||0}</b><small>Final score</small></span><span><b>${timeText(m.elapsed)}</b><small>Time to 100</small></span><span><b>${record.deepMakes||0}/${record.deepAttempts||0}</b><small>Halfcourt balls</small></span>`;
+    if(record&&(record.variant==="speed100"||record.mode==="rack-rush-speed100"))return `<span><b>${timeText(m.elapsed)}</b><small>Finish time</small></span><span><b>${m.makes}/${m.attempts}</b><small>Makes</small></span><span><b>${Math.round(m.rawAccuracy)}%</b><small>FG%</small></span>`;
+    return `<span><b>${m.total}</b><small>Total</small></span><span><b>${m.makes}/${m.attempts}</b><small>Makes</small></span><span><b>x${record&&record.bestStreak||0}</b><small>Best streak</small></span>`;
   }
   function resultBadgeMarkup(record){
     if(!record)return"";
@@ -259,7 +259,7 @@
   }
   function resultHeaderMarkup(record,opts){
     opts=opts||{};const m=metricsFor(record),tier=tierFor(m.score);
-    return `<section class="resultScoreHero resultTier-${tier.cls}"><div class="resultModeLine"><b>${esc(opts.headline||"挑战完成")}</b><span>${esc(opts.mode||"POSTGAME COMPLETE")}</span></div><div class="resultScoreValue">${esc(opts.score||recordScoreText(record))}</div><div class="resultStamp">${esc(tier.stamp)}</div><div class="resultScoreLabel">${esc(opts.label||"FINAL RESULT")}</div></section>`;
+    return `<section class="resultScoreHero resultTier-${tier.cls}"><div class="resultModeLine"><b>${esc(opts.headline||"Challenge complete")}</b><span>${esc(opts.mode||"POSTGAME COMPLETE")}</span></div><div class="resultScoreValue">${esc(opts.score||recordScoreText(record))}</div><div class="resultStamp">${esc(tier.stamp)}</div><div class="resultScoreLabel">${esc(opts.label||"FINAL RESULT")}</div></section>`;
   }
   function keyFor(record){
     if(!record._cloudKey)record._cloudKey="cloudRank"+(++seq);
@@ -267,15 +267,15 @@
   }
   function rankLine(record){
     const res=record&&record.cloudResult;
-    if(record&&record.cloudStatus==="syncing")return {cls:"pending",main:"同步全球排名中",sub:scopeText(record)};
-    if(res&&res.ok&&res.rank)return {cls:"ok",main:"全球排名 #"+res.rank+" / "+(res.total||"?"),sub:scopeText(record)+" · "+recordScoreText(record)};
-    if(res&&res.queued)return {cls:"queued",main:"已进入离线队列",sub:"网络恢复后自动补交"};
-    if(res&&!res.ok)return {cls:"queued",main:"本机成绩已保存",sub:"全球排名暂时不可用"};
-    return {cls:"pending",main:"等待全球排名",sub:scopeText(record)};
+    if(record&&record.cloudStatus==="syncing")return {cls:"pending",main:"Syncing global rank",sub:scopeText(record)};
+    if(res&&res.ok&&res.rank)return {cls:"ok",main:"Global rank #"+res.rank+" / "+(res.total||"?"),sub:scopeText(record)+" · "+recordScoreText(record)};
+    if(res&&res.queued)return {cls:"queued",main:"Queued offline",sub:"Auto‑submits when back online"};
+    if(res&&!res.ok)return {cls:"queued",main:"Saved locally",sub:"Global rank unavailable"};
+    return {cls:"pending",main:"Waiting for global rank",sub:scopeText(record)};
   }
   function recordRankText(record){
     const line=rankLine(record);
-    return line&&line.cls==="ok"?line.main:"全球排名同步中";
+    return line&&line.cls==="ok"?line.main:"Syncing global rank";
   }
   function updateRank(record){
     if(!record)return;
@@ -310,10 +310,10 @@
     return `<div id="${key}" class="cloudRankBox ${line.cls}"><small>GLOBAL RANK</small><b>${esc(line.main)}</b><span>${esc(line.sub)}</span></div>`;
   }
   const BOARD_DEFS=[
-    {key:"speed100",title:"百分竞速",mode:"rack-rush-speed100",variant:"speed100",hint:"100 分冲线",scoreLabel:"用时"},
-    {key:"battle",title:"百分大战",mode:"percent-battle",variant:"",hint:"先到 100",scoreLabel:"用时"},
-    {key:"rackrush",title:"投篮机闯关",mode:"rack-rush",variant:"classic",hint:"最高总分",scoreLabel:"分数"},
-    {key:"contest",title:"三分大赛",mode:"three-point-contest",variant:"classic",hint:"经典 70 秒",scoreLabel:"分数",soon:true}
+    {key:"speed100",title:"Speed 100",mode:"rack-rush-speed100",variant:"speed100",hint:"Race to 100",scoreLabel:"Time"},
+    {key:"battle",title:"Percent Battle",mode:"percent-battle",variant:"",hint:"First to 100",scoreLabel:"Time"},
+    {key:"rackrush",title:"Rack Rush",mode:"rack-rush",variant:"classic",hint:"Best total",scoreLabel:"Score"},
+    {key:"contest",title:"3PT Contest",mode:"three-point-contest",variant:"classic",hint:"Classic 70s",scoreLabel:"Score",soon:true}
   ];
   function todayDate(){
     const d=new Date();
@@ -340,42 +340,42 @@
     return params;
   }
   function boardScopeLabel(period,data){
-    const cached=data&&data.cached?" · 缓存":"";
+    const cached=data&&data.cached?" · cached":"";
     if(period==="today"){
-      if(data&&data.period==="date")return "今日全球记录"+cached;
-      return "今日榜"+cached;
+      if(data&&data.period==="date")return "Today's global records"+cached;
+      return "Today's board"+cached;
     }
-    return "全球总榜"+cached;
+    return "All-time"+cached;
   }
   function boardRowsMarkup(def,rows){
-    if(def.soon)return `<tr><td colspan="4">三分大赛云端榜稍后接入</td></tr>`;
-    if(!rows||!rows.length)return `<tr><td colspan="4">暂无全球记录</td></tr>`;
+    if(def.soon)return `<tr><td colspan="4">3PT cloud board coming soon</td></tr>`;
+    if(!rows||!rows.length)return `<tr><td colspan="4">No global records yet</td></tr>`;
     const record={mode:def.mode,variant:def.variant};
     return rows.slice(0,8).map(row=>`<tr><td>${row.rank}</td><td>${esc(rowName(row))}</td><td>${rowScoreText(row,record)}</td><td>${row.makes==null?"-":row.makes+"/"+row.attempts}</td></tr>`).join("");
   }
   function boardCardMarkup(def,data,period){
     if(data&&data.ok===false){
       const err=String(data.error||"leaderboard_failed").replace(/^Error:\s*/,"");
-      return `<section class="leaderboardCard error"><div class="leaderboardCardHead"><span><small>${period==="today"?"今日榜":"全球总榜"}</small><b>${esc(def.title)}</b></span><em>${esc(def.hint)}</em></div>
-        <div class="note">读取失败：${esc(err)}<br>网络恢复后成绩会继续补交。</div>
-        <button class="btn sm" onclick="showLeaderboardHub('${esc(period)}','${esc(def.key)}')">重试</button></section>`;
+      return `<section class="leaderboardCard error"><div class="leaderboardCardHead"><span><small>${period==="today"?"Today's board":"All-time"}</small><b>${esc(def.title)}</b></span><em>${esc(def.hint)}</em></div>
+        <div class="note">Load failed: ${esc(err)}<br>Scores resubmit when you're back online.</div>
+        <button class="btn sm" onclick="showLeaderboardHub('${esc(period)}','${esc(def.key)}')">Retry</button></section>`;
     }
     const pendingDaily=period==="today"&&data&&!data.soon&&data.period!=="date";
     const rows=pendingDaily?[]:(data&&data.rows||[]);
     return `<section class="leaderboardCard"><div class="leaderboardCardHead"><span><small>${esc(boardScopeLabel(period,data))}</small><b>${esc(def.title)}</b></span><em>${esc(def.hint)}</em></div>
-      <table class="std onlineBoard"><tr><td>#</td><td>玩家</td><td>${esc(def.scoreLabel)}</td><td>命中</td></tr>${pendingDaily?`<tr><td colspan="4">今日榜服务升级中,可先查看总榜</td></tr>`:boardRowsMarkup(def,rows)}</table></section>`;
+      <table class="std onlineBoard"><tr><td>#</td><td>Player</td><td>${esc(def.scoreLabel)}</td><td>Makes</td></tr>${pendingDaily?`<tr><td colspan="4">Today's board is upgrading — check all‑time for now</td></tr>`:boardRowsMarkup(def,rows)}</table></section>`;
   }
   async function showLeaderboardHub(period,focus){
     if(typeof global.playSFX==="function")global.playSFX("ui_leaderboard_open_01");
     period=period==="all"?"all":"today";
     const defs=boardDefsFor(focus);
     if(!global.AIBALeaderboard||!global.AIBALeaderboard.leaderboard){
-      if(typeof toast==="function")toast("全球排行榜暂不可用","#ff8d7a");
+      if(typeof toast==="function")toast("Global board unavailable","#ff8d7a");
       return;
     }
-    if(typeof showPanel==="function")showPanel(`<h1 class="title" style="font-size:22px">全球排行榜</h1>
-      <div class="leaderboardTabs"><button class="${period==="all"?"on":""}" onclick="showLeaderboardHub('all','${esc(focus||"")}')">全球总榜</button><button class="${period==="today"?"on":""}" onclick="showLeaderboardHub('today','${esc(focus||"")}')">今日榜</button></div>
-      <div id="leaderboardHubRows" class="leaderboardCards"><div class="note">正在读取全球记录...</div></div><button class="btn sm" onclick="${focus?"goDiff(G.mode,true)":"showMenu()"}">返回</button>`);
+    if(typeof showPanel==="function")showPanel(`<h1 class="title" style="font-size:22px">Global leaderboard</h1>
+      <div class="leaderboardTabs"><button class="${period==="all"?"on":""}" onclick="showLeaderboardHub('all','${esc(focus||"")}')">All-time</button><button class="${period==="today"?"on":""}" onclick="showLeaderboardHub('today','${esc(focus||"")}')">Today</button></div>
+      <div id="leaderboardHubRows" class="leaderboardCards"><div class="note">Loading global records...</div></div><button class="btn sm" onclick="${focus?"goDiff(G.mode,true)":"showMenu()"}">Back</button>`);
     try{
       if(global.AIBALeaderboard&&global.AIBALeaderboard.flush)global.AIBALeaderboard.flush().catch(()=>{});
       const results=await Promise.all(defs.map(def=>def.soon?Promise.resolve({ok:true,rows:[],soon:true}):global.AIBALeaderboard.leaderboard(boardParams(def,period,8,!!focus)).catch(e=>({ok:false,rows:[],error:String(e&&e.message||e)}))));
@@ -383,23 +383,23 @@
       if(el)el.innerHTML=defs.map((def,i)=>boardCardMarkup(def,results[i],period)).join("");
     }catch(e){
       const el=document.getElementById("leaderboardHubRows");
-      if(el)el.innerHTML=`<div class="note">全球排行榜读取失败,稍后再试。</div>`;
+      if(el)el.innerHTML=`<div class="note">Couldn't load the global board — try again later.</div>`;
     }
   }
   async function showOnlineLeaderboardForRecord(record){
     if(typeof global.playSFX==="function")global.playSFX("ui_leaderboard_open_01");
     if(!record||!global.AIBALeaderboard||!global.AIBALeaderboard.leaderboard){
-      if(typeof toast==="function")toast("全球排行榜暂不可用","#ff8d7a");
+      if(typeof toast==="function")toast("Global board unavailable","#ff8d7a");
       return;
     }
-    if(typeof showPanel==="function")showPanel(`<h1 class="title" style="font-size:22px">${modeTitle(record)}</h1><div class="note">正在读取全球排行榜...</div>`);
+    if(typeof showPanel==="function")showPanel(`<h1 class="title" style="font-size:22px">${modeTitle(record)}</h1><div class="note">Loading the global leaderboard...</div>`);
     try{
       const data=await global.AIBALeaderboard.leaderboard(paramsFor(record,10));
       const rows=data&&data.rows||[];
-      const body=rows.length?rows.map(row=>`<tr class="${record.cloudResult&&row.id===record.cloudResult.run_id?"me":""}"><td>${row.rank}</td><td>${esc(rowName(row))}</td><td>${rowScoreText(row,record)}</td><td>${row.makes==null?"-":row.makes+"/"+row.attempts}</td></tr>`).join(""):`<tr><td colspan="4">暂无全球记录</td></tr>`;
-      if(typeof showPanel==="function")showPanel(`<h1 class="title" style="font-size:22px">${modeTitle(record)}</h1><div class="note">${scopeText(record)} · 全球实时记录</div><table class="std onlineBoard"><tr><td>#</td><td>玩家</td><td>${record.mode==="percent-battle"||record.variant==="speed100"?"用时":"分数"}</td><td>命中</td></tr>${body}</table><button class="btn sm" onclick="showMenu()">返回封面</button>`);
+      const body=rows.length?rows.map(row=>`<tr class="${record.cloudResult&&row.id===record.cloudResult.run_id?"me":""}"><td>${row.rank}</td><td>${esc(rowName(row))}</td><td>${rowScoreText(row,record)}</td><td>${row.makes==null?"-":row.makes+"/"+row.attempts}</td></tr>`).join(""):`<tr><td colspan="4">No global records yet</td></tr>`;
+      if(typeof showPanel==="function")showPanel(`<h1 class="title" style="font-size:22px">${modeTitle(record)}</h1><div class="note">${scopeText(record)} · Live global records</div><table class="std onlineBoard"><tr><td>#</td><td>Player</td><td>${record.mode==="percent-battle"||record.variant==="speed100"?"Time":"Score"}</td><td>Makes</td></tr>${body}</table><button class="btn sm" onclick="showMenu()">Back to home</button>`);
     }catch(e){
-      if(typeof showPanel==="function")showPanel(`<h1 class="title" style="font-size:22px">${modeTitle(record)}</h1><div class="note">全球排行榜读取失败,稍后再试。</div><button class="btn sm" onclick="showMenu()">返回封面</button>`);
+      if(typeof showPanel==="function")showPanel(`<h1 class="title" style="font-size:22px">${modeTitle(record)}</h1><div class="note">Couldn't load the global board — try again later.</div><button class="btn sm" onclick="showMenu()">Back to home</button>`);
     }
   }
 
