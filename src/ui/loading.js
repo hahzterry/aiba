@@ -9,11 +9,11 @@
 
   function setBootProgress(done,total,finished,count){
     const percent=Math.round(clamp(done/Math.max(1,total),0,1)*100);
-    $("bootBar").style.width=percent+"%";$("bootPercent").textContent=percent+"%";$("bootFile").textContent=finished+"/"+count+" 核心资源";
+    $("bootBar").style.width=percent+"%";$("bootPercent").textContent=percent+"%";$("bootFile").textContent=finished+"/"+count+" core assets";
   }
-  /* 音频同样用 fetch() 预热(移动端在用户交互前不会预加载 <audio>,等元素就绪会
-     一直卡到超时),但拿到的数据不能白扔:直接转成 object URL 喂给音轨,这样
-     <audio> 不会再为同一个文件发第二次请求。 */
+  /* Audio is also preheated with fetch() (mobile won't preload <audio> before user interaction,
+     and waiting for elements to be ready will hang until timeout), but the fetched data is not wasted:
+     directly convert to object URL and feed to audio track, so <audio> won't send a second request for the same file. */
   async function preloadBootAsset(asset,total,state){
     let ok=true;
     try{
@@ -29,7 +29,7 @@
       }
     }catch(error){
       ok=false;bootFailed++;
-      // 预热失败时退回普通 URL,音频照常可用,只是少了进度条上的准确度
+      // When preheating fails, fallback to normal URL; audio still works, just with less accuracy on the progress bar.
       if(asset.media&&typeof extEnsureSrc==="function")extEnsureSrc(asset.media);
     }
     state.done+=asset.weight;state.finished++;setBootProgress(state.done,total,state.finished,state.count);return ok;
@@ -48,11 +48,11 @@
       {media:"ocean",url:EXT_AUDIO.ocean,weight:32684},{media:"gull",url:EXT_AUDIO.gull,weight:32108}
     ];
     const usable=assets.filter(asset=>asset.url),total=usable.reduce((sum,asset)=>sum+asset.weight,0);
-    const state={done:0,finished:0,count:usable.length};$("bootStatus").textContent="正在同步画面与球馆声音";
+    const state={done:0,finished:0,count:usable.length};$("bootStatus").textContent="Syncing visuals and arena audio";
     await Promise.all([Promise.all(usable.map(asset=>preloadBootAsset(asset,total,state))),new Promise(resolve=>setTimeout(resolve,1100))]);
     await ensureUIFontReady();setBootProgress(total,total,usable.length,usable.length);global.BOOT_READY=true;
     const gate=$("bootLoad");gate.classList.add("ready");gate.setAttribute("aria-busy","false");
-    $("bootStatus").textContent=bootFailed?"基础资源就绪":"赛场资源就绪";document.documentElement.dataset.bootReady="1";
+    $("bootStatus").textContent=bootFailed?"Basic resources ready":"Arena resources ready";document.documentElement.dataset.bootReady="1";
   }
   function unlockBoot(event){
     if(!global.BOOT_GATE_ACTIVE)return false;
