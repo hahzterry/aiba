@@ -1,7 +1,7 @@
 "use strict";
 
 const GAME_VERSION="v2.12.8";
-const GAME_NAME="aiBA·百分大战";
+const GAME_NAME="3BALL.fun";
 const CONFIG=window.AIBA_CONFIG||{};
 const COURT={
   width:15.24,length:28.65,halfWidth:7.62,

@@ -30,7 +30,7 @@
     el.id="obWelcome";
     el.innerHTML=
       '<div class="obCard">'+
-      '<small>WELCOME TO</small><h1>aiBA · 百分大战</h1>'+
+      '<small>WELCOME TO</small><h1>3BALL.fun</h1>'+
       '<div class="obSteps">'+
       '<span><b>1</b><i data-aiba-icon="hand-pointer" data-aiba-label=""></i>按住屏幕蓄力</span>'+
       '<span><b>2</b><i data-aiba-icon="play" data-aiba-label=""></i>松开手出手</span>'+

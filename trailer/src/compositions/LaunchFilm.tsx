@@ -111,7 +111,7 @@ const EndCard:React.FC=()=>{
   return <AbsoluteFill style={{background:m.colors.black,color:m.colors.paper,justifyContent:"center",alignItems:"center",fontFamily:font,overflow:"hidden"}}>
     <div style={{position:"absolute",width:770,height:770,border:`2px solid ${m.colors.yellow}`,transform:`rotate(${spin}deg) scale(${.7+.3*pop})`,boxShadow:`0 0 130px ${m.colors.red}66`}}/>
     <div style={{fontSize:23,letterSpacing:14,color:m.colors.cyan}}>CYBER COURT</div>
-    <div style={{fontSize:164,lineHeight:.8,marginTop:30,transform:`scale(${.82+.18*pop})`,textAlign:"center",fontWeight:950}}>aiBA<br/><span style={{color:m.colors.yellow}}>百分大战</span></div>
+    <div style={{fontSize:164,lineHeight:.8,marginTop:30,transform:`scale(${.82+.18*pop})`,textAlign:"center",fontWeight:950}}>3BALL<br/><span style={{color:m.colors.yellow}}>.fun</span></div>
     <div style={{fontSize:28,letterSpacing:6,marginTop:62}}>100 POINTS. ONE CROWN.</div>
     <div style={{position:"absolute",bottom:116,border:`2px solid ${m.colors.yellow}`,padding:"20px 52px",fontSize:26}}>PLAY NOW</div>
   </AbsoluteFill>;
