@@ -35,7 +35,7 @@ function buildStands(){
   side(13.4,COURT.midZ,COURT.length+4,"z",-1,5); // right sideline
   if(stepParts.length)bakeVoxelMesh(indoorRoot,stepParts);
   // banner walls
-  const banners=[["aiBA PERCENT BATTLE","#13213f","#ffd23f"],["MINE-DEW 深远三分区","#0c3a14","#9dff8d"],["像素之夜 PIXEL NIGHT","#3a1240","#ff9df1"]];
+  const banners=[["3BALL.fun","#13213f","#ffd23f"],["#3BALLFUN","#0c3a14","#9dff8d"],["3BALL.fun","#3a1240","#ff9df1"]];
   const wallDefs=[
     [0,3.6,COURT.nearBaseline-9.4,0,26],
     [-19.5,3.6,COURT.midZ,Math.PI/2,38],

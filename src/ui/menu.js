@@ -19,7 +19,7 @@
         <div class="coverMenu"><div>
           <picture class="coverTitleMark">
             <source srcset="assets/aiba-brand/aiba-percent-battle-logo-v3.webp" type="image/webp">
-            <img class="coverTitleLogo" src="assets/aiba-brand/aiba-percent-battle-logo-v3.png" width="768" height="425" alt="aiBA Percent Battle">
+            <img class="coverTitleLogo" src="assets/aiba-brand/aiba-percent-battle-logo-v3.png" width="768" height="425" alt="3BALL.fun">
           </picture>
           <div class="coverSub">对着空气时出手，对着篮筐时杀手</div>
           ${global.AIBAProfileBarMarkup?global.AIBAProfileBarMarkup():""}
@@ -40,7 +40,7 @@
             </div>
           </div>${global.AIBALeaderboardHomeMarkup?global.AIBALeaderboardHomeMarkup():""}
         </div></div>
-        <div class="coverCredit">aiBA PERCENT BATTLE</div>
+        <div class="coverCredit">3BALL.fun</div>
       </div>
     `);
     if(!global.BOOT_GATE_ACTIVE)global.scheduleCoverVideo();
