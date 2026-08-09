@@ -5,43 +5,43 @@
   const LS_KEY="aiba_gear_v1";
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
-  /* 数值口径：speed/aim 是乘区(1+amt)，clutch 只在关键时刻乘到甜区，
-     stamina 抬精力上限，cost 降蓄力+出手的精力消耗，recovery 加快恢复 */
+  /* Numeric scope: speed/aim are multipliers (1+amt), clutch only applies in clutch moments,
+     stamina raises max energy, cost reduces energy drain during charge+release, recovery speeds up regen */
   const SLOTS=[
-    {id:"shoes",name:"球鞋",en:"SHOES"},
-    {id:"sleeve",name:"护腕护肘",en:"SLEEVE"},
-    {id:"band",name:"头部装扮",en:"HEAD"}
+    {id:"shoes",name:"Shoes",en:"SHOES"},
+    {id:"sleeve",name:"Sleeve/Guard",en:"SLEEVE"},
+    {id:"band",name:"Headwear",en:"HEAD"}
   ];
   const CATALOG={
     shoes:[
-      {id:"shoes-blaze",name:"疾风橙",color:"#e8771e",stat:"speed",amt:.12,desc:"投射蓄力 +12%"},
-      {id:"shoes-anchor",name:"稳踏青",color:"#7ee7ff",stat:"aim",amt:.12,desc:"准星甜区 +12%"},
-      {id:"shoes-marathon",name:"长跑灰",color:"#9aa7b8",stat:"stamina",amt:.25,desc:"精力上限 +25%"},
-      {id:"shoes-spring",name:"回弹紫",color:"#b07ff2",stat:"recovery",amt:.35,desc:"精力恢复 +35%"}
+      {id:"shoes-blaze",name:"Blaze Orange",color:"#e8771e",stat:"speed",amt:.12,desc:"Shot charge speed +12%"},
+      {id:"shoes-anchor",name:"Anchor Cyan",color:"#7ee7ff",stat:"aim",amt:.12,desc:"Sweet spot +12%"},
+      {id:"shoes-marathon",name:"Marathon Gray",color:"#9aa7b8",stat:"stamina",amt:.25,desc:"Max stamina +25%"},
+      {id:"shoes-spring",name:"Spring Purple",color:"#b07ff2",stat:"recovery",amt:.35,desc:"Stamina recovery +35%"}
     ],
     sleeve:[
-      {id:"sleeve-steady",name:"稳定白",color:"#f2f5fa",stat:"aim",amt:.1,desc:"准星甜区 +10%"},
-      {id:"sleeve-ice",name:"冷血黑",color:"#252a36",stat:"clutch",amt:.25,desc:"关键时刻准星 +25%"},
-      {id:"sleeve-snap",name:"快弹红",color:"#e03a3e",stat:"speed",amt:.08,desc:"投射蓄力 +8%"},
-      {id:"sleeve-saver",name:"节能蓝",color:"#4aa3ff",stat:"cost",amt:.2,desc:"精力消耗 -20%"}
+      {id:"sleeve-steady",name:"Steady White",color:"#f2f5fa",stat:"aim",amt:.1,desc:"Sweet spot +10%"},
+      {id:"sleeve-ice",name:"Ice Black",color:"#252a36",stat:"clutch",amt:.25,desc:"Clutch sweet spot +25%"},
+      {id:"sleeve-snap",name:"Snap Red",color:"#e03a3e",stat:"speed",amt:.08,desc:"Shot charge speed +8%"},
+      {id:"sleeve-saver",name:"Saver Blue",color:"#4aa3ff",stat:"cost",amt:.2,desc:"Energy cost -20%"}
     ],
     band:[
-      {id:"band-gold",name:"冷静金",color:"#ffd23f",stat:"clutch",amt:.2,desc:"关键时刻准星 +20%"},
-      {id:"band-focus",name:"专注青",color:"#7ee7ff",stat:"aim",amt:.08,desc:"准星甜区 +8%"},
-      {id:"band-iron",name:"铁人绿",color:"#69d98c",stat:"stamina",amt:.2,desc:"精力上限 +20%"},
-      {id:"band-volt",name:"闪电黄",color:"#f2ef6a",stat:"speed",amt:.1,desc:"投射蓄力 +10%"},
-      {id:"head-mask",name:"黑面具",color:"#252a36",mods:{clutch:.22,speed:-.05},desc:"关键准星 +22% / 投速 -5%"},
-      {id:"head-cap",name:"棒球帽",color:"#7ee7ff",mods:{stamina:.18,aim:-.04},desc:"精力上限 +18% / 准星 -4%"},
-      {id:"head-shades",name:"太阳镜",color:"#111111",mods:{aim:.12,clutch:-.06},desc:"准星 +12% / 关键 -6%"},
-      {id:"head-hoodie",name:"连帽衫",color:"#9aa7b8",mods:{recovery:.32,speed:-.08},desc:"恢复 +32% / 投速 -8%"},
-      {id:"head-weird",name:"奇葩头套",color:"#ff8df0",mods:{speed:.14,aim:-.08},desc:"投速 +14% / 准星 -8%"}
+      {id:"band-gold",name:"Calm Gold",color:"#ffd23f",stat:"clutch",amt:.2,desc:"Clutch sweet spot +20%"},
+      {id:"band-focus",name:"Focus Cyan",color:"#7ee7ff",stat:"aim",amt:.08,desc:"Sweet spot +8%"},
+      {id:"band-iron",name:"Iron Green",color:"#69d98c",stat:"stamina",amt:.2,desc:"Max stamina +20%"},
+      {id:"band-volt",name:"Volt Yellow",color:"#f2ef6a",stat:"speed",amt:.1,desc:"Shot charge speed +10%"},
+      {id:"head-mask",name:"Black Mask",color:"#252a36",mods:{clutch:.22,speed:-.05},desc:"Clutch +22% / Speed -5%"},
+      {id:"head-cap",name:"Baseball Cap",color:"#7ee7ff",mods:{stamina:.18,aim:-.04},desc:"Stamina +18% / Aim -4%"},
+      {id:"head-shades",name:"Sunglasses",color:"#111111",mods:{aim:.12,clutch:-.06},desc:"Aim +12% / Clutch -6%"},
+      {id:"head-hoodie",name:"Hoodie",color:"#9aa7b8",mods:{recovery:.32,speed:-.08},desc:"Recovery +32% / Speed -8%"},
+      {id:"head-weird",name:"Weird Mask",color:"#ff8df0",mods:{speed:.14,aim:-.08},desc:"Speed +14% / Aim -8%"}
     ]
   };
-  const STAT_NAMES={speed:"投速",aim:"准星",clutch:"关键",stamina:"精力",recovery:"回复",cost:"节能"};
+  const STAT_NAMES={speed:"Shot Speed",aim:"Sweet Spot",clutch:"Clutch",stamina:"Stamina",recovery:"Recovery",cost:"Efficiency"};
 
-  /* 精力模型：蓄力持续掉，出手一次性掉；连续出手期间不回复，
-     停手 REGEN_DELAY 秒后才开始快速恢复（=必须真的休息一下）。
-     快节奏约 10-12 连投见底，力竭后回到 28% 解锁 */
+  /* Stamina model: continuous drain while charging, one-time cost on release; no regen during consecutive shots,
+     regen only starts after REGEN_DELAY seconds of no action (you must actually rest).
+     Fast tempo ~10-12 shots until empty; after exhaustion, unlocks at 28% */
   const STA_BASE=100,CHARGE_DRAIN=5.5,SHOT_COST=6.5,REGEN=14,REGEN_DELAY=.9,WAKE_RATIO=.28,TIRED_RATIO=.25;
 
   let load={shoes:"",sleeve:"",band:"",active:""};
@@ -83,7 +83,7 @@
     return m;
   }
 
-  /* ---------------- 关键时刻判定 ---------------- */
+  /* ---------------- Clutch moment detection ---------------- */
   function gameRef(){return typeof G==="undefined"?null:G;}
   function playing(g){return !!g&&(g.state==="round"||g.state==="tiebreak"||g.state==="battle"||g.state==="rackrush");}
   function clutchActive(){
@@ -93,7 +93,7 @@
     return !!g.running&&g.timer<=10;
   }
 
-  /* ---------------- 精力引擎 ---------------- */
+  /* ---------------- Stamina engine ---------------- */
   const STA={v:STA_BASE,max:STA_BASE,out:false,was:false,lastT:0,toastAt:0,lastUseAt:0};
   const MET={lowMs:0,outCount:0};
   const staProj=()=>new THREE.Vector3();
@@ -111,7 +111,7 @@
   }
   function announceGear(){
     const it=activeItem();
-    if(it)setTimeout(()=>toastSafe(it.name+" · 生效 · "+it.desc,it.color),700);
+    if(it)setTimeout(()=>toastSafe(it.name+" · Active · "+it.desc,it.color),700);
   }
 
   /* ---------------- HUD ---------------- */
@@ -120,7 +120,7 @@
     if(hud)return hud;
     hud=document.createElement("div");
     hud.id="staminaWrap";
-    hud.innerHTML='<svg class="staRing" viewBox="0 0 64 64" aria-hidden="true"><circle class="staTrack" cx="32" cy="32" r="25" pathLength="100"/><circle id="staArc" class="staArc" cx="32" cy="32" r="25" pathLength="100"/></svg><small>精力 STAMINA</small><div class="staBar"><i id="staFill"></i></div><b id="staChip"></b>';
+    hud.innerHTML='<svg class="staRing" viewBox="0 0 64 64" aria-hidden="true"><circle class="staTrack" cx="32" cy="32" r="25" pathLength="100"/><circle id="staArc" class="staArc" cx="32" cy="32" r="25" pathLength="100"/></svg><small>STAMINA</small><div class="staBar"><i id="staFill"></i></div><b id="staChip"></b>';
     document.body.appendChild(hud);
     return hud;
   }
@@ -168,7 +168,7 @@
     const state=STA.out?"out":(r<TIRED_RATIO?"low":(r<.5?"warn":"ok"));
     if(state!==hudState){hudState=state;el.dataset.sta=state;}
     const m=mods();
-    const chip=STA.out?"力竭恢复中…":(m.clutch>0&&clutchActive()?"CLUTCH 准星 +"+Math.round(m.clutch*100)+"%":(r<TIRED_RATIO?"手臂发沉 · 准星下降":""));
+    const chip=STA.out?"Recovering from exhaustion...":(m.clutch>0&&clutchActive()?"CLUTCH +"+Math.round(m.clutch*100)+"%":(r<TIRED_RATIO?"Heavy arms · Sweet spot reduced":""));
     if(chip!==hudChip){hudChip=chip;const c=document.getElementById("staChip");if(c)c.textContent=chip;}
   }
   function tick(now){
@@ -190,13 +190,13 @@
       if(g.charging){STA.v=Math.max(0,STA.v-CHARGE_DRAIN*m.cost*dt);STA.lastUseAt=now;}
       else if(now-STA.lastUseAt>=REGEN_DELAY*1000)STA.v=Math.min(STA.max,STA.v+REGEN*m.recovery*dt);
       if(staminaRatio()<TIRED_RATIO)MET.lowMs+=dt*1000;
-      if(!STA.out&&STA.v<=.01){STA.out=true;MET.outCount++;toastThrottled("💦 精力耗尽 · 喘口气再投!","#ff8d7a");if(typeof phoneHaptic==="function"&&typeof HAPTIC_PATTERNS!=="undefined")phoneHaptic(HAPTIC_PATTERNS.exhausted);}
-      if(STA.out&&STA.v>=STA.max*WAKE_RATIO){STA.out=false;toastThrottled("💪 缓过来了 · 继续!","#7CFC6B");}
+      if(!STA.out&&STA.v<=.01){STA.out=true;MET.outCount++;toastThrottled("💦 Exhausted · Take a breather!","#ff8d7a");if(typeof phoneHaptic==="function"&&typeof HAPTIC_PATTERNS!=="undefined")phoneHaptic(HAPTIC_PATTERNS.exhausted);}
+      if(STA.out&&STA.v>=STA.max*WAKE_RATIO){STA.out=false;toastThrottled("💪 Recovered · Keep going!","#7CFC6B");}
     }
     updateHud(active);
   }
 
-  /* ---------------- 球员初始数值 ---------------- */
+  /* ---------------- Player base stats ---------------- */
   function profileOf(star){
     const cfg=global.AIBA_CONFIG||{};
     return (cfg.shotProfileFor?cfg.shotProfileFor(star):null)||cfg.DEFAULT_SHOT_PROFILE||{speed:1,window:1};
@@ -211,7 +211,7 @@
     };
   }
 
-  /* ---------------- 更衣室 UI ---------------- */
+  /* ---------------- Locker room UI ---------------- */
   let lastStar=null;
   function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
   function statRow(label,val,bonusText){
@@ -222,10 +222,10 @@
     const b=baseStats(star),m=mods(),it=activeItem();
     const extra=it&&(it.stat==="recovery"||it.stat==="cost")?it.desc:"";
     return `<div class="gearStats lockerMetrics">
-      ${statRow("投速",b.speed*m.speed,m.speed>1?"+"+Math.round((m.speed-1)*100)+"%":"")}
-      ${statRow("准星",b.aim*m.aim,m.aim>1?"+"+Math.round((m.aim-1)*100)+"%":"")}
-      ${statRow("关键",b.clutch*(1+m.clutch),m.clutch>0?"关键时刻+"+Math.round(m.clutch*100)+"%":"")}
-      ${statRow("精力",b.stamina*m.staminaMax,m.staminaMax>1?"+"+Math.round((m.staminaMax-1)*100)+"%":extra)}
+      ${statRow("Shot Speed",b.speed*m.speed,m.speed>1?"+"+Math.round((m.speed-1)*100)+"%":"")}
+      ${statRow("Sweet Spot",b.aim*m.aim,m.aim>1?"+"+Math.round((m.aim-1)*100)+"%":"")}
+      ${statRow("Clutch",b.clutch*(1+m.clutch),m.clutch>0?"+"+Math.round(m.clutch*100)+"% at clutch":"")}
+      ${statRow("Stamina",b.stamina*m.staminaMax,m.staminaMax>1?"+"+Math.round((m.staminaMax-1)*100)+"%":extra)}
     </div>`;
   }
   function chipMarkup(slot,item){
@@ -235,7 +235,7 @@
   }
   function slotMarkup(slot){
     const it=itemOf(slot.id),isActive=load.active===slot.id&&!!it;
-    const state=it?`<button class="gearActive ${isActive?"on":""}" type="button" onclick="AIBAGearActivate('${slot.id}')">${isActive?"✓ 加成生效":"设为生效"}</button>`:`<span class="gearEmpty">未装备</span>`;
+    const state=it?`<button class="gearActive ${isActive?"on":""}" type="button" onclick="AIBAGearActivate('${slot.id}')">${isActive?"✓ Active":"Activate"}</button>`:`<span class="gearEmpty">Empty</span>`;
     return `<div class="gearSlot ${isActive?"live":""}">
       <div class="gearSlotHead"><small>${esc(slot.en)}</small><b>${esc(slot.name)}</b>${state}</div>
       <div class="gearChips">${CATALOG[slot.id].map(item=>chipMarkup(slot.id,item)).join("")}</div>
@@ -244,7 +244,7 @@
   function sectionMarkup(star){
     if(star!==undefined)lastStar=star||null;
     return `<div id="lockerGear" class="lockerGear">
-      <div class="gearHead"><small>GEAR LAB</small><b>装备工坊</b><em>可穿 3 件 · 同时只有 1 件的加成生效，点「设为生效」切换</em></div>
+      <div class="gearHead"><small>GEAR LAB</small><b>Equipment Workshop</b><em>Equip up to 3 items · only 1 active at a time — click "Activate" to switch</em></div>
       ${SLOTS.map(slotMarkup).join("")}
       ${statsMarkup(lastStar)}
     </div>`;
@@ -281,7 +281,7 @@
     if(el)el.outerHTML=statsMarkup(lastStar);
   }
 
-  /* ---------------- 装备外观:更衣室预览与正式上场共用 ---------------- */
+  /* ---------------- Gear appearance: shared between locker preview and in-game ---------------- */
   function colorOf(item,fallback){
     const value=item&&item.color;
     return parseInt(String(value||fallback||"#ffffff").replace("#",""),16)||0xffffff;
@@ -346,7 +346,7 @@
     if(root&&global.AIBALockerPreview)global.AIBALockerPreview.render(root);
   }
 
-  /* ---------------- 挂钩游戏全局(在主脚本之后加载) ---------------- */
+  /* ---------------- Hook into game globals (load after main script) ---------------- */
   function wrapGlobals(){
     const wrap=(name,make)=>{
       const orig=global[name];
@@ -365,7 +365,7 @@
     });
     wrap("startCharge",orig=>function(){
       if(STA.out&&playing(gameRef())){
-        toastThrottled("💦 力竭中 · 精力回到 "+Math.round(WAKE_RATIO*100)+"% 才能出手","#ffd23f");
+        toastThrottled("💦 Exhausted · Wait until stamina reaches "+Math.round(WAKE_RATIO*100)+"% to shoot","#ffd23f");
         return false;
       }
       return orig.apply(this,arguments);

@@ -2,15 +2,15 @@
   "use strict";
 
   const coverStars=Object.freeze([
-    {id:"k24",n:"科比·布莱恩特",t:"五届总冠军 · 关键球专家",r:95,col:[0x111111,0x4a3a12],num:24,
+    {id:"k24",n:"Kobe Bryant",t:"Five-time Champion · Clutch Specialist",r:95,col:[0x111111,0x4a3a12],num:24,
      cover:"assets/aiba-covers/cover-k24.webp",coverVideo:"assets/aiba-covers/cover-k24-lite.mp4",skin:0x8d5524,shoe:0x552583,headband:false,wrist:0xfdb927,sleeve:0x111111,hair:0x101010,hairStyle:"fade",beard:true},
-    {id:"j23",n:"迈克尔·乔丹",t:"六届总冠军 · 后仰跳投",r:96,col:[0xce1141,0x111111],num:23,
+    {id:"j23",n:"Michael Jordan",t:"Six-time Champion · Fadeaway Jumper",r:96,col:[0xce1141,0x111111],num:23,
      cover:"assets/aiba-covers/cover-j23.webp",coverVideo:"assets/aiba-covers/cover-j23-lite.mp4",skin:0x8d5524,shoe:0xce1141,headband:false,wrist:0x111111,sleeve:0x111111,hair:0x101010,hairStyle:"bald",beard:0x1a1a1a},
-    {id:"a03",n:"阿伦·艾弗森",t:"四届得分王 · 交叉步突破",r:92,col:[0xf7f7f7,0x1d428a],num:3,
+    {id:"a03",n:"Allen Iverson",t:"Four-time Scoring Champion · Crossover",r:92,col:[0xf7f7f7,0x1d428a],num:3,
      cover:"assets/aiba-covers/cover-a03.webp",coverVideo:"assets/aiba-covers/cover-a03-lite.mp4",skin:0x8d5524,shoe:0xffffff,headband:0xffffff,wrist:0x111111,sleeve:0x111111,hair:0x141414,hairStyle:"cornrows",beard:true},
-    {id:"v15",n:"文斯·卡特",t:"八届全明星 · 2000扣篮冠军",r:90,col:[0x5a2d81,0x111111],num:15,
+    {id:"v15",n:"Vince Carter",t:"Eight-time All-Star · 2000 Slam Dunk Champion",r:90,col:[0x5a2d81,0x111111],num:15,
      cover:"assets/aiba-covers/cover-v15.webp",coverVideo:"assets/aiba-covers/cover-v15-lite.mp4",skin:0x9c6b43,shoe:0x7b2cff,headband:false,wrist:0x7b2cff,sleeve:0x111111,hair:0x101010,hairStyle:"bald",beard:false},
-    {id:"t01",n:"特雷西·麦克格雷迪",t:"七届全明星 · 左手远投",r:91,col:[0x006bb6,0xffffff],num:1,
+    {id:"t01",n:"Tracy McGrady",t:"Seven-time All-Star · Left-handed Long-range Shooter",r:91,col:[0x006bb6,0xffffff],num:1,
      cover:"assets/aiba-covers/cover-t01.webp",coverVideo:"assets/aiba-covers/cover-t01-lite.mp4",skin:0x8d5524,shoe:0x1d6dff,headband:false,wrist:0xffffff,sleeve:0x111111,hair:0x101010,hairStyle:"fade",beard:false}
   ]);
 
