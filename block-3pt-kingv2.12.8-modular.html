@@ -41,10 +41,10 @@
 <div id="hud">
   <div id="hudRound" class="px"></div>
   <div id="hudTimer">70.0</div>
-  <div id="hudScore"><div class="big" id="scoreNum">0</div><div class="sm">得分 PTS</div></div>
+  <div id="hudScore"><div class="big" id="scoreNum">0</div><div class="sm">POINTS</div></div>
   <div id="hudRack"><div id="hudRackName"></div><div id="hudDots"></div></div>
   <div id="hudStreak">🔥 x0</div>
-  <div id="powerWrap"><div id="pZone"><div id="pTag">甜区</div></div><div id="pSweet"></div><div id="pFill"></div></div>
+  <div id="powerWrap"><div id="pZone"><div id="pTag">Sweet Spot</div></div><div id="pSweet"></div><div id="pFill"></div></div>
   <div id="playerPower" aria-hidden="true">
     <svg viewBox="0 0 78 124" role="presentation">
       <defs>
@@ -63,60 +63,60 @@
       <path class="ppRim" d="M22 115 C60 89 66 36 40 9"/>
     </svg>
   </div>
-  <div id="tiltWrap"><span id="tiltLbl">⟺ 保持水平</span><div id="tiltCenter"></div><div id="tiltDot"></div></div>
+  <div id="tiltWrap"><span id="tiltLbl">⟺ Keep Level</span><div id="tiltCenter"></div><div id="tiltDot"></div></div>
   <div id="battleControls">
-    <div id="battleSpotName">弧顶<br><span id="battleOppScore">对手 0/100</span></div>
+    <div id="battleSpotName">Top of the Key<br><span id="battleOppScore">Opponent 0/100</span></div>
   </div>
   <div id="battleScore">
-    <span id="bsMe"><b id="bsMeName">你</b> <span id="bsMeNum">0</span></span>
+    <span id="bsMe"><b id="bsMeName">YOU</b> <span id="bsMeNum">0</span></span>
     <span id="bsVS">VS</span>
-    <span id="bsOpp"><span id="bsOppNum">0</span> <b id="bsOppName">对手</b></span>
+    <span id="bsOpp"><span id="bsOppNum">0</span> <b id="bsOppName">Opponent</b></span>
     <div id="bsRace"><i id="bsRaceMe"></i><i id="bsRaceOpp"></i></div>
     <small id="bsTimer">0:00.0</small>
   </div>
-  <button id="midBtn" onpointerdown="event.stopPropagation();event.preventDefault();battleSetSpot(7)" onclick="event.stopPropagation();event.preventDefault()">🔥 中场10分</button>
+  <button id="midBtn" onpointerdown="event.stopPropagation();event.preventDefault();battleSetSpot(7)" onclick="event.stopPropagation();event.preventDefault()">🔥 Half-court 10pts</button>
   <div id="edgeArrows"></div>
   <div id="spotDots"></div>
-  <div id="courtTools" aria-label="球场工具">
-    <button id="camBtn" type="button" data-aiba-icon="camera" data-aiba-label="第一人称" onclick="cycleCam()">第一人称</button>
-    <button id="muteBtn" class="needsAudio" type="button" data-aiba-icon="volume-1" data-aiba-label="启动声音" onclick="toggleMute()">启动声音</button>
-    <button id="pauseBtn" type="button" data-aiba-icon="pause" data-aiba-label="暂停菜单" onclick="openPauseMenu(event)">暂停菜单</button>
+  <div id="courtTools" aria-label="Court Tools">
+    <button id="camBtn" type="button" data-aiba-icon="camera" data-aiba-label="First Person" onclick="cycleCam()">First Person</button>
+    <button id="muteBtn" class="needsAudio" type="button" data-aiba-icon="volume-1" data-aiba-label="Enable Audio" onclick="toggleMute()">Enable Audio</button>
+    <button id="pauseBtn" type="button" data-aiba-icon="pause" data-aiba-label="Pause Menu" onclick="openPauseMenu(event)">Pause Menu</button>
   </div>
-  <div id="heroTag" data-aiba-icon="clapperboard" data-aiba-label="英雄时刻 HERO BALL">英雄时刻 HERO BALL</div>
+  <div id="heroTag" data-aiba-icon="clapperboard" data-aiba-label="HERO BALL">HERO BALL</div>
   <div id="hudTarget"></div>
   <div id="vsBanner"></div>
-  <div id="hint">按住屏幕蓄力 · 松开出手 · 停在绿色甜区</div>
+  <div id="hint">Hold to charge · Release to shoot · Stop in the green sweet spot</div>
 </div>
 
-<aside id="visionPreview" data-phase="align" aria-label="体感投篮摄像头预览">
-  <div class="visionHead"><span><b>●</b> LOCAL POSE</span><button class="visionClose" type="button" aria-label="关闭体感控制" onclick="disableVisionControl(event)">×</button></div>
+<aside id="visionPreview" data-phase="align" aria-label="Motion Sensing Camera Preview">
+  <div class="visionHead"><span><b>●</b> LOCAL POSE</span><button class="visionClose" type="button" aria-label="Disable motion sensing" onclick="disableVisionControl(event)">×</button></div>
   <div class="visionBody"><div class="visionStage"><video id="visionVideo" muted playsinline></video><canvas id="visionCanvas"></canvas><div class="visionScan"></div></div><div class="visionTrack" aria-hidden="true"><i id="visionTrackFill"></i></div></div>
-  <div class="visionFoot"><span id="visionState">等待启动</span></div>
+  <div class="visionFoot"><span id="visionState">Waiting for start</span></div>
 </aside>
 
 <div id="toast" class="px"></div>
 <div id="pops"></div>
 <div id="countN"></div>
-<div id="finalRun" role="status" aria-live="assertive"><div class="finalRunCopy"><small>MATCH POINT PHASE</small><b>FINAL RUN</b><span>最后冲刺</span></div></div>
+<div id="finalRun" role="status" aria-live="assertive"><div class="finalRunCopy"><small>MATCH POINT PHASE</small><b>FINAL RUN</b><span>Final Sprint</span></div></div>
 
 <div id="lbT"></div><div id="lbB"></div>
 <div id="repUI">
-  <div id="repTag">● REPLAY 精彩回放</div>
-  <div id="repCam" data-aiba-icon="video" data-aiba-label="机位 1 · 侧翼跟踪">机位 1 · 侧翼跟踪</div>
-  <button id="repSkip" class="btn sm" onclick="skipReplay()">跳过 ≫</button>
+  <div id="repTag">● REPLAY</div>
+  <div id="repCam" data-aiba-icon="video" data-aiba-label="Cam 1 · Wing Tracking">Cam 1 · Wing Tracking</div>
+  <button id="repSkip" class="btn sm" onclick="skipReplay()">Skip »</button>
 </div>
 
 <div id="showUI">
   <span style="color:#ff4040;font-weight:bold">● LIVE</span>
   <b id="showName"></b>
-  <span id="showScore" style="color:#ffd23f;font-size:20px;font-weight:bold">0</span>分
+  <span id="showScore" style="color:#ffd23f;font-size:20px;font-weight:bold">0</span>pts
   <span id="showTgt" style="color:#9ab;font-size:11px"></span>
-  <button class="btn sm" onclick="skipShow()" style="pointer-events:auto">跳过 ≫</button>
+  <button class="btn sm" onclick="skipShow()" style="pointer-events:auto">Skip »</button>
 </div>
 
 <div id="ov"><div id="ovBox"></div></div>
 
-<!-- 优先用随包附带的本地 three.js(离线可用、不受 CDN 拦截影响),失败再按顺序回退到各 CDN -->
+<!-- Prefer local three.js to avoid CDN blocking, fallback to CDNs if unavailable -->
 <script>window.BOOT_GATE_ACTIVE=true;window.BOOT_READY=false;window.BOOT_COVER=null;window.unlockBoot=window.unlockBoot||function(){};window.addEventListener("error",function(e){var root=document.documentElement,items=[];try{items=JSON.parse(root.getAttribute("data-aiba-early-errors")||"[]");}catch(_){items=[];}items.push({message:e.message||"",source:e.filename||"",line:e.lineno||0,column:e.colno||0,stack:e.error&&e.error.stack||""});root.setAttribute("data-aiba-early-errors",JSON.stringify(items.slice(-30)));},true);</script>
 <script src="src/core/runtime.js?v=refactor7"></script>
 <script src="vendor/three.min.r128.js"></script>

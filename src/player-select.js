@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY="aiba_selected_star_v1";
-  const RANDOM_LABEL="随机上场";
+  const RANDOM_LABEL="Random Starter";
   let activeMode="contest";
   let pendingId="";
 
@@ -18,7 +18,7 @@
   }
   function profileFor(star){
     const cfg=global.AIBA_CONFIG||{};
-    return cfg.shotProfileFor?cfg.shotProfileFor(star):((cfg.SHOT_PROFILES||{})[starKey(star)]||cfg.DEFAULT_SHOT_PROFILE||{speed:1,window:1,label:"标准出手",arcLabel:"标准弧线"});
+    return cfg.shotProfileFor?cfg.shotProfileFor(star):((cfg.SHOT_PROFILES||{})[starKey(star)]||cfg.DEFAULT_SHOT_PROFILE||{speed:1,window:1,label:"Standard Release",arcLabel:"Standard Arc"});
   }
   function selectedId(){
     try{return localStorage.getItem(STORAGE_KEY)||"";}catch(e){return "";}
@@ -59,7 +59,7 @@
   }
   function profileText(star){
     const p=profileFor(star);
-    return `${p.label||"标准出手"} · ${p.arcLabel||"标准弧线"} · 甜区 ${Math.round((p.window||1)*100)}%`;
+    return `${p.label||"Standard Release"} · ${p.arcLabel||"Standard Arc"} · Sweet Spot ${Math.round((p.window||1)*100)}%`;
   }
   function stat(label,value,copy){
     const pct=Math.max(8,Math.min(96,Math.round(value)));
@@ -75,9 +75,9 @@
   function metrics(star){
     const p=profileFor(star);
     return `<div class="lockerMetrics">
-      ${stat("出手",((p.speed||1)-.78)*190,p.label||"标准出手")}
-      ${stat("弧线",((p.arc||1)-.86)*260,p.arcLabel||"标准弧线")}
-      ${stat("甜区",(p.window||1)*74,`窗口 ${Math.round((p.window||1)*100)}%`)}
+      ${stat("Release",((p.speed||1)-.78)*190,p.label||"Standard Release")}
+      ${stat("Arc",((p.arc||1)-.86)*260,p.arcLabel||"Standard Arc")}
+      ${stat("Sweet Spot",(p.window||1)*74,`Window ${Math.round((p.window||1)*100)}%`)}
     </div>`;
   }
   function randomCard(current){
@@ -85,7 +85,7 @@
     return `<button class="lockerCard lockerRandom ${current?"":"selected"}" type="button" data-aiba-player="" style="${cardStyle(star)}" onclick="previewAIBAPlayer('')" aria-pressed="${current?"false":"true"}">
       <span class="lockerPlate"><small>LOCKER</small><b>RND</b></span>
       ${avatarSlot("")}
-      <span class="lockerCardCopy"><small>EVERY GAME</small><b>${RANDOM_LABEL}</b><em>每局从球星池抽选，保留一点赛前未知感。</em></span>
+      <span class="lockerCardCopy"><small>EVERY GAME</small><b>${RANDOM_LABEL}</b><em>Drawn from the star pool each match, keeping a touch of mystery before tip-off.</em></span>
       <span class="lockerRibbon">SHUFFLE</span>
     </button>`;
   }
@@ -94,18 +94,18 @@
     return `<button class="lockerCard ${isOn?"selected":""}" type="button" data-aiba-player="${esc(id)}" style="${cardStyle(star)}" onclick="previewAIBAPlayer(${safeArg(id)})" aria-pressed="${isOn}">
       <span class="lockerPlate"><small>${esc((p.label||"SHOOTER").toUpperCase())}</small><b>#${esc(star.num)}</b></span>
       ${avatarSlot(id)}
-      <span class="lockerCardCopy"><small>${esc(rating(star))}</small><b>${esc(star.n)}</b><em>${esc(star.t||"街球场走出的方块新星")}</em></span>
-      <span class="lockerRibbon">${esc(p.arcLabel||"标准弧线")}</span>
+      <span class="lockerCardCopy"><small>${esc(rating(star))}</small><b>${esc(star.n)}</b><em>${esc(star.t||"A blocky new star from the street court.")}</em></span>
+      <span class="lockerRibbon">${esc(p.arcLabel||"Standard Arc")}</span>
     </button>`;
   }
   function currentMarkup(id){
     const star=findStar(allStars(),id);
-    if(!star)return `<div class="lockerCurrentMain"><small>NEXT STARTER</small><b>${RANDOM_LABEL}</b><em>确认后，每局开赛会从完整球员池随机抽一个角色。</em></div>
-      <div class="lockerCurrentMeta"><span>未知出手</span><span>未知弧线</span><span>随机甜区</span></div>`;
+    if(!star)return `<div class="lockerCurrentMain"><small>NEXT STARTER</small><b>${RANDOM_LABEL}</b><em>After confirming, a random character is drawn from the full player pool at the start of each game.</em></div>
+      <div class="lockerCurrentMeta"><span>Unknown Release</span><span>Unknown Arc</span><span>Random Sweet Spot</span></div>`;
     const p=profileFor(star);
-    return `<div class="lockerCurrentMain"><small>NEXT STARTER</small><b>${esc(star.n)} <i>#${esc(star.num)}</i></b><em>${esc(star.t||"街球场走出的方块新星")}</em></div>
+    return `<div class="lockerCurrentMain"><small>NEXT STARTER</small><b>${esc(star.n)} <i>#${esc(star.num)}</i></b><em>${esc(star.t||"A blocky new star from the street court.")}</em></div>
       ${metrics(star)}
-      <div class="lockerCurrentMeta"><span>${esc(p.label||"标准出手")}</span><span>${esc(p.arcLabel||"标准弧线")}</span><span>甜区 ${Math.round((p.window||1)*100)}%</span></div>`;
+      <div class="lockerCurrentMeta"><span>${esc(p.label||"Standard Release")}</span><span>${esc(p.arcLabel||"Standard Arc")}</span><span>Sweet Spot ${Math.round((p.window||1)*100)}%</span></div>`;
   }
   function stageMarkup(id){
     const star=findStar(allStars(),id);
@@ -152,11 +152,11 @@
     const stars=allStars(list),current=selectedId(),star=findStar(stars,current);
     const p=star?profileFor(star):null;
     const gear=global.AIBAGear?global.AIBAGear.activeSummary():"";
-    const desc=(star?(p.label||"标准出手")+" · "+(p.arcLabel||"标准弧线"):"每局从球星池随机抽选")+(gear?" · "+gear:"");
-    return `<button class="playerSelectDock" type="button" onclick="showAIBAPlayerSelect()" aria-label="选择球员">
+    const desc=(star?(p.label||"Standard Release")+" · "+(p.arcLabel||"Standard Arc"):"Randomly drawn from the star pool each game")+(gear?" · "+gear:"");
+    return `<button class="playerSelectDock" type="button" onclick="showAIBAPlayerSelect()" aria-label="Select Player">
       <span class="playerSelectBadge">${star?("#"+esc(star.num)):"RND"}</span>
       <span class="playerSelectInfo"><small>PLAYER LOCKER</small><b>${star?esc(star.n):RANDOM_LABEL}</b><em>${esc(desc)}</em></span>
-      <span class="playerSelectAction">换球员 ›</span>
+      <span class="playerSelectAction">Switch Player ›</span>
     </button>`;
   }
   function showPanelForSelect(mode){
@@ -167,16 +167,16 @@
     const gearSection=global.AIBAGear?global.AIBAGear.sectionMarkup(findStar(stars,current)):"";
     const motionSection=global.AIBAMotion?global.AIBAMotion.toggleMarkup():"";
     global.showPanel(`<div class="playerLocker">
-      <div class="lockerHead"><small>PLAYER LOCKER</small><h1>赛前更衣室</h1><p>横划查看球员。点卡片只是预览，确认后才会锁定上场。</p></div>
+      <div class="lockerHead"><small>PLAYER LOCKER</small><h1>Locker Room</h1><p>Swipe to browse players. Tap a card to preview; they won't lock in until confirmed.</p></div>
       ${stageMarkup(current)}
       <div class="lockerWorkbench">
-        <div class="lockerDeck" aria-label="横向选择球员">${global.AIBACustomizer?global.AIBACustomizer.cardMarkup(current):""}${randomCard(current)}${stars.filter(star=>starKey(star)!=="custom-player").map(star=>choiceButton(star,current)).join("")}</div>
+        <div class="lockerDeck" aria-label="Swipe to select players">${global.AIBACustomizer?global.AIBACustomizer.cardMarkup(current):""}${randomCard(current)}${stars.filter(star=>starKey(star)!=="custom-player").map(star=>choiceButton(star,current)).join("")}</div>
         ${gearSection}
         ${motionSection}
       </div>
       <div class="lockerActions">
-        <button class="btn" type="button" onclick="confirmAIBAPlayer()">确认上场</button>
-        <button class="btn sm" type="button" onclick="goDiff(${modeArg()},true)">返回设置</button>
+        <button class="btn" type="button" onclick="confirmAIBAPlayer()">Lock In</button>
+        <button class="btn sm" type="button" onclick="goDiff(${modeArg()},true)">Back to Settings</button>
       </div>
     </div>`);
     const box=document.getElementById("ovBox");
@@ -192,7 +192,7 @@
   function choose(id){
     saveSelectedId(id||"");
     pendingId=id||"";
-    if(typeof global.toast==="function")global.toast(id?"球员已锁定":"已切回随机上场",id?"#7CFC6B":"#ffd23f");
+    if(typeof global.toast==="function")global.toast(id?"Player locked in":"Switched back to Random Starter",id?"#7CFC6B":"#ffd23f");
   }
   function confirm(){
     choose(pendingId);
