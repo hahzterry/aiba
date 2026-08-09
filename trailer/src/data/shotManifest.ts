@@ -23,7 +23,7 @@ export const shotManifest = {
     a03: "covers/cover-a03.mp4"
   },
   audio: {
-    music: "audio/menu-basketball-dubstep.mp3",
+    music: "audio/menu-basketball-jersey.mp3",
     crowd: "audio/crowd-basketball-game.mp3",
     cheer: "audio/crowd-cheer-stadium.mp3",
     swish: "audio/swish.mp3",

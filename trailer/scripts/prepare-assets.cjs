@@ -9,7 +9,7 @@ const copies=[
   ["assets/aiba-covers/cover-k24.mp4","public/covers/cover-k24.mp4"],
   ["assets/aiba-covers/cover-j23-lite.mp4","public/covers/cover-j23.mp4"],
   ["assets/aiba-covers/cover-a03.mp4","public/covers/cover-a03.mp4"],
-  ["assets/aiba-audio/menu-basketball-dubstep.mp3","public/audio/menu-basketball-dubstep.mp3"],
+  ["assets/aiba-audio/menu-basketball-jersey.mp3","public/audio/menu-basketball-jersey.mp3"],
   ["assets/aiba-audio/crowd-basketball-game.mp3","public/audio/crowd-basketball-game.mp3"],
   ["assets/aiba-audio/crowd-cheer-stadium.mp3","public/audio/crowd-cheer-stadium.mp3"],
   ["assets/aiba-audio/swish.mp3","public/audio/swish.mp3"],

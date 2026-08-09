@@ -7,6 +7,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>3BALL.fun</title>
+
+<!-- ========== FORCE ENGLISH AS DEFAULT LANGUAGE ========== -->
+<script>
+  try {
+    if (!localStorage.getItem("aiba-lang")) {
+      localStorage.setItem("aiba-lang", "en");
+    }
+  } catch(e) {}
+</script>
+<!-- ===================================================== -->
+
 <script src="src/i18n.js?v=2.00-battlefair"></script>
 <script src="src/ui/icons.js?v=1"></script>
 <link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">

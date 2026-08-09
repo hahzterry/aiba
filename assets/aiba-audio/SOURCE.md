@@ -18,7 +18,7 @@ The game asset was converted to a 24 kHz, 80 kbps stereo MP3 for web delivery.
 - Source: https://pixabay.com/music/dubstep-dubstep-basketball-event-music-382151/
 - License: Pixabay Content License
 - License summary: https://pixabay.com/service/license-summary/
-- Game asset: `menu-basketball-dubstep.mp3`
+- Game asset: `menu-basketball-jersey.mp3`
 
 The game asset was converted to a 44.1 kHz, 96 kbps stereo MP3 for web delivery.
 

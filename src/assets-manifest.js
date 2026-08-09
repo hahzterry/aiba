@@ -15,7 +15,7 @@
   ]);
 
   const audio=Object.freeze({
-    bgm:"assets/aiba-audio/menu-basketball-dubstep.mp3",
+    bgm:"assets/aiba-audio/menu-basketball-jersey.mp3",
     crowd:"assets/aiba-audio/crowd-basketball-game.mp3",
     crowdCheer:"assets/aiba-audio/crowd-cheer-stadium.mp3",
     rain:"assets/aiba-audio/rain-light-loop.mp3",
