@@ -8,14 +8,53 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>3BALL.fun</title>
 
-<!-- Force English as the default language if no preference is stored -->
+<!-- ========== FORCE ENGLISH (MULTI-LAYER) ========== -->
 <script>
+  // Layer 1: Overwrite localStorage BEFORE i18n loads
   try {
-    if (!localStorage.getItem("aiba-lang")) {
-      localStorage.setItem("aiba-lang", "en");
+    localStorage.setItem("aiba-lang", "en");
+  } catch(e) {}
+
+  // Layer 2: Add ?lang=en to URL if not already present
+  (function(){
+    try {
+      var url = new URL(window.location.href);
+      if (!url.searchParams.has("lang")) {
+        url.searchParams.set("lang", "en");
+        window.location.replace(url.toString());
+        return;
+      }
+    } catch(e) {}
+  })();
+</script>
+<!-- ================================================== -->
+
+<script src="src/i18n.js?v=2.00-battlefair"></script>
+<script src="src/ui/icons.js?v=1"></script>
+
+<!-- Layer 3: Force English again AFTER i18n loads (re-run detection) -->
+<script>
+  // Force the i18n system to use English after it loads
+  try {
+    if (typeof AIBALang === "function") {
+      AIBALang("en");
+    }
+  } catch(e) {}
+
+  // Also directly set the global language if exposed
+  try {
+    if (window.AIBAI18N && typeof window.AIBAI18N.lang !== "undefined") {
+      window.AIBAI18N.lang = "en";
     }
   } catch(e) {}
 </script>
+
+<link rel="preload" href="assets/fonts/orbitron/Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+<link rel="stylesheet" href="styles.css?v=2.14">
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="vig"></div><div id="scan"></div>
 
 <script src="src/i18n.js?v=2.00-battlefair"></script>
 <script src="src/ui/icons.js?v=1"></script>
