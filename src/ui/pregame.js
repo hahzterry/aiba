@@ -33,7 +33,7 @@
       <small>${tag}</small>
       <span class="lockerAvatar" data-locker-avatar="${esc(id)}"><i>3D</i><b>LOADING</b></span>
       <div class="battleFighterName"><b>${esc(star&&star.n||"PLAYER")}</b><span>#${esc(star&&star.num||"0")}</span></div>
-      <em>${esc(profile.label||"标准出手")} · ${esc(profile.arcLabel||"标准弧线")}</em>
+      <em>${esc(profile.label||"Standard Shot")} · ${esc(profile.arcLabel||"Standard Arc")}</em>
     </article>`;
   }
 
@@ -67,19 +67,19 @@
     G.opponents.forEach((opponent,index)=>applyStarStyle(rivals[index],opponent));
     G.stage="semi";G.stats={best:0,moneyM:0,moneyT:0,deepM:0,deepT:0};G.semiDone=false;G.finalDone=false;
 
-    let html=`<h1 class="title" style="font-size:22px">对位介绍</h1>
-      <div class="note">今晚的像素之夜 · ${count+1} 人半决赛 · 前 2 名晋级决赛<br>出手顺序随机抽签 · 对手比赛全程直播</div>`;
+    let html=`<h1 class="title" style="font-size:22px">Matchup Introduction</h1>
+      <div class="note">Tonight's Pixel Night · ${count+1}-Player Semifinal · Top 2 Advance to Final<br>Shooting order randomly drawn · Opponent matches live-streamed</div>`;
     G.opponents.forEach(opponent=>{
       const rawTalk=TALK_PRE[(Math.random()*TALK_PRE.length)|0],talk=translate(rawTalk);
       html+=`<div class="card"><b>${opponent.n}</b> #${opponent.num} <span style="color:#ffb">${stars(opponent.r)}</span><br>
-        <span style="color:#9ab;font-size:11px">三分能力 ${opponent.r}</span><br>
+        <span style="color:#9ab;font-size:11px">3PT Ability ${opponent.r}</span><br>
         <span style="color:#ff9d8d;font-size:11px">「${talk}」</span></div>`;
     });
-    html+=`<div class="card" style="border-color:#3a6"><b style="color:#9dff8d">你 (YOU)</b> #${G.myNum} ${stars(G.myStar.r||88)}<br>
-      <span style="color:#9ab;font-size:11px">${G.myStar.n} · 三分能力 ${G.myStar.r||88}</span><br>
+    html+=`<div class="card" style="border-color:#3a6"><b style="color:#9dff8d">You (YOU)</b> #${G.myNum} ${stars(G.myStar.r||88)}<br>
+      <span style="color:#9ab;font-size:11px">${G.myStar.n} · 3PT ${G.myStar.r||88}</span><br>
       <span style="color:#9dff8d;font-size:11px">${shotProfileText(G.myStar)}</span></div>
-      <button class="btn green" data-aiba-icon="target" data-aiba-label="热身练习 (3球)" onclick="startPractice()">热身练习 (3球)</button>
-      <button class="btn gold" data-aiba-icon="play" data-aiba-label="直接开赛 →" onclick="hidePanel();beginStage()">直接开赛 →</button>`;
+      <button class="btn green" data-aiba-icon="target" data-aiba-label="Warm-up Practice (3 Balls)" onclick="startPractice()">Warm-up Practice (3 Balls)</button>
+      <button class="btn gold" data-aiba-icon="play" data-aiba-label="Start Match →" onclick="hidePanel();beginStage()">Start Match →</button>`;
     global.showPanel(html);
   }
 
@@ -87,26 +87,26 @@
     const opponent=G.battleOpp,rawTalk=TALK_PRE[(Math.random()*TALK_PRE.length)|0],talk=translate(rawTalk);
     const myProfile=shotProfileFor(G.myStar)||{},opponentProfile=shotProfileFor(opponent)||{};
     global.showPanel(`<section class="battleIntro">
-      <header class="battleIntroHead"><small>PERCENT BATTLE · MATCHUP</small><h1>先到 ${BATTLE_TARGET} 分获胜</h1></header>
+      <header class="battleIntroHead"><small>PERCENT BATTLE · MATCHUP</small><h1>First to ${BATTLE_TARGET} Wins</h1></header>
       <div class="battleLineup">
         ${fighterMarkup(G.myStar,"me","YOU")}
         <div class="battleVs"><b>VS</b><span>FIRST TO<br>${BATTLE_TARGET}</span></div>
         ${fighterMarkup(opponent,"opp","RIVAL")}
       </div>
       <div class="battleMetrics">
-        ${metricRow("三分能力",G.myStar.r||88,opponent.r||88)}
-        ${metricRow("投速",(myProfile.speed||1)*86,(opponentProfile.speed||1)*86)}
-        ${metricRow("甜区",(myProfile.window||1)*82,(opponentProfile.window||1)*82)}
+        ${metricRow("3PT Ability",G.myStar.r||88,opponent.r||88)}
+        ${metricRow("Shot Speed",(myProfile.speed||1)*86,(opponentProfile.speed||1)*86)}
+        ${metricRow("Sweet Spot",(myProfile.window||1)*82,(opponentProfile.window||1)*82)}
       </div>
-      <div class="battleRuleChips"><span>常规点 <b>3</b></span><span>彩球点 <b>5</b></span><span>中场 <b>10</b></span><span>篮球可碰撞</span></div>
-      <details class="battleRules"><summary>查看完整规则</summary><div>
-        <p>两人同时开投，率先达到 ${BATTLE_TARGET} 分获胜。</p>
-        <p>点击场上光圈切换投篮点；普通点和彩球点用完后需要恢复。</p>
-        <p>${G.diff==="easy"?"前 70% 显示投篮条，最后 30% 靠手感。":`前 ${BATTLE_BAR_VISIBLE_SHOTS} 球显示投篮条，之后靠手感出手。`}</p>
-        <p>对手与你同场竞投，空中的篮球可能碰撞改变结果。</p>
+      <div class="battleRuleChips"><span>Regular Spot <b>3</b></span><span>Money Spot <b>5</b></span><span>Half-Court <b>10</b></span><span>Basketballs can collide</span></div>
+      <details class="battleRules"><summary>View Full Rules</summary><div>
+        <p>Both shoot simultaneously. First to ${BATTLE_TARGET} wins.</p>
+        <p>Tap the glowing rings on the court to switch spots. Regular and money spots recharge after use.</p>
+        <p>${G.diff==="easy"?"Shot meter visible for the first 70%, then rely on feel for the last 30%.":`Shot meter visible for the first ${BATTLE_BAR_VISIBLE_SHOTS} shots, then pure feel.`}</p>
+        <p>Your opponent shoots on the same court. Airborne basketballs may collide and alter results.</p>
       </div></details>
       <div class="battleTalk">“${esc(talk)}”</div>
-      <button class="btn gold battleStart" onclick="ensureAudio(false,true);startBattle()">开战!</button>
+      <button class="btn gold battleStart" onclick="ensureAudio(false,true);startBattle()">BATTLE!</button>
     </section>`);
     const box=document.getElementById("ovBox");if(box)box.classList.add("battleIntroBox");
     setTimeout(()=>{
