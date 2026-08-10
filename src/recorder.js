@@ -62,7 +62,7 @@
       const p=global.AIBAIdentity&&global.AIBAIdentity.publicProfile&&global.AIBAIdentity.publicProfile();
       if(p&&p.has_nickname&&p.display_name)return p.display_name;
     }catch(e){}
-    return "aiBA PLAYER";
+    return "3BALLR";
   }
   function rankText(){
     try{return global.__aibaLastCloudRankText||"";}catch(e){return "";}

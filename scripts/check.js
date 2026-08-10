@@ -71,8 +71,8 @@ const requiredFiles=[
   "src/ui/pause.js",
   "src/ui/icons.js",
   "src/ui/result-copy.js",
-  "assets/aiba-brand/aiba-percent-battle-logo-v3.png",
-  "assets/aiba-brand/aiba-percent-battle-logo-v3.webp",
+  "assets/aiba-brand/3ball-logo-v3.png",
+  "assets/aiba-brand/3ball-logo-v3.webp",
   "docs/ARCHITECTURE.md",
   "docs/MODULAR_REFACTOR_PLAN.md",
   "assets/aiba-faces/curry-smile-pixel-128.png",
@@ -177,8 +177,8 @@ const homeMenuSource=menuScript.slice(menuScript.indexOf("function showMenu"),me
 if(homeMenuSource.includes("CYBER COURT")||read("styles.css").includes(".coverKicker"))fail("legacy CYBER COURT kicker must stay removed");
 if(!homeMenuSource.includes("对着空气时出手，对着篮筐时杀手"))fail("new home slogan missing");
 if(!read("src/i18n.js").includes('"对着空气时出手,对着篮筐时杀手":"Shoot at the air. Kill at the rim."'))fail("new home slogan translation missing");
-if(!homeMenuSource.includes('<source srcset="assets/aiba-brand/aiba-percent-battle-logo-v3.webp" type="image/webp">'))fail("compressed WebP home title source missing");
-if(!homeMenuSource.includes('<img class="coverTitleLogo" src="assets/aiba-brand/aiba-percent-battle-logo-v3.png"'))fail("PNG home title fallback missing");
+if(!homeMenuSource.includes('<source srcset="assets/aiba-brand/3ball-logo-v3.webp" type="image/webp">'))fail("compressed WebP home title source missing");
+if(!homeMenuSource.includes('<img class="coverTitleLogo" src="assets/aiba-brand/3ball-logo-v3.png"'))fail("PNG home title fallback missing");
 if(homeMenuSource.includes("global.coverQuote()")||homeMenuSource.includes('class="coverQuote"'))fail("home quote must stay removed");
 if(homeMenuSource.includes('class="coverTitle"'))fail("legacy text home title must stay removed");
 const homeStyles=read("styles.css");
@@ -186,8 +186,8 @@ if(!homeStyles.includes(".coverTitleMark{")||!homeStyles.includes(".coverTitleLo
 if(!homeStyles.includes(".coverHero.video-active .coverTitleLogo{opacity:.58"))fail("video-active title de-emphasis missing");
 if(homeStyles.includes(".coverTitle{")||homeStyles.includes(".coverQuote{"))fail("legacy home title or quote styles must stay removed");
 if(!read("src/ui/result-copy.js").includes('class="scoreQuote"')||!homeStyles.includes(".scoreQuote{"))fail("result-page quote module must stay available");
-const titleLogoPng=fs.readFileSync(path.join(root,"assets/aiba-brand/aiba-percent-battle-logo-v3.png"));
-const titleLogoWebp=fs.readFileSync(path.join(root,"assets/aiba-brand/aiba-percent-battle-logo-v3.webp"));
+const titleLogoPng=fs.readFileSync(path.join(root,"assets/aiba-brand/3ball-logo-v3.png"));
+const titleLogoWebp=fs.readFileSync(path.join(root,"assets/aiba-brand/3ball-logo-v3.webp"));
 if(titleLogoPng.length<10000||titleLogoPng.subarray(0,8).toString("hex")!=="89504e470d0a1a0a")fail("home title fallback must be a valid PNG asset");
 if(titleLogoWebp.length>100000||titleLogoWebp.subarray(0,4).toString("ascii")!=="RIFF"||titleLogoWebp.subarray(8,12).toString("ascii")!=="WEBP")fail("home title WebP must stay valid and under 100 KB");
 const loadingScript=read("src/ui/loading.js");

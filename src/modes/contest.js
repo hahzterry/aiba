@@ -23,12 +23,12 @@
     G.lineup=names;G.lineIdx=0;G.posted=[];G.stageCeremonyDone=false;
     if(G.stage==="semi")G.semiDone=false;else G.finalDone=false;
     benchSetup();
-    let html=`<h1 class="title" style="font-size:20px">出手顺序抽签</h1><div class="note">${G.stage==="final"?"决赛":"半决赛"}出场顺序:</div>`;
+    let html=`<h1 class="title" style="font-size:20px">Shooting Order Draw</h1><div class="note">${G.stage==="final"?"Final":"Semi-Final"} Lineup Order:</div>`;
     names.forEach((who,i)=>{
       const me=who==="YOU";
-      html+=`<div class="card" style="${me?"border-color:#3a6":""}"><b style="${me?"color:#9dff8d":""}">${i+1}. ${me?"你 (YOU)":who.n}</b></div>`;
+      html+=`<div class="card" style="${me?"border-color:#3a6":""}"><b style="${me?"color:#9dff8d":""}">${i+1}. ${me?"You (YOU)":who.n}</b></div>`;
     });
-    html+=`<button class="btn gold" onclick="hidePanel();startStageCeremony()">开始 →</button>`;
+    html+=`<button class="btn gold" onclick="hidePanel();startStageCeremony()">Start →</button>`;
     showPanel(html);
   }
   function startStageCeremony(){
@@ -53,15 +53,15 @@
   function preMyTurn(){
     benchSetup();
     const target=G.posted.length?G.posted.reduce((a,b)=>a.score>b.score?a:b):null;
-    let html=`<h1 class="title" style="font-size:20px">🎯 轮到你出手</h1>`;
+    let html=`<h1 class="title" style="font-size:20px">🎯 Your Turn</h1>`;
     if(target){
-      html+=`<div class="card">当前最高:<b style="color:#ffd23f">${target.o.n} ${target.score} 分</b><br>
+      html+=`<div class="card">Current highest:<b style="color:#ffd23f">${target.o.n} ${target.score} pts</b><br>
         <span style="color:#ff9d8d;font-size:11px">${target.o.n}:「${TALK_PRE[(Math.random()*TALK_PRE.length)|0]}」</span></div>
-        <div class="note">${G.stage==="final"?"超过他就是冠军":"追上他 · 反超有惊喜"}</div>`;
+        <div class="note">${G.stage==="final"?"Surpass him and you're champion":"Catch up · Overtake for a surprise"}</div>`;
     }else{
-      html+=`<div class="note">你率先出手 · 给他们立个标杆<br>${G.stage==="final"?"投出一个让"+G.finalist.n+"绝望的分数":""}</div>`;
+      html+=`<div class="note">You shoot first · Set the bar<br>${G.stage==="final"?"Put up a score that makes "+G.finalist.n+" despair":""}</div>`;
     }
-    html+=`<button class="btn gold" data-aiba-icon="play" data-aiba-label="上场" onclick="hidePanel();startRound()">上场</button>`;
+    html+=`<button class="btn gold" data-aiba-icon="play" data-aiba-label="Take the court" onclick="hidePanel();startRound()">Take the court</button>`;
     showPanel(html);
   }
   function stageDone(){
@@ -83,7 +83,7 @@
     balls.slice().forEach(ball=>{scene.remove(ball.mesh);scene.remove(ball.blob);});balls.length=0;
     resetRackBalls();
     $("hudTimer").style.display="block";$("scoreNum").textContent="0";$("hudStreak").style.display="none";
-    $("hudRound").innerHTML=(G.stage==="final"?"🏆 决 赛":"半决赛")+"<br><span style='color:#778'>"+DIFFS[G.diff].n+"</span>";
+    $("hudRound").innerHTML=(G.stage==="final"?"🏆 Final":"Semi-Final")+"<br><span style='color:#778'>"+DIFFS[G.diff].n+"</span>";
     updTargetUI();$("hud").style.display="block";
     const first=G.seq[0],base=first.deep!=null?DEEPS[first.deep].p:RACKS[first.rack].p;
     P.pos.copy(base);P.face=faceTo(base,HOOP);P.walking=false;P.jump=0;P.eyeDip=0;
@@ -98,26 +98,26 @@
       el.textContent="GO!";el.style.display="flex";sGo();setTimeout(()=>el.style.display="none",500);
       calibrateTilt();G.state="round";G.running=!G.practice;applyCamMode();readyBall();
       if(!G.practice)setTimeout(organCharge,2400);
-      if(G.practice)toast("热身 · 按住蓄力,顶点出手!","#ffd23f");
-      else toast("💰 全花球架: "+RACKS[G.moneyRack].n+(TILT.on?" · 保持手机水平":""));
+      if(G.practice)toast("Warm up · Hold to charge, release at peak!","#ffd23f");
+      else toast("💰 Money rack: "+RACKS[G.moneyRack].n+(TILT.on?" · Keep phone level":""));
       return;
     }
     el.textContent=n;el.style.display="flex";sBeep();setTimeout(()=>countdown(n-1),750);
   }
   function endRound(){
     G.running=false;G.state="roundend";
-    if(global.AIBARecorder)AIBARecorder.mark(G.stage==="final"?"决赛最后一球":"半决赛最后一球",{postMs:4200});
+    if(global.AIBARecorder)AIBARecorder.mark(G.stage==="final"?"Final last shot":"Semi-Final last shot",{postMs:4200});
     leaveArenaAudio();endHero();G.cutQ=[];
     if(G.cutAway){G.cutAway=null;$("vsBanner").style.display="none";}
     applyCamMode();$("hud").style.display="none";sBuzz();G.cheer=.7;cheerSound(true);
     if(G.stage==="semi")G.semiScore=G.score;else G.finalScore=G.score;
     const made=G.shots.filter(shot=>shot.made).length,highlights=pickHighlights();
-    showPanel(`<h1 class="title" style="font-size:22px">⏱ ${G.stage==="final"?"决赛":"半决赛"}结束</h1>
-      <div style="font-size:54px;color:#7CFC6B;text-shadow:4px 4px 0 #000;font-weight:bold;margin:8px 0">${G.score} 分</div>
-      <div class="card">命中 <b>${made}/${G.shots.length}</b> · 花球 <b>${G.stats.moneyM}</b> · 深远 <b>${G.stats.deepM}</b> · 最高连中 <b class="flame">x${G.stats.best}</b></div>
+    showPanel(`<h1 class="title" style="font-size:22px">⏱ ${G.stage==="final"?"Final":"Semi-Final"} Over</h1>
+      <div style="font-size:54px;color:#7CFC6B;text-shadow:4px 4px 0 #000;font-weight:bold;margin:8px 0">${G.score} pts</div>
+      <div class="card">Made <b>${made}/${G.shots.length}</b> · Money balls <b>${G.stats.moneyM}</b> · Deep balls <b>${G.stats.deepM}</b> · Best streak <b class="flame">x${G.stats.best}</b></div>
       ${scoreQuoteMarkup()}${global.AIBARecorder?AIBARecorder.resultMarkup():""}
-      ${highlights.length?`<button class="btn gold" onclick="startReplay()">🎬 精彩回放 (${highlights.length})</button>`:""}
-      <button class="btn green" onclick="afterRound()">继续 →</button>`);
+      ${highlights.length?`<button class="btn gold" onclick="startReplay()">🎬 Highlights (${highlights.length})</button>`:""}
+      <button class="btn green" onclick="afterRound()">Continue →</button>`);
   }
   function pickHighlights(){
     const made=G.shots.filter(shot=>shot.made&&shot.rec.length>6);
@@ -131,8 +131,8 @@
       for(let ball=0;ball<5;ball++){
         const value=rack===money||ball===4?2:1;if(Math.random()<probability)points+=value;
       }
-      total+=points;events.push({l:"第"+(rack+1)+"架",p:points,max:rack===money?10:6});
-      if(rack===1||rack===2){const deep=Math.random()<probability*.82?3:0;total+=deep;events.push({l:"深远球",p:deep,max:3});}
+      total+=points;events.push({l:"Rack "+(rack+1),p:points,max:rack===money?10:6});
+      if(rack===1||rack===2){const deep=Math.random()<probability*.82?3:0;total+=deep;events.push({l:"Deep ball",p:deep,max:3});}
     }
     return {ev:events,total};
   }
@@ -146,31 +146,31 @@
     else{hidePanel();showMenu();}
   }
   function showBracket(){
-    const rows=[{n:"你 (YOU)",s:G.semiScore,me:true},...G.opponents.map(opponent=>({n:opponent.n,s:opponent.posted||0,o:opponent}))];
+    const rows=[{n:"You (YOU)",s:G.semiScore,me:true},...G.opponents.map(opponent=>({n:opponent.n,s:opponent.posted||0,o:opponent}))];
     rows.sort((a,b)=>b.s-a.s||(a.me?-1:1));
     const myRank=rows.findIndex(row=>row.me),advanced=myRank<2;
-    let html='<h1 class="title" style="font-size:20px">半决赛榜单</h1><table class="std">';
-    rows.forEach((row,i)=>{html+=`<tr class="${row.me?"me ":""}${i<2?"adv":""}"><td style="width:34px">${i+1}</td><td style="text-align:left">${row.n}${i<2?" · 晋级":""}</td><td style="width:70px">${row.s}分</td></tr>`;});
+    let html='<h1 class="title" style="font-size:20px">Semi-Final Leaderboard</h1><table class="std">';
+    rows.forEach((row,i)=>{html+=`<tr class="${row.me?"me ":""}${i<2?"adv":""}"><td style="width:34px">${i+1}</td><td style="text-align:left">${row.n}${i<2?" · Advancing":""}</td><td style="width:70px">${row.s} pts</td></tr>`;});
     html+="</table>"+scoreQuoteMarkup();
     if(advanced){
       G.finalist=rows.find((row,i)=>i<2&&!row.me).o;
-      if(!playAudioEvent("contest_advance"))paSay("晋级决赛!",true);
-      html+=`<div class="note">🎉 你晋级决赛!对手:<b style="color:#ffd23f">${G.finalist.n}</b></div><button class="btn gold" onclick="goFinal()">进入决赛 🏆</button>`;
+      if(!playAudioEvent("contest_advance"))paSay("Advance to Final!",true);
+      html+=`<div class="note">🎉 You advance to the Final! Opponent: <b style="color:#ffd23f">${G.finalist.n}</b></div><button class="btn gold" onclick="goFinal()">Enter Final 🏆</button>`;
     }else{
       playAudioEvent("contest_eliminated");
-      html+=`<div class="note">差 ${rows[1].s-G.semiScore+1} 分晋级...观众仍为你欢呼</div>${global.AIBARecorder?AIBARecorder.resultMarkup():""}<button class="btn red" onclick="returnContestHome()">返回首页</button><button class="btn sm" onclick="shareScore(false)">生成战报海报</button>`;
+      html+=`<div class="note">Need ${rows[1].s-G.semiScore+1} points to advance... The crowd still cheers for you</div>${global.AIBARecorder?AIBARecorder.resultMarkup():""}<button class="btn red" onclick="returnContestHome()">Back to Home</button><button class="btn sm" onclick="shareScore(false)">Generate Match Report Poster</button>`;
       G.state="eliminated";
     }
     showPanel(html);
   }
   function goFinal(){
     G.stage="final";
-    showPanel(`<h1 class="title" style="font-size:22px">🏆 决 赛</h1>
-      <div class="card"><b>你</b> #${G.myNum}  VS  <b style="color:#ffd23f">${G.finalist.n}</b> #${G.finalist.num}<br>
+    showPanel(`<h1 class="title" style="font-size:22px">🏆 Final</h1>
+      <div class="card"><b>You</b> #${G.myNum}  VS  <b style="color:#ffd23f">${G.finalist.n}</b> #${G.finalist.num}<br>
       <span style="font-size:11px;color:#9ab">${G.finalist.t} · ${stars(G.finalist.r)}</span><br>
       <span style="color:#ff9d8d;font-size:11px">「${TALK_PRE[(Math.random()*TALK_PRE.length)|0]}」</span></div>
-      <div class="note">出手顺序重新抽签 · 决赛分数定冠军</div>
-      <button class="btn gold" onclick="hidePanel();beginFinal()">抽签 →</button>`);
+      <div class="note">Shooting order re-draw · Final score decides champion</div>
+      <button class="btn gold" onclick="hidePanel();beginFinal()">Draw →</button>`);
   }
   function beginFinal(){
     applyStarStyle(rivals[0],G.finalist);G.opponents=[G.finalist];beginStage();
@@ -179,52 +179,52 @@
     G.aiFinal=aiScore;if(G.finalScore>aiScore)champion();else if(G.finalScore<aiScore)runnerUp();else startTiebreak();
   }
   function startTiebreak(){
-    paSay("平分!突然死亡加赛!",true);G.tiebreakN++;
-    showPanel(`<h1 class="title" style="font-size:22px">⚖ ${G.finalScore} : ${G.aiFinal} 平分!</h1>
-      <div class="note">突然死亡决胜球 · 各投 1 记深远三分<br>你先出手 · 命中且对手打铁即夺冠</div>
-      <button class="btn gold" onclick="doTiebreak()">出手决胜球!</button>`);
+    paSay("Tie! Sudden death overtime!",true);G.tiebreakN++;
+    showPanel(`<h1 class="title" style="font-size:22px">⚖ ${G.finalScore} : ${G.aiFinal} Tie!</h1>
+      <div class="note">Sudden death winner-take-all · Each shoots 1 deep three<br>You shoot first · Make it and opponent misses to win</div>
+      <button class="btn gold" onclick="doTiebreak()">Shoot the winner!</button>`);
   }
   function doTiebreak(){
     hidePanel();G.seq=[{deep:Math.random()<.5?0:1,val:3,money:false,rack:null}];
     G.shotIdx=0;G.shots=[];G.buzzed=false;G.running=false;deepBalls.forEach(mesh=>mesh.visible=true);
-    $("hud").style.display="block";$("hudTimer").style.display="block";$("hudTimer").textContent="决胜";G.state="tiebreak";
+    $("hud").style.display="block";$("hudTimer").style.display="block";$("hudTimer").textContent="Decider";G.state="tiebreak";
     const point=DEEPS[G.seq[0].deep].p;P.pos.copy(point);P.face=faceTo(point,HOOP);P.walking=false;applyCamMode();
-    const eye=shotEye(G.seq[0]);glideTo(eye,HOOP.clone().add(V3(0,.15,0)),1,()=>{readyBall();toast("一球定冠军!","#ffd23f");});
+    const eye=shotEye(G.seq[0]);glideTo(eye,HOOP.clone().add(V3(0,.15,0)),1,()=>{readyBall();toast("One shot for the championship!","#ffd23f");});
   }
   function tiebreakResolve(){
     endHero();applyCamMode();
     const meMade=G.shots[0]&&G.shots[0].made,aiMade=Math.random()<aiProb(G.finalist.r)*.85;
     $("hud").style.display="none";
-    const text=`你 ${meMade?"命中 ✅":"打铁 ❌"} · ${G.finalist.n} ${aiMade?"命中 ✅":"打铁 ❌"}`;
-    if(global.AIBARecorder&&(meMade!==aiMade||G.tiebreakN>=3))AIBARecorder.mark("突然死亡决胜",{postMs:5600});
+    const text=`You ${meMade?"Made ✅":"Missed ❌"} · ${G.finalist.n} ${aiMade?"Made ✅":"Missed ❌"}`;
+    if(global.AIBARecorder&&(meMade!==aiMade||G.tiebreakN>=3))AIBARecorder.mark("Sudden death decider",{postMs:5600});
     if(meMade&&!aiMade){toast(text);champion(true);}
     else if(!meMade&&aiMade){toast(text);runnerUp(true);}
-    else if(G.tiebreakN>=3){champion(true,"鏖战三轮 险胜!");}
-    else showPanel(`<h1 class="title" style="font-size:20px">${text}</h1><div class="note">仍未分胜负 · 再来一球!</div><button class="btn gold" onclick="startTiebreak()">继续决胜</button>`);
+    else if(G.tiebreakN>=3){champion(true,"After three rounds, narrow victory!");}
+    else showPanel(`<h1 class="title" style="font-size:20px">${text}</h1><div class="note">Still undecided · One more shot!</div><button class="btn gold" onclick="startTiebreak()">Continue decider</button>`);
   }
   function champion(tiebreak,extra){
-    airhorn();setTimeout(airhorn,700);if(!playAudioEvent("contest_champion"))djSay("新科三分王,诞生了!",true);
+    airhorn();setTimeout(airhorn,700);if(!playAudioEvent("contest_champion"))djSay("A new three-point king is born!",true);
     startConfetti();G.cheer=1;cheerSound(true);setTimeout(()=>cheerSound(true),1500);
     startVictoryCine({
-      hero:player,foil:rivals[0]||null,nextState:"champion",tag:"🏆 冠军时刻",dur:4.6,
+      hero:player,foil:rivals[0]||null,nextState:"champion",tag:"🏆 Champion Moment",dur:4.6,
       onDone:()=>{leaveArenaAudio();music(true,true);showPanel(`<div style="font-size:64px;animation:blink 1.2s steps(2) infinite">🏆</div>
-        <h1 class="title">aiBA 冠军诞生!</h1><h2 class="sub">CYBER COURT CHAMPION</h2>${extra?`<div class="note">${extra}</div>`:""}
-        <div class="card">决赛 <b>${G.finalScore}</b> : ${G.aiFinal} 击败 <b>${G.finalist.n}</b>${tiebreak?" (决胜球)":""}<br>
-          最高连中 <b class="flame">x${G.stats.best}</b> · 花球 <b>${G.stats.moneyM}/${G.stats.moneyT}</b> · 深远 <b>${G.stats.deepM}/${G.stats.deepT}</b><br>难度:<b>${DIFFS[G.diff].n}</b></div>
+        <h1 class="title">3BALLR Champ Crowned!</h1><h2 class="sub">CYBER COURT CHAMPION</h2>${extra?`<div class="note">${extra}</div>`:""}
+        <div class="card">Final <b>${G.finalScore}</b> : ${G.aiFinal} defeats <b>${G.finalist.n}</b>${tiebreak?" (decider shot)":""}<br>
+          Best streak <b class="flame">x${G.stats.best}</b> · Money balls <b>${G.stats.moneyM}/${G.stats.moneyT}</b> · Deep balls <b>${G.stats.deepM}/${G.stats.deepT}</b><br>Difficulty: <b>${DIFFS[G.diff].n}</b></div>
         ${scoreQuoteMarkup()}${global.AIBARecorder?AIBARecorder.resultMarkup():""}
-        <button class="btn gold" onclick="shareScore(true)">📤 生成战报海报</button><button class="btn green" onclick="returnContestHome()">返回首页</button>`);}
+        <button class="btn gold" onclick="shareScore(true)">📤 Generate Match Report Poster</button><button class="btn green" onclick="returnContestHome()">Back to Home</button>`);}
     });
   }
   function runnerUp(tiebreak){
-    if(!playAudioEvent("contest_runnerup"))paSay("屈居亚军,虽败犹荣,观众把掌声送给你!",true);G.state="runnerup";
-    showPanel(`<div style="font-size:54px">🥈</div><h1 class="title" style="font-size:24px">亚军 · 虽败犹荣</h1>
-      <div class="card">决赛 <b>${G.finalScore}</b> : ${G.aiFinal} 不敌 <b>${G.finalist.n}</b>${tiebreak?" (决胜球)":""}<br>
-        最高连中 <b class="flame">x${G.stats.best}</b> · 全场为你起立鼓掌</div>
+    if(!playAudioEvent("contest_runnerup"))paSay("Runner-up, honorable defeat, the crowd applauds you!",true);G.state="runnerup";
+    showPanel(`<div style="font-size:54px">🥈</div><h1 class="title" style="font-size:24px">Runner-up · Honorable Defeat</h1>
+      <div class="card">Final <b>${G.finalScore}</b> : ${G.aiFinal} lost to <b>${G.finalist.n}</b>${tiebreak?" (decider shot)":""}<br>
+        Best streak <b class="flame">x${G.stats.best}</b> · The whole arena gives you a standing ovation</div>
       ${scoreQuoteMarkup()}${global.AIBARecorder?AIBARecorder.resultMarkup():""}
-      <button class="btn red" onclick="returnContestHome()">返回首页</button><button class="btn sm" onclick="shareScore(false)">生成战报海报</button>`);
+      <button class="btn red" onclick="returnContestHome()">Back to Home</button><button class="btn sm" onclick="shareScore(false)">Generate Match Report Poster</button>`);
   }
   function shareScore(championResult){
-    if(!global.AIBAShare){toast("分享模块未就绪","#ff8d7a");return;}
+    if(!global.AIBAShare){toast("Share module not ready","#ff8d7a");return;}
     AIBAShare.genPoster(championResult,{G,DIFFS,GAME_NAME,GAME_SEED,toast});
   }
 

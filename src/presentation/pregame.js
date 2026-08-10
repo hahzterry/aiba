@@ -5,8 +5,8 @@ const PREGAME_ACTIONS=["shoot","stretch","dunk","chalk","hang","finger","huddle"
 const PREGAME_CAMS=["orbit","push","low","overhead","freeze","follow","pan","pull"];
 const pregamePick=a=>a[(Math.random()*a.length)|0];
 const PREGAME_LABELS={
-  shoot:"投篮热身",stretch:"拉伸热身",dunk:"空切扣篮",chalk:"撒镁粉",hang:"挂框定格",
-  finger:"对镜头摇手指",huddle:"拥抱打气",wave:"向镜头致意",pump:"赛前加油"
+  shoot:"Shoot",stretch:"Stretch",dunk:"Dunk",chalk:"Chalk",hang:"Hang",
+  finger:"Finger Wag",huddle:"Huddle",wave:"Wave",pump:"Pump Up"
 };
 function pregameBallFor(guy){
   if(guy===player)return pBall;
@@ -90,11 +90,11 @@ function pregameBuildActors(opts){
   const actors=[{guy:player,name:heroName,role:"hero",base:P.pos.clone(),face:P.face}];
   let other=null;
   if(opts.mode==="battle"&&G.battleOpp&&rivals[0]){
-    other={guy:rivals[0],name:G.battleOpp.n||"对手",role:"opponent"};
+    other={guy:rivals[0],name:G.battleOpp.n||"Opponent",role:"opponent"};
   }else{
     const rv=rivals.find(x=>x.active);
-    if(rv&&rv!==actors[0].guy)other={guy:rv,name:rv.o&&rv.o.n?rv.o.n:"挑战者",role:"opponent"};
-    else if(passer)other={guy:passer,name:"训练搭档",role:"teammate"};
+    if(rv&&rv!==actors[0].guy)other={guy:rv,name:rv.o&&rv.o.n?rv.o.n:"Challenger",role:"opponent"};
+    else if(passer)other={guy:passer,name:"Training Partner",role:"teammate"};
   }
   if(other){
     other.base=pregameSideBase(actors[0].base,1);
@@ -127,7 +127,7 @@ function pregameBuildShots(opts){
 function pregameCaption(seg){
   const el=$("vsBanner"),mode=G.mode==="battle"?"PERCENT BATTLE":(G.mode==="rackrush"?"RACK RUSH":"3PT CONTEST");
   const name=seg.group?"TEAM":seg.actor.name;
-  el.innerHTML=`<span style="font-size:11px;color:#7feaff;letter-spacing:2px">${mode} / PREGAME</span><br>${name} · ${PREGAME_LABELS[seg.action]||"赛前热身"}`;
+  el.innerHTML=`<span style="font-size:11px;color:#7feaff;letter-spacing:2px">${mode} / PREGAME</span><br>${name} · ${PREGAME_LABELS[seg.action]||"Pregame Warmup"}`;
   el.style.display="block";
 }
 function pregamePlace(actor,pos,face){
