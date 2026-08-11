@@ -527,7 +527,7 @@ try{new Function(navigation);}
 catch(e){fail("navigation script syntax error: "+e.message);}
 for(const token of ["homeBtn","requestHome","cleanup","removeEventListener(\"pointerdown\",global.unlockBoot)","addEventListener(\"pointerup\""])
   if(!navigation.includes(token))fail("navigation flow token missing "+token);
-/* 导出顺序会随功能增删变化,只断言"定义了 + 导出了",不绑定相邻写法 */
+/* Export order changes with feature additions/removals; we only assert that they are "defined" and "exported", without tying to adjacent syntax. */
 if(!recorderScript.includes("function cancel()"))fail("recorder cancellation missing function cancel()");
 const recorderExports=(recorderScript.match(/AIBARecorder=Object\.freeze\(\{([\s\S]*?)\}\)/)||[])[1]||"";
 for(const name of ["cancel","resultMarkup"])
@@ -546,10 +546,10 @@ const ownershipModuleFiles=["core","materials","court","arena","spectators","hoo
   .concat(["src/core/error-boundary.js","src/core/foundation.js","src/data/game-config.js","src/data/dialogue.js","src/core/state.js","src/services/audio-cues.js","src/ui/result-copy.js","src/gameplay/shots.js","src/gameplay/collisions.js","src/presentation/cinematics.js","src/presentation/pregame.js","src/presentation/battle.js","src/presentation/replay.js","src/presentation/win-cinematic.js","src/ui/battle-controls.js","src/core/input.js","src/core/game-loop.js","src/core/scene-init.js"]);
 try{new Function(ownershipModuleFiles.map(read).join("\n;\n"));}
 catch(e){fail("ownership modules have conflicting top-level declarations: "+e.message);}
-/* 顶层脚本(非 IIFE 包装)里不能出现 Node 风格的 global.*:浏览器里会直接 ReferenceError */
+/* Top-level scripts (not wrapped in IIFE) must not use Node-style global.*; it will cause a ReferenceError in the browser. */
 for(const rel of walkSrc("src")){
   const src=read(rel);
-  if(/function[A-Za-z ]*\(global\)/.test(src))continue;   // IIFE 包装过的模块可以用 global
+  if(/function[A-Za-z ]*\(global\)/.test(src))continue;   // IIFE-wrapped modules may use 'global'
   if(/\bglobal\s*\./.test(src))fail(rel+" uses bare global.* but is not wrapped in an IIFE; use window.*");
 }
 const runtimeScript=read("src/core/runtime.js");

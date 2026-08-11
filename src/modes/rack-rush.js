@@ -275,11 +275,11 @@
   async function shareRackRushResult(){
     const record=G.rushResultRecord;if(!record)return;
     const speed=isRackRushSpeed(record);
-    const text=speed?`aiBA RACK RUSH · Speed 100\n${formatRackRushClock(record.elapsedMs/1000)} reached 100 pts · Accuracy ${Math.round(rackRushAccuracy(record)*100)}%\n${global.AIBARecordRankText?AIBARecordRankText(record):"Syncing global ranking..."}`:
+    const text=speed?`3BALL RACK RUSH · Speed 100\n${formatRackRushClock(record.elapsedMs/1000)} reached 100 pts · Accuracy ${Math.round(rackRushAccuracy(record)*100)}%\n${global.AIBARecordRankText?AIBARecordRankText(record):"Syncing global ranking..."}`:
       `aiBA RACK RUSH · ${DIFFS[record.difficulty].n}\n${record.total} pts · ${record.completed?"FINAL RUSH Cleared":"Highest L"+record.highestLevel} · Accuracy ${Math.round(rackRushAccuracy(record)*100)}%\n${global.AIBARecordRankText?AIBARecordRankText(record):"Syncing global ranking..."}`;
     let url=location.href;
     try{const nextUrl=new URL(location.href);nextUrl.searchParams.set("mode","rackrush");nextUrl.searchParams.set("diff",record.difficulty);nextUrl.searchParams.set("seed",record.seed);nextUrl.searchParams.set("scene",record.scene);nextUrl.searchParams.set("star",record.playerId);if(speed)nextUrl.searchParams.set("submode","speed100");else nextUrl.searchParams.delete("submode");url=nextUrl.toString();}catch(e){}
-    try{if(navigator.share){await navigator.share({title:speed?"aiBA SPEED 100":"aiBA RACK RUSH",text,url});return;}}catch(e){if(e&&e.name==="AbortError")return;}
+    try{if(navigator.share){await navigator.share({title:speed?"3BALL SPEED 100":"3BALL RACK RUSH",text,url});return;}}catch(e){if(e&&e.name==="AbortError")return;}
     try{await navigator.clipboard.writeText(text+"\n"+url);toast("Result and challenge link copied","#7CFC6B");}catch(e){toast(text,"#ffd23f");}
   }
 

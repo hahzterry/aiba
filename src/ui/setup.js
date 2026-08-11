@@ -35,7 +35,7 @@
     if(!quiet){
       airhorn();
       const preset=SCENE_PRESETS[getScenePreset()]||SCENE_PRESETS.indoor;
-      paSay("Welcome to aiBA " + preset.name + ". Lights are ready, countdown to tip-off.", true);
+      paSay("Welcome to 3BALL " + preset.name + ". Lights are ready, countdown to tip-off.", true);
     }
     let html=(global.AIBAModeLeaderboardMarkup?global.AIBAModeLeaderboardMarkup(G.mode):"")+
       '<h1 class="title" style="font-size:24px">Select Difficulty</h1>'+

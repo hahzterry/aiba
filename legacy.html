@@ -3884,7 +3884,7 @@ function goDiff(mode,quiet){
   G.mode=mode||"contest";G.state="diff";ensureAudio(true);if(!quiet&&typeof playSFX==="function")playSFX("ui_mode_whoosh_01",.52);
   if(!quiet){
     airhorn();
-    paSay("Welcome to aiBA "+SCENE_PRESETS[currentScenePreset].name+". Lights set — countdown to tip‑off.",true);
+    paSay("Welcome to 3BALL "+SCENE_PRESETS[currentScenePreset].name+". Lights set — countdown to tip‑off.",true);
   }
   let h=(window.AIBAModeLeaderboardMarkup?AIBAModeLeaderboardMarkup(G.mode):"")+'<h1 class="title" style="font-size:24px">Choose difficulty</h1>'+(window.AIBAPlayerSelectMarkup?AIBAPlayerSelectMarkup(LEGENDS,G.mode):"");
   h+=sceneSelectMarkup();
