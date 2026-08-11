@@ -71,8 +71,8 @@ function makeCourtTexture(theme){
 
     g.fillStyle=outdoor?"#176b66":"#1d428a";g.beginPath();g.arc(u(0),v(COURT.midZ),2.1*PXM,0,7);g.fill();
     g.fillStyle=outdoor?"#f4e7b0":"#ffd23f";g.font="bold 56px Orbitron, monospace";g.textAlign="center";
-    g.fillText("aiBA",u(0),v(COURT.midZ-.15));
-    g.font="bold 34px Orbitron, monospace";g.fillText("★ RACE 100 ★",u(0),v(COURT.midZ+.8));
+    g.fillText("3BALL.fun",u(0),v(COURT.midZ-.15));
+    g.font="bold 34px Orbitron, monospace";g.fillText("★ #3BALLFUN ★",u(0),v(COURT.midZ+.8));
 
     function spotDecal(x,z,r,fill,line,lw,txt,txtCol,fs){
       g.fillStyle=fill;g.beginPath();g.arc(u(x),v(z),r*PXM,0,7);g.fill();
