@@ -18,8 +18,19 @@
         ${coverVideo}
         <div class="coverMenu"><div>
           <picture class="coverTitleMark">
-            <source srcset="assets/aiba-brand/3ball-logo-v3.webp" type="image/webp">
-            <img class="coverTitleLogo" src="assets/aiba-brand/3ball-logo-v3.png" width="768" height="425" alt="3BALL.fun">
+          <source
+          srcset="/assets/aiba-brand/3ball-logo-v3.webp"
+          type="image/webp"
+          >
+          <img
+          class="coverTitleLogo"
+          src="/assets/aiba-brand/3ball-logo-v3.png"
+          width="768"
+          height="425"
+          alt="3BALL.fun"
+          loading="eager"
+          decoding="async"
+          >
           </picture>
           <div class="coverSub">Shoot at air? Nah. Shoot at the rim? Kill mode.</div>
           ${global.AIBAProfileBarMarkup?global.AIBAProfileBarMarkup():""}

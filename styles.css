@@ -715,3 +715,17 @@ html[lang="en"] .visionModeLabel b{font-size:11px}
 html[lang="en"] .playerProfile b{font-size:12px;letter-spacing:0}
 html[lang="en"] .gearChip b{letter-spacing:0}
 html[lang="en"] .perfSegBtns button{letter-spacing:0}
+
+/* Override with new widths */
+.coverTitleMark {
+  display: block;
+  width: min(100%, 768px);
+}
+
+.coverTitleLogo {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
