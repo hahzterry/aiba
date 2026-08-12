@@ -14,7 +14,7 @@
   function start(){
     if(!NBA_DNA_ENABLED){
       if(typeof showModeInfo==="function")showModeInfo("nbadna");
-      else safeToast("NBA DNA【即将上线】","#ffd23f");
+      else safeToast("3BA DNA [Coming Soon]","#ffd23f");
       return false;
     }
     if(global.G)G.state="nba-dna";
@@ -26,20 +26,20 @@
   function dnaUpload(){
     dnaShell(`
       <div class="dnaHero">
-        <small>NBA DNA</small>
-        <h1>让我看看你的投篮。</h1>
-        <p>上传一张投篮姿势照片，匹配你的 Mamba DNA。</p>
+        <small>3BA DNA</small>
+        <h1>Show me your shot.</h1>
+        <p>Upload a shooting form photo to match your Mamba DNA.</p>
       </div>
       <div class="dnaCompare">
-        <figure class="dnaRef"><img src="${NBADNAPoseAnalyzer.refUrl}" alt="Kobe 标准投篮姿势"><figcaption>KOBE BRYANT · 24</figcaption></figure>
+        <figure class="dnaRef"><img src="${NBADNAPoseAnalyzer.refUrl}" alt="Kobe standard shooting form"><figcaption>KOBE BRYANT · 24</figcaption></figure>
         <label class="dnaDrop" for="nbaDnaFile">
           <input id="nbaDnaFile" type="file" accept="image/*" onchange="nbaDnaPickPhoto(event)">
-          <span id="nbaDnaPreview">${state.previewUrl?`<img src="${state.previewUrl}" alt="你的投篮照片">`:"<b>上传照片</b><em>完整投篮姿势效果最好</em>"}</span>
+          <span id="nbaDnaPreview">${state.previewUrl?`<img src="${state.previewUrl}" alt="Your shot photo">`:"<b>Upload Photo</b><em>Full shooting form works best</em>"}</span>
         </label>
       </div>
       <div class="dnaActions">
-        <button class="btn gold" onclick="nbaDnaRun()">生成 NBA DNA</button>
-        <button class="btn sm" onclick="showMenu()">返回封面</button>
+        <button class="btn gold" onclick="nbaDnaRun()">Generate 3BA DNA</button>
+        <button class="btn sm" onclick="showMenu()">Back to Cover</button>
       </div>`);
   }
   function pickPhoto(event){
@@ -49,25 +49,25 @@
     const previewUrl=URL.createObjectURL(file);
     state.file=file;state.previewUrl=previewUrl;
     const box=$("nbaDnaPreview");
-    if(box)box.innerHTML=`<img src="${previewUrl}" alt="你的投篮照片">`;
+    if(box)box.innerHTML=`<img src="${previewUrl}" alt="Your shot photo">`;
   }
   function progress(label){
     dnaShell(`
       <div class="dnaScan">
-        <small>NBA DNA</small>
+        <small>3BA DNA</small>
         <h1>${label}</h1>
         <div class="dnaScanBar"><i></i></div>
-        <p>正在匹配 Mamba DNA，别眨眼。</p>
+        <p>Matching Mamba DNA, don't blink.</p>
       </div>`);
   }
   function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
   function analysisScoreRows(result){
     if(global.NBADNAPoseVisualizer&&NBADNAPoseVisualizer.scoreRows)return NBADNAPoseVisualizer.scoreRows(result);
     return [
-      {name:"出手点",score:result.parts.shooting},
-      {name:"手肘角度",score:result.parts.elbow},
-      {name:"身体轴线",score:result.parts.balance},
-      {name:"跟随动作",score:result.parts.follow}
+      {name:"Release Point",score:result.parts.shooting},
+      {name:"Elbow Angle",score:result.parts.elbow},
+      {name:"Body Axis",score:result.parts.balance},
+      {name:"Follow-Through",score:result.parts.follow}
     ];
   }
   async function playFallbackAnalysis(result){
@@ -75,12 +75,12 @@
     dnaShell(`
       <div class="dnaAnalyzer fallback">
         <div class="dnaAnalyzerHead">
-          <small>NBA DNA LAB</small>
-          <h1>正在打印 Mamba DNA</h1>
-          <p id="nbaDnaStageText">扫描你的出手姿势</p>
+          <small>3BA DNA LAB</small>
+          <h1>Printing Mamba DNA</h1>
+          <p id="nbaDnaStageText">Scanning your release form</p>
         </div>
         <div class="dnaFallbackStage">
-          <div class="dnaFallbackPhoto">${state.previewUrl?`<img src="${state.previewUrl}" alt="你的投篮照片">`:""}</div>
+          <div class="dnaFallbackPhoto">${state.previewUrl?`<img src="${state.previewUrl}" alt="Your shot photo">`:""}</div>
           <div class="dnaFallbackTrace">
             <i class="bone b1"></i><i class="bone b2"></i><i class="bone b3"></i><i class="bone b4"></i>
             <b class="dot d1"></b><b class="dot d2"></b><b class="dot d3"></b><b class="dot d4"></b>
@@ -88,10 +88,10 @@
           </div>
         </div>
         <div class="dnaTape" id="nbaDnaTape">
-          <span data-step="0">扫描你的出手姿势</span>
-          <span data-step="1">滑入 Kobe 标准骨架</span>
-          <span data-step="2">重叠手肘与出手点</span>
-          <span data-step="3">打印关键节点相似度</span>
+          <span data-step="0">Scanning your release form</span>
+          <span data-step="1">Sliding into Kobe's standard frame</span>
+          <span data-step="2">Overlapping elbow & release point</span>
+          <span data-step="3">Printing key node similarities</span>
         </div>
         <div class="dnaNodePrint" id="nbaDnaNodePrint">
           ${rows.map(r=>`<b>${quoteEscape(r.name)}<em>${Math.round(r.score)}%</em></b>`).join("")}
@@ -120,18 +120,18 @@
     dnaShell(`
       <div class="dnaAnalyzer">
         <div class="dnaAnalyzerHead">
-          <small>NBA DNA LAB</small>
-          <h1>正在对齐 Mamba 出手曲线</h1>
-          <p id="nbaDnaStageText">扫描你的出手姿势</p>
+          <small>3BA DNA LAB</small>
+          <h1>Aligning Mamba release curve</h1>
+          <p id="nbaDnaStageText">Scanning your release form</p>
         </div>
         <div class="dnaAnalyzerStage">
           <canvas id="nbaDnaAnalysisCanvas" width="640" height="760"></canvas>
         </div>
         <div class="dnaTape" id="nbaDnaTape">
-          <span data-step="0">扫描你的出手姿势</span>
-          <span data-step="1">滑入 Kobe 标准骨架</span>
-          <span data-step="2">重叠手肘与出手点</span>
-          <span data-step="3">打印关键节点相似度</span>
+          <span data-step="0">Scanning your release form</span>
+          <span data-step="1">Sliding into Kobe's standard frame</span>
+          <span data-step="2">Overlapping elbow & release point</span>
+          <span data-step="3">Printing key node similarities</span>
         </div>
         <div class="dnaNodePrint" id="nbaDnaNodePrint">
           ${rows.map(r=>`<b>${quoteEscape(r.name)}<em>${Math.round(r.score)}%</em></b>`).join("")}
@@ -158,7 +158,7 @@
           }
           el.classList.toggle("active",active);
         });
-        if(stageText)stageText.textContent=tape[step]?tape[step].textContent:"打印关键节点相似度";
+        if(stageText)stageText.textContent=tape[step]?tape[step].textContent:"Printing key node similarities";
       });
     }catch(e){
       await playFallbackAnalysis(result);
@@ -168,8 +168,8 @@
   }
   async function run(){
     if(state.busy)return;
-    if(!state.file){safeToast("先给我一张投篮照片","#ff8d7a");return;}
-    state.busy=true;progress("读取你的球场基因");
+    if(!state.file){safeToast("Give me a shot photo first","#ff8d7a");return;}
+    state.busy=true;progress("Reading your court genes");
     if(typeof playAudioEvent==="function")playAudioEvent("dna_scan");
     try{
       const analyzed=await NBADNAPoseAnalyzer.analyzeFile(state.file);
@@ -187,14 +187,14 @@
   }
   function bars(parts){
     return [
-      ["出手动作",parts.shooting],
-      ["手肘稳定",parts.elbow],
-      ["身体平衡",parts.balance],
-      ["跟随动作",parts.follow]
+      ["Release",parts.shooting],
+      ["Elbow Stability",parts.elbow],
+      ["Body Balance",parts.balance],
+      ["Follow-Through",parts.follow]
     ].map(r=>`<div class="dnaStat"><span>${r[0]}</span><b>${r[1]}%</b><i><em style="width:${r[1]}%"></em></i></div>`).join("");
   }
   function rewardMarkup(result){
-    return result.rewards.length?`<div class="dnaRewards"><small>UNLOCKED</small>${result.rewards.map(x=>`<span>${x}</span>`).join("")}</div>`:`<div class="dnaRewards locked"><small>NEXT UNLOCK</small><span>70% 解锁 Mamba 投篮动作</span></div>`;
+    return result.rewards.length?`<div class="dnaRewards"><small>UNLOCKED</small>${result.rewards.map(x=>`<span>${x}</span>`).join("")}</div>`:`<div class="dnaRewards locked"><small>NEXT UNLOCK</small><span>70% unlocks Mamba shooting form</span></div>`;
   }
   function showResult(result,img){
     if(typeof playAudioEvent==="function"){
@@ -207,20 +207,20 @@
     dnaShell(`
       <div id="nbaDnaResultVisual" class="dnaResultVisual"></div>
       <div class="dnaCard">
-        <small>YOUR NBA DNA</small>
+        <small>YOUR 3BA DNA</small>
         <div class="dnaPercent">${result.total}%</div>
         <h1>${result.star}</h1>
         <p>${quoteEscape(result.line)}</p>
       </div>
       <div class="dnaGrid">
         <div class="dnaStats">${bars(result.parts)}</div>
-        <div class="dnaCoach"><b>AI 教练一句话</b><ol>${coach}</ol></div>
+        <div class="dnaCoach"><b>AI Coach's Tip</b><ol>${coach}</ol></div>
       </div>
       ${rewardMarkup(result)}
       <div class="dnaActions">
-        <button class="btn gold" onclick="nbaDnaBuildPoster()">生成分享海报</button>
-        <button class="btn green" onclick="nbaDnaReset()">再测一次</button>
-        <button class="btn sm" onclick="showMenu()">继续游戏</button>
+        <button class="btn gold" onclick="nbaDnaBuildPoster()">Generate Share Poster</button>
+        <button class="btn green" onclick="nbaDnaReset()">Test Again</button>
+        <button class="btn sm" onclick="showMenu()">Continue Game</button>
       </div>
       <div id="nbaDnaPosterMount" class="dnaPosterMount"></div>`);
     const mount=$("nbaDnaResultVisual");
@@ -242,7 +242,7 @@
       mount.appendChild(canvas);
       const actions=document.createElement("div");
       actions.className="dnaActions";
-      actions.innerHTML='<button class="btn gold" onclick="nbaDnaSavePoster()">保存图片</button><button class="btn sm" onclick="nbaDnaSharePoster()">一键分享</button>';
+      actions.innerHTML='<button class="btn gold" onclick="nbaDnaSavePoster()">Save Image</button><button class="btn sm" onclick="nbaDnaSharePoster()">Share</button>';
       mount.appendChild(actions);
     }
   }
@@ -250,8 +250,8 @@
   async function sharePoster(){
     if(!state.poster)buildPoster();
     if(!state.poster||!state.result)return;
-    try{await NBADNAShareCard.share(state.poster,state.result);safeToast("分享面板已打开","#7CFC6B");}
-    catch(e){safeToast("已生成海报，保存后发出去","#ffd23f");}
+    try{await NBADNAShareCard.share(state.poster,state.result);safeToast("Share panel opened","#7CFC6B");}
+    catch(e){safeToast("Poster generated, save and share!","#ffd23f");}
   }
   function reset(){
     state.file=null;state.result=null;state.userImg=null;state.analysis=null;state.poster=null;

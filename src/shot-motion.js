@@ -1,33 +1,43 @@
-/* ---------------- shot motion V2 (可完全回退) ----------------
-   原版动作全部保留在 index.html 内联脚本中作为兜底；本模块在主脚本之后
-   加载，通过覆盖全局函数提供 V2 动作，localStorage `aiba_motion_v2`=off
-   或更衣室开关即可完整恢复原版（函数、球的挂点、第一人称手全部还原）。
+/* ---------------- Shot Motion V2 (Fully Rollback Capable) ----------------
+   The original motion is fully preserved in index.html's inline script as a
+   fallback. This module loads after the main script and provides V2 motion
+   by overriding global functions. Setting localStorage "aiba_motion_v2"=off
+   or using the locker room toggle restores the original entirely (functions,
+   ball attachment point, first-person hands all revert).
 
-   V2 内容：
-   1) 球贴手：第三人称把球挂到投篮手前臂(肘组)掌心处，蓄力/举球/出手全程跟手。
-   2) 第一人称粗糙手掌：原手模隐藏(可还原)，新手掌+手指+手腕 pivot 进入视野，
-      蓄力压腕、出手甩腕跟随(follow-through)，有真实投篮感。
-   3) 顶点即落：接线 AIBAShotPhysics(v1.52 已实现但未接入)——蓄力过顶后
-      人物按时间轴自然下落，落地前自动出手并按严重晚释放/短球惩罚。
-   4) 实体篮板：飞行段做线段穿越检测，过力平射被篮板正面弹回(算投失)；
-      蓄力接近拉满的超远失误会拉高弧线从篮板上方绕过去，永不穿板。 */
+   V2 Features:
+   1) Ball glued to hand: In 3rd person, the ball attaches to the shooting
+      hand forearm (elbow group) at the palm. It follows through the entire
+      wind-up, lift, and release.
+   2) First-person rough hand model: The original hand is hidden (restorable).
+      A new palm + fingers + wrist pivot enters the view. It allows wrist-cocking
+      during the wind-up and wrist-snap follow-through on release for a realistic
+      shooting feel.
+   3) Instant drop at apex: Integrates AIBAShotPhysics (v1.52 already implemented
+      but not connected). After the lift reaches the apex, the character naturally
+      descends along the timeline. The shot auto-releases before landing, with
+      severe late-release / short-ball penalties.
+   4) Solid backboard: Line-segment collision detection during flight.
+      Overpowered flat shots bounce back off the front of the backboard (counted
+      as a miss). Extremely long-range errors when power is nearly maxed will
+      arc over the top of the backboard, never clipping through. */
 (function(global){
   "use strict";
 
   const LS_KEY="aiba_motion_v2";
   const clampN=(v,a,b)=>Math.max(a,Math.min(b,v));
 
-  /* ---- 篮板实体参数(与内联 free 阶段碰撞常量一致) ---- */
+  /* ---- Solid backboard parameters (matches inline free-phase collision constants) ---- */
   const BOARD_Z=-8.5,BOARD_HALF_W=0.98,BOARD_Y_MIN=2.9,BOARD_Y_MAX=4.1;
-  const BOUNCE_K=0.42;          // 篮板反弹衰减
-  const OVER_ERR=19;            // 过力超过该值 → 高弧绕过篮板上方
+  const BOUNCE_K=0.42;          // Backboard bounce attenuation
+  const OVER_ERR=19;            // Overpowered beyond this value → high arc over the top of the backboard
   const OVER_TOP={y:4.42,z:-9.05,maxX:1.5};
 
   let on=true;
   try{on=localStorage.getItem(LS_KEY)!=="off";}catch(e){}
   function save(){try{localStorage.setItem(LS_KEY,on?"on":"off");}catch(e){}}
 
-  /* ================= 第一人称 V2 手掌 ================= */
+  /* ================= First-Person V2 Hands ================= */
   const FOLLOW_EXTEND=0.105,BALL_RELEASE_AT=0.092,FOLLOW_HOLD=0.24,FOLLOW_FADE=0.38;
   let fpRig=null,fpHidden=[],followAge=0,followActive=false;
   let guideStart={x:-1.3,z:-0.18,elbowX:-0.68};
@@ -37,7 +47,7 @@
   const mixN=(a,b,k)=>a+(b-a)*k;
   function buildFpRig(){
     if(fpRig||typeof hands==="undefined"||typeof THREE==="undefined")return;
-    // 隐藏原第一人称手模(保留引用以便还原)，球(handBall)除外
+    // Hide the original first-person hand model (keep reference for restore), except the ball (handBall)
     fpHidden=hands.children.filter(c=>c!==handBall&&c.visible!==false);
     fpHidden.forEach(c=>{c.visible=false;});
     const skin=new THREE.MeshLambertMaterial({color:0xf0bd90});
@@ -45,13 +55,13 @@
     const rig=new THREE.Group();rig.name="fpHandsV2";
     const mk=(w,h,d,m)=>new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
     const side=(sx,shoot)=>{
-      const armRoot=new THREE.Group();                       // 从画面下侧探入
+      const armRoot=new THREE.Group();                       // Enters from the lower side of the screen
       armRoot.position.set(sx*0.21,-0.26,0.1);
       const fore=mk(0.11,0.11,0.34,sleeve);fore.position.set(0,0,0.1);
       fore.rotation.x=0.5;armRoot.add(fore);
-      const wrist=new THREE.Group();wrist.position.set(0,0.06,-0.08); // 手腕 pivot
+      const wrist=new THREE.Group();wrist.position.set(0,0.06,-0.08); // Wrist pivot
       const palm=mk(0.2,0.05,0.2,skin);palm.position.set(0,0,-0.05);wrist.add(palm);
-      for(let i=0;i<4;i++){                                  // 粗糙四指
+      for(let i=0;i<4;i++){                                  // Rough four fingers
         const f=mk(0.038,0.04,0.1,skin);
         f.position.set((i-1.5)*0.048,0.005,-0.19);wrist.add(f);
       }
@@ -120,10 +130,10 @@
     const planeK=ease01(((c.lift||0)-0.40)/0.45);
     if(k<=0&&planeK<=0)return;
     const shoot=o.arms[0],guide=o.arms[1],shootEl=o.elbows[0],guideEl=o.elbows[1];
-    // 举球终点:投篮大臂接近水平、前臂向上,把伸肘动作留到真正松手后。
+    // Lift endpoint: shooting arm nearly horizontal, forearm up, leaving elbow extension for the actual release.
     if(shoot){
       shoot.rotation.x=mixN(shoot.rotation.x,-1.88,k);
-      // 右手肩轴用正 Z 轻微内收，让肩、肘、腕留在同一投篮平面。
+      // Right shoulder axis slightly adducts in +Z to keep shoulder, elbow, wrist in the same shooting plane.
       shoot.rotation.y=mixN(shoot.rotation.y,0,planeK);
       shoot.rotation.z=mixN(shoot.rotation.z,0.10,planeK);
     }
@@ -138,7 +148,7 @@
   function applyFollowThroughPose(o,state){
     if(!o||!o.arms||!o.elbows||!state||!state.active)return;
     const shoot=o.arms[0],guide=o.arms[1],shootEl=o.elbows[0],guideEl=o.elbows[1];
-    // -2.62rad 约等于整条投篮臂与地面成60°,肘部趋近0表示主动伸直。
+    // -2.62rad is roughly 60° between the shooting arm and the ground. Elbow approaching 0 indicates active extension.
     const targetShootX=-2.62,targetShootZ=0.06,targetShootElX=-0.08,targetShootElZ=0;
     const targetGuideX=Math.min(guideStart.x-0.14,-2.06),targetGuideZ=guideStart.z+0.14,targetGuideElX=Math.max(guideStart.elbowX,-0.62);
     const guideBlend=state.recover;
@@ -168,7 +178,7 @@
       }
       shootEl.rotation.y=0;
     }
-    // 辅助手随顶肘自然打开,接近落地后再沿基线逐步收回。
+    // The guide hand naturally opens with the elbow extension, then gradually retracts along the baseline as the player lands.
     if(guide){
       if(guideBlend>0){
         guide.rotation.x=mixN(targetGuideX,baseGuideX,guideBlend);
@@ -186,28 +196,28 @@
   function animFpRig(c,phys,state){
     if(!fpRig)return;
     const lift=c.lift,jmp=c.jmp;
-    // 球在 handBall(0,0.08,-0.12)，掌心托在球底部(半径0.16)
-    const cock=0.35+0.4*lift;                    // 蓄力压腕(掌心朝上兜住球)
+    // Ball is at handBall(0,0.08,-0.12). The palm supports the bottom of the ball (radius 0.16).
+    const cock=0.35+0.4*lift;                    // Cock wrist (palm facing up cradling the ball)
     const followK=state&&state.active?state.follow:0;
-    const snap=followK*1.08;                      // 手腕随伸直-保持-回收阶段平滑跟随
+    const snap=followK*1.08;                      // Wrist smoothly follows the extend-hold-retract phases
     const r=fpRig.r,l=fpRig.l;
     const stance=shotStanceBlend(c,typeof G!=="undefined"&&(G.canShoot||G.charging));
     r.root.position.set(0.16-0.05*lift,-0.25+0.1*lift+0.05*jmp,-0.1);
-    // 辅助手贴到球的侧面,第一人称不再像离球很远的单手投篮。
+    // Guide hand attaches to the side of the ball, no longer looking like a distant one-handed shot in first-person.
     l.root.position.set(-0.13+0.125*lift,-0.27+0.12*lift+0.03*jmp,-0.13+0.015*lift);
     r.wrist.rotation.x=cock-snap;
     l.wrist.rotation.x=cock*0.8-followK*0.5;
-    l.wrist.rotation.z=0.58-0.2*lift;             // 护球手侧扶球,出手时自然打开
+    l.wrist.rotation.z=0.58-0.2*lift;             // Guide hand supports the side of the ball, naturally opening on release.
     r.root.rotation.z=-0.08*lift+SHOT_STANCE_YAW*0.2*stance;
     l.root.rotation.z=0.18+0.16*lift;
   }
 
-  /* ================= 第三人称球贴手 ================= */
+  /* ================= Third-Person Ball Attach ================= */
   let ballAttached=false,pBallHome=null;
   function attachBall(){
     if(ballAttached||typeof player==="undefined"||typeof pBall==="undefined")return;
     if(!pBallHome)pBallHome={parent:pBall.parent,pos:pBall.position.clone()};
-    // arms[0]/elbows[0] 是投篮手(x=-0.33)；掌心在肘组局部 y≈-0.335,z≈0.1
+    // arms[0]/elbows[0] is the shooting hand (x=-0.33). The palm is at local y≈-0.335, z≈0.1 relative to the elbow group.
     player.elbows[0].add(pBall);
     pBall.position.set(0,-0.43,0.12);
     ballAttached=true;
@@ -219,7 +229,7 @@
     ballAttached=false;
   }
 
-  /* ================= updPose V2：顶点即落 ================= */
+  /* ================= updPose V2: Apex-Triggered Drop ================= */
   const origUpdPose=global.updPose;
   function updPoseV2(dt){
     const s=curShot();
@@ -229,7 +239,7 @@
     const tutorialHold=!!(global.AIBAInteractiveTutorial&&
       typeof global.AIBAInteractiveTutorial.isHoldingRelease==="function"&&
       global.AIBAInteractiveTutorial.isHoldingRelease());
-    // v1.52 物理:顶点前沿用原曲线,顶点后接管自然下落;落地前自动出手
+    // v1.52 physics: uses the original curve before the apex, then takes over for natural descent after the apex; auto-releases before landing.
     const phys=AIBAShotPhysics.update({charging:G.charging,paused:tutorialHold,dt,ideal,rate:playerChargeRate(),curve:base});
     const rawCurve=phys.curve;
     if(G.charging)lastPoseCurve={dip:rawCurve.dip,lift:rawCurve.lift,rise:rawCurve.rise,jmp:rawCurve.jmp,over:rawCurve.over};
@@ -246,7 +256,7 @@
     const c=visualReleaseCurve(rawCurve,follow);
     P.jump=phys.airborne?Math.max(0,rawCurve.jmp*0.55):Math.max(-0.06,rawCurve.jmp*0.55-rawCurve.over*0.28);
     P.eyeDip=-0.26*c.dip-0.09*lk;
-    // 第一人称手组整体运动沿用原公式,腕部动作由 rig 叠加
+    // First-person hand group overall motion uses the original formula, with wrist action overlaid by the rig.
     hands.position.x=-0.05*c.lift;
     hands.position.y=-0.5-0.2*c.dip+0.3*c.lift+0.42*c.jmp;
     hands.position.z=-0.62+0.12*c.dip-0.17*c.jmp;
@@ -260,7 +270,7 @@
       hands.rotation.x-=0.12*follow.follow;
     }
     animFpRig(c,phys,follow);
-    // 第三人称
+    // Third-person
     player.g.position.set(P.pos.x,0,P.pos.z);
     player.g.rotation.y=P.face+(P.walking?0:SHOT_STANCE_YAW*stance);
     if(P.walking){
@@ -279,20 +289,20 @@
       applyShotSetPose(player,c);
       applyFollowThroughPose(player,follow);
     }
-    // 球挂在投篮手肘组上自动跟手,无需 poseBallPos
+    // Ball attaches to the shooting elbow group automatically, no need for poseBallPos.
     if(!ballAttached)poseBallPos(pBall.position,c);
     if(pendingRelease&&followAge>=BALL_RELEASE_AT)completePendingRelease();
   }
 
-  /* ================= releaseShot V2：晚释放惩罚 + 高弧过板 ================= */
-  const chainedReleaseShot=global.releaseShot; // 可能已被 gear.js 包装,保持链
+  /* ================= releaseShot V2: Late Release Penalty + High Arc Over Board ================= */
+  const chainedReleaseShot=global.releaseShot; // May already be wrapped by gear.js, keep the chain.
   function completePendingRelease(){
     if(!pendingRelease)return false;
     const p=pendingRelease;pendingRelease=null;
     if(player&&player.g)player.g.updateMatrixWorld(true);
     if(typeof hands!=="undefined"&&hands)hands.updateMatrixWorld(true);
     const r=chainedReleaseShot.call(p.ctx,p.power,p.shot);
-    // 蓄力接近拉满的超远过力:抬高弧线从篮板上方绕过去(落到板后,正常算投失)
+    // For extremely long-range overpowered shots near full charge: raise the arc to go over the top of the backboard (lands behind it, counts as a miss).
     const b=(typeof balls!=="undefined")&&balls[balls.length-1];
     if(b&&!b.opp&&!b.silent&&b.outcome==="miss"&&(G.lastErr||0)>=OVER_ERR){
       const xT=clampN(b.p0.x+b.v0.x*b.tf,-OVER_TOP.maxX,OVER_TOP.maxX);
@@ -307,16 +317,16 @@
     captureReleaseCurve();
     beginFollow();
     const ideal=weatherAdjustedIdeal(shot,true);
-    const adj=AIBAShotPhysics.releasePower(power,ideal); // 下落中出手→明显偏短
+    const adj=AIBAShotPhysics.releasePower(power,ideal); // Releasing during descent → notably short.
     pendingRelease={ctx:this,power:adj,shot};
     G.canShoot=false;
     return true;
   }
 
-  /* ================= updBalls V2：实体篮板(线段穿越) ================= */
+  /* ================= updBalls V2: Solid Backboard (Segment Intersection) ================= */
   const origUpdBalls=global.updBalls;
   function boardHit(px,py,pz,qx,qy,qz){
-    // 从篮板前方(-z 方向)穿越正面平面,且穿越点落在板面矩形内
+    // Crossing the front plane from the front of the backboard (-z direction), with the crossing point inside the board rectangle.
     if(!(pz>BOARD_Z&&qz<=BOARD_Z))return null;
     const k=(pz-BOARD_Z)/Math.max(1e-6,pz-qz);
     const hx=px+(qx-px)*k,hy=py+(qy-py)*k;
@@ -337,13 +347,13 @@
       const hit=(b.phase==="fly"||b.phase==="free"||b.phase==="fall")&&boardHit(px,py,pz,p.x,p.y,p.z);
       if(!hit)continue;
       if(b.phase==="fly"){
-        // 飞行段撞板:结算为投失并从板面弹回
+        // Hit the board during flight: counted as a miss and bounces back from the board surface.
         const t=Math.min(b.t,b.tf);
         const vy=b.v0.y-9.8*t;
         b.phase="free";
         b.vel.set(b.v0.x*0.4,vy*0.5,Math.abs(b.v0.z)*BOUNCE_K);
         if(b.opp)triggerStreetCrowdReaction("oppMiss",0);
-        else if(!b.silent){missBall();toast("🧱 篮板拒绝!","#ff8d7a");}
+        else if(!b.silent){missBall();toast("🧱 Rejected by the backboard!","#ff8d7a");}
       }else{
         b.vel.z=Math.abs(b.vel.z)*BOUNCE_K;
         b.vel.x*=0.8;
@@ -354,7 +364,7 @@
     }
   }
 
-  /* ================= 开关 / 兜底恢复 ================= */
+  /* ================= Toggle / Fallback Restore ================= */
   function installMotionHooks(){
     global.updPose=updPoseV2;
     global.releaseShot=releaseShotV2;
@@ -378,11 +388,11 @@
   }
   function setEnabled(v){
     on=!!v;save();apply();
-    if(typeof global.toast==="function")global.toast(on?"已启用新版投篮动作":"已恢复经典投篮动作(兜底)",on?"#7CFC6B":"#ffd23f");
+    if(typeof global.toast==="function")global.toast(on?"New shooting motion enabled":"Classic shooting motion restored (fallback)",on?"#7CFC6B":"#ffd23f");
   }
   function toggleMarkup(){
-    return `<div class="motionToggle"><span><small>SHOT MOTION</small><b>投篮动作引擎</b><em>新版:球贴手+手腕出手+顶点即落+实体篮板;出问题可随时切回经典兜底。</em></span>
-      <button type="button" onclick="AIBAMotionToggle()">${on?"V2 新版 · 点击切回经典":"经典兜底 · 点击启用新版"}</button></div>`;
+    return `<div class="motionToggle"><span><small>SHOT MOTION</small><b>Shooting Motion Engine</b><em>New: Ball glued to hand + wrist release + apex drop + solid backboard. Switch back to the classic fallback anytime if issues arise.</em></span>
+      <button type="button" onclick="AIBAMotionToggle()">${on?"V2 (New) · Click to restore classic":"Classic (Fallback) · Click to enable V2"}</button></div>`;
   }
   function toggle(){
     setEnabled(!on);
