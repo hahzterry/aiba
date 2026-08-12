@@ -92,7 +92,7 @@
       if (G.mode === "rackrush") return G.rush && G.rush.variant === "speed100" ? "SPEED 100" : "RACK RUSH";
       return G.stage === "final" ? "FINAL" : "THREE POINT";
     } catch (e) {
-      return "aiBA HIGHLIGHT";
+      return "3BALL HIGHLIGHT";
     }
   }
 
@@ -320,7 +320,7 @@
     ctx.fillStyle = "#7ee7ff";
     ctx.font = "700 22px Orbitron, monospace";
     ctx.letterSpacing = "0px";
-    ctx.fillText("aiBA HIGHLIGHT", 34, 54);
+    ctx.fillText("3BALL.fun HIGHLIGHT", 34, 54);
     ctx.fillStyle = "#ffd23f";
     ctx.font = "900 58px Orbitron, monospace";
     ctx.fillText(scoreText(), 34, 118);
@@ -344,7 +344,7 @@
     ctx.fillText("PULL UP. LOCK IN. SHARE IT.", 34, H - 78);
     ctx.fillStyle = "#9ab2c5";
     ctx.font = "700 16px Orbitron, monospace";
-    ctx.fillText("opstiger.github.io/aiba-percent-battle", 34, H - 44);
+    ctx.fillText("3ball.fun", 34, H - 44);
     ctx.restore();
   }
 
